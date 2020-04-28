@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4a871d07-1089-4a0f-8b5c-b9474d931da1" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/Controllers/ValuesController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/Properties/launchSettings.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/BB52DFAC-CFA7-45C5-8A6F-98419864C582/1/SignalRDependencyInjectionExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/Hubs/ChatHubs.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/Startup.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/appsettings.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/53F05B57-A720-47CA-B613-DF4A55F3BB54/6/Hub.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/560D56F8-376D-4258-A59A-D5478913C777/4/UseExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/rogue-like-multi-server/appsettings.Development.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/7D014BEE-5747-4EE0-8DA7-655E19DDB1D8/6/WebSocket.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/rogue-like-multi-server/Properties/launchSettings.json" />
+        <option value="$PROJECT_DIR$/rogue-like-multi-server/Controllers/ValuesController.cs" />
+        <option value="$PROJECT_DIR$/rogue-like-multi-server/Startup.cs" />
+        <option value="$PROJECT_DIR$/rogue-like-multi-server/Hubs/ChatHubs.cs" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="1b8TGvDZRb09LK18ew7ZO5v4ajK" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RunManager" selected=".NET Launch Settings Profile.rogue-like-multi-server: IIS Express (1)">
+    <configuration name="rogue-like-multi-server: IIS Express (1)" type="LaunchSettings" factoryName=".NET Launch Settings Profile" temporary="true">
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/rogue-like-multi-server/rogue-like-multi-server.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value=".NETCoreApp,Version=v2.1" />
+      <option name="LAUNCH_PROFILE_NAME" value="IIS Express" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="USE_MONO" value="0" />
+      <option name="RUNTIME_ARGUMENTS" value="" />
+      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+      <option name="SEND_DEBUG_REQUEST" value="1" />
+      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+      <method v="2">
+        <option name="Build" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="rogue-like-multi-server: IIS Express" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/rogue-like-multi-server/rogue-like-multi-server.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value=".NETCoreApp,Version=v2.1" />
+      <option name="LAUNCH_PROFILE_NAME" value="IIS Express" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="USE_MONO" value="0" />
+      <option name="RUNTIME_ARGUMENTS" value="" />
+      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+      <option name="SEND_DEBUG_REQUEST" value="1" />
+      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+      <method v="2">
+        <option name="Build" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="rogue-like-multi-server: rogue_like_multi_server" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/rogue-like-multi-server/rogue-like-multi-server.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value=".NETCoreApp,Version=v2.1" />
+      <option name="LAUNCH_PROFILE_NAME" value="rogue_like_multi_server" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="USE_MONO" value="0" />
+      <option name="RUNTIME_ARGUMENTS" value="" />
+      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+      <option name="SEND_DEBUG_REQUEST" value="1" />
+      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+      <method v="2">
+        <option name="Build" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue=".NET Launch Settings Profile.rogue-like-multi-server: IIS Express (1)" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4a871d07-1089-4a0f-8b5c-b9474d931da1" name="Default Changelist" comment="" />
+      <created>1588012629844</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1588012629844</updated>
+      <workItem from="1588012635908" duration="629000" />
+      <workItem from="1588057081596" duration="5708000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="WindowStateProjectService">
+    <state width="1663" height="367" key="GridCell.Tab.0.bottom" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.0.bottom/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.0.center" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.0.center/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.0.left" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.0.left/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.0.right" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.0.right/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.1.bottom" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.1.bottom/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.1.center" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.1.center/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.1.left" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.1.left/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.1.right" timestamp="1588063319539">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.1.right/0.0.1707.920@0.0.1707.920" timestamp="1588063319539" />
+    <state width="1663" height="367" key="GridCell.Tab.2.bottom" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.2.bottom/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.2.center" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.2.center/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.2.left" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.2.left/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.2.right" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.2.right/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.3.bottom" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.3.bottom/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.3.center" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.3.center/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.3.left" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.3.left/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.3.right" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.3.right/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.4.bottom" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.4.bottom/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.4.center" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.4.center/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.4.left" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.4.left/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state width="1663" height="367" key="GridCell.Tab.4.right" timestamp="1588063319540">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state width="1663" height="367" key="GridCell.Tab.4.right/0.0.1707.920@0.0.1707.920" timestamp="1588063319540" />
+    <state x="446" y="194" key="Rider.ProjectTemplateDialog.Size" timestamp="1588059014121">
+      <screen x="0" y="0" width="1707" height="920" />
+    </state>
+    <state x="446" y="194" key="Rider.ProjectTemplateDialog.Size/0.0.1707.920@0.0.1707.920" timestamp="1588059014121" />
+  </component>
+</project>

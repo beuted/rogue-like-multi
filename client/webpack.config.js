@@ -1,0 +1,55 @@
+const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const distPath = path.resolve(__dirname, 'dist');
+const isDev = process.env.NODE_ENV !== 'production';
+
+module.exports = {
+    entry: './src/index.ts',
+    mode: isDev ? 'development' : 'production',
+    devtool: 'inline-source-map',
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
+    },
+    plugins: [
+        new CleanWebpackPlugin(),
+        new CopyPlugin([
+            { from: 'src/index.html' },
+            { from: 'src/css/style.css', to: 'css/' },
+            { from: 'src/assets/', to: 'assets/' },
+            { from: 'src/sounds/', to: 'sounds/' },
+            { from: 'src/scripts/', to: 'scripts/' },
+        ]),
+    ],
+    resolve: {
+        extensions: [ '.tsx', '.ts', '.js' ]
+    },
+    output: {
+        filename: 'bundle.js',
+        path: distPath
+    },
+    devServer: {
+        contentBase: distPath,
+        compress: true,
+        port: 8080,
+        hot: true,
+        proxy: {
+          '/api': {
+            target: 'http://localhost:19689',
+          },
+          '/hub': {
+            target: 'http://localhost:19689',
+            ws: true
+          }
+        }
+    },
+    optimization: {
+        minimize: !isDev
+    }
+};
