@@ -1,3 +1,3 @@
 export type Cell = {
-  spriteId: number
+  floorType: number
 }

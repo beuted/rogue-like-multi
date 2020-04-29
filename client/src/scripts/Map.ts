@@ -2,51 +2,43 @@ import { Cell } from "./Cell";
 import { Container, Sprite } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { Entity } from "./Entity";
+import { SocketClient, SocketMessageReceived } from "./SocketClient";
+import { RenderService } from "./RenderService";
 
 export class Map {
   private size: number = 20
   private cells: Cell[][] = [];
-  private entities: {[name: string]: Entity} = {}; //TODO registerListener
+  private entities: {[name: string]: Entity} = {};
 
-  constructor(private spriteManager: SpriteManager) {
+  constructor(private spriteManager: SpriteManager, private socketClient: SocketClient, private renderService: RenderService) {
   }
 
-  public init() {
-    this.cells = [];
-    for (let i = 0; i < this.size; i++) {
-      this.cells.push([]);
-      for (let j = 0; j < this.size; j++) {
-        this.cells[i].push({spriteId: this.getRandomSpriteId()});
-      }
-    }
-  }
+  public init(container: Container, cells: Cell[][]) {
+    // Init map grid
+    this.cells = cells;
 
-  public addEntity(entity: Entity) {
-    this.entities[entity.name] = entity;
-  }
-
-  public removeEntity(entityName: string) {
-    delete this.entities[entityName];
-  }
-
-  public render(container: Container) {
+    // Init map sprites (will never move)
     for (let i = 0; i < this.size; i++) {
       for (let j = 0; j < this.size; j++) {
-        let cell = new Sprite(this.spriteManager.textures[this.cells[i][j].spriteId]);
+        let cell = new Sprite(this.spriteManager.textures[this.cells[i][j].floorType]);
         cell.x = i*this.spriteManager.tilesetSize;
         cell.y = j*this.spriteManager.tilesetSize;
         container.addChild(cell);
       }
     }
 
-    for (let entityName in this.entities) {
-      this.entities[entityName].render();
-    }
+    // Watch for entities moves
+    this.socketClient.registerListener(SocketMessageReceived.SetMapStateDynamic, (mapStateDynamic) => {
+      this.entities = mapStateDynamic.entities;
+      for (let entityName in this.entities) {
+        this.renderService.renderEntity(this.entities[entityName]);
+      }
+    });
   }
 
-  private getRandomSpriteId(): number {
-    const okSpriteId = [11, 11, 11, 11, 44, 44, 45, 54, 55, 56];
-    var id = Math.floor(Math.random() * okSpriteId.length);
-    return okSpriteId[id];
+  public render() {
+    /*for (let entityName in this.entities) {
+      this.renderService.renderEntity(this.entities[entityName]);
+    }*/
   }
 }

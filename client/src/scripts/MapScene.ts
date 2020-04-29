@@ -5,7 +5,8 @@ import { Map } from "./Map";
 import { Character } from "./Character";
 import { InputManager } from "./InputManager";
 import { SocketClient } from "./SocketClient";
-import { Entity } from "./Entity";
+import { GameServerClient } from "./GameServerClient";
+import { RenderService } from "./RenderService";
 
 export class MapScene {
   private spriteManager: SpriteManager;
@@ -16,44 +17,42 @@ export class MapScene {
   private socketClient: SocketClient;
 
   private state: GameState = GameState.Pause;
+  private gameServerClient: GameServerClient;
+  private renderService: RenderService;
 
   constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/kenney_microroguelike_1.1/Tilemap/colored_tilemap.png", 9, 10, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
-    this.map = new Map(this.spriteManager);
     this.socketClient = new SocketClient();
+    this.renderService = new RenderService(this.spriteManager);
+    this.map = new Map(this.spriteManager, this.socketClient, this.renderService);
     this.character = new Character(this.spriteManager, this.socketClient);
     this.inputManager = new InputManager();
+    this.gameServerClient = new GameServerClient();
   }
 
   public async init() {
+    await this.socketClient.init();
     await this.spriteManager.init();
     await this.soundManager.init();
-    this.map.init();
     this.inputManager.init();
-    await this.socketClient.init();
 
     //this.soundManager.play();
 
     console.log("Everything initialized");
 
     // Set state
-
     this.state = GameState.Play;
 
     // Display stuff
-
-
     let sceneContainer = new Container();
     sceneContainer.scale.set(4);
     let mapContainer = new Container();
     sceneContainer.addChild(mapContainer);
+    this.renderService.init(mapContainer)
 
-    this.map.render(mapContainer);
-    let ent = new Entity(this.spriteManager);
-    ent.init(mapContainer, "michel", 3, 3);
-    this.map.addEntity(ent);
-
+    var gameState = await this.gameServerClient.getState();
+    this.map.init(mapContainer, gameState.mapStateStatic.map.cells);
 
     this.character.init(mapContainer, "user" + Math.floor(Math.random()*100));
 
@@ -75,6 +74,7 @@ export class MapScene {
       this.character.move(inputs.vx, inputs.vy);
 
     delta;
+    this.map.render();
     this.character.render();
   }
 }

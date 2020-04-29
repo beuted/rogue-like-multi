@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
-namespace SignalRChat.Hubs
+namespace rogue_like_multi_server.Hubs
 {
     public class ChatHub : Hub
     {

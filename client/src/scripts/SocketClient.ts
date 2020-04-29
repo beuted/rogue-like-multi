@@ -22,7 +22,7 @@ export class SocketClient {
       .then(() => console.log(`Msg ${messageName} sent (${username}): ${args.join(", ")}`));
   }
 
-  public registerListener(messageName: SocketMessageReceived, cb: (username: string, ...args: any[]) => void) {
+  public registerListener(messageName: SocketMessageReceived, cb: (...args: any[]) => void) {
     this.connection.on(messageName, cb);
   }
 }
@@ -32,5 +32,5 @@ export enum SocketMessageSent {
 }
 
 export enum SocketMessageReceived {
-  Move = "move",
+  SetMapStateDynamic = "setMapStateDynamic",
 }
