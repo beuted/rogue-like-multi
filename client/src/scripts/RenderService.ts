@@ -5,6 +5,8 @@ import { Sprite, Container } from "pixi.js";
 export class RenderService {
 
   private entityContainer: Container;
+  private entitySprites: {[name: string] : Sprite} = {};
+  private characterSprite: Sprite;
 
   constructor(private spriteManager: SpriteManager) {
   }
@@ -14,12 +16,20 @@ export class RenderService {
   }
 
   public renderEntity(entity: Entity) {
-    //TODO: creating new sprites might be inefficient.
-    let sprite = new Sprite(this.spriteManager.textures[entity.spriteId]);
-    sprite.x = entity.coord.x * this.spriteManager.tilesetSize;
-    sprite.y = entity.coord.y * this.spriteManager.tilesetSize;
-    this.entityContainer.addChild(sprite);
+    if (!this.entitySprites[entity.name])
+      this.entitySprites[entity.name] = new Sprite(this.spriteManager.textures[entity.spriteId]);
 
-    console.log("render", entity.coord.x, entity.coord.y, entity.spriteId)
+    this.entitySprites[entity.name].x = entity.coord.x * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].y = entity.coord.y * this.spriteManager.tilesetSize;
+    this.entityContainer.addChild(this.entitySprites[entity.name]);
+  }
+
+  public renderCharacter(character: Entity) {
+    if (!this.characterSprite)
+      this.characterSprite = new Sprite(this.spriteManager.textures[character.spriteId]);
+
+    this.characterSprite.x = character.coord.x*this.spriteManager.tilesetSize;
+    this.characterSprite.y = character.coord.y*this.spriteManager.tilesetSize;
+    this.entityContainer.addChild(this.characterSprite);
   }
 }

@@ -7,14 +7,20 @@
         <e p=".gitignore" t="Include" />
         <e p="appsettings.Development.json" t="Include" />
         <e p="appsettings.json" t="Include" />
+        <e p="BasicAuthenticationHandler.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
+        <e p="BoardState.cs" t="Include" />
+        <e p="BoardStateDynamic.cs" t="Include" />
+        <e p="BoardStateService.cs" t="Include" />
+        <e p="BoardStateStatic.cs" t="Include" />
         <e p="Cell.cs" t="Include" />
         <e p="Controllers" t="Include">
           <e p="GameStateController.cs" t="Include" />
+          <e p="UserController.cs" t="Include" />
           <e p="ValuesController.cs" t="Include" />
         </e>
         <e p="Coord.cs" t="Include" />
-        <e p="Entitiy.cs" t="Include" />
+        <e p="Entity.cs" t="Include" />
         <e p="FloorType.cs" t="Include" />
         <e p="GameHostedService.cs" t="Include" />
         <e p="GameService.cs" t="Include" />
@@ -22,9 +28,6 @@
           <e p="ChatHubs.cs" t="Include" />
         </e>
         <e p="Map.cs" t="Include" />
-        <e p="MapState.cs" t="Include" />
-        <e p="MapStateDynamic.cs" t="Include" />
-        <e p="MapStateStatic.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp2.1" t="Include">
@@ -33,12 +36,17 @@
             </e>
           </e>
         </e>
+        <e p="Player.cs" t="Include" />
         <e p="Program.cs" t="Include" />
         <e p="Properties" t="Include">
           <e p="launchSettings.json" t="Include" />
         </e>
         <e p="rogue-like-multi-server.csproj" t="IncludeRecursive" />
         <e p="Startup.cs" t="Include" />
+        <e p="User.cs" t="Include" />
+        <e p="UserIdProvider.cs" t="Include" />
+        <e p="UserService.cs" t="Include" />
+        <e p="WebSocketMiddleware.cs" t="Include" />
         <e p="wwwroot" t="Include" />
       </e>
       <e p="rogue-like-multi-server.sln" t="IncludeFlat" />

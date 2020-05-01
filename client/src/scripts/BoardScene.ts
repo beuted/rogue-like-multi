@@ -1,38 +1,42 @@
 import { Application, Container } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Map } from "./Map";
-import { Character } from "./Character";
+import { Board } from "./Board";
 import { InputManager } from "./InputManager";
-import { SocketClient } from "./SocketClient";
+import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
+import { CharacterController } from "./CharacterController";
 
-export class MapScene {
+export class BoardScene {
   private spriteManager: SpriteManager;
   private soundManager: SoundManager;
-  private map: Map;
-  private character: Character;
+  private board: Board;
   private inputManager: InputManager;
   private socketClient: SocketClient;
 
   private state: GameState = GameState.Pause;
   private gameServerClient: GameServerClient;
   private renderService: RenderService;
+  private characterController: CharacterController;
 
   constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/kenney_microroguelike_1.1/Tilemap/colored_tilemap.png", 9, 10, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.socketClient = new SocketClient();
     this.renderService = new RenderService(this.spriteManager);
-    this.map = new Map(this.spriteManager, this.socketClient, this.renderService);
-    this.character = new Character(this.spriteManager, this.socketClient);
+    this.board = new Board(this.spriteManager, this.renderService);
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
+    this.characterController = new CharacterController(this.socketClient)
   }
 
   public async init() {
-    await this.socketClient.init();
+    var user = await this.gameServerClient.authenticate();
+    if (user == null)
+      return;
+
+    await this.socketClient.init(user);
     await this.spriteManager.init();
     await this.soundManager.init();
     this.inputManager.init();
@@ -52,11 +56,19 @@ export class MapScene {
     this.renderService.init(mapContainer)
 
     var gameState = await this.gameServerClient.getState();
-    this.map.init(mapContainer, gameState.mapStateStatic.map.cells);
 
-    this.character.init(mapContainer, "user" + Math.floor(Math.random()*100));
+    this.board.init(mapContainer, gameState, user.username);
 
     this.app.stage.addChild(sceneContainer);
+
+    this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic) => {
+      console.log('SetBoardStateDynamic');
+      this.board.render(boardStateDynamic);
+    });
+
+    this.socketClient.registerListener(SocketMessageReceived.NewMessage, (message) => {
+      console.log('message', message);
+    });
 
     // Game loop
 
@@ -69,13 +81,15 @@ export class MapScene {
   }
 
   private play(delta: number) {
-    let inputs = this.inputManager.get();
-    if (inputs.vx != 0 || inputs.vy != 0)
-      this.character.move(inputs.vx, inputs.vy);
+    let direction = this.inputManager.get();
+    if ((direction.x != 0 || direction.y != 0) && !this.board.player.hasPlayedThisTurn) {
+      this.characterController.move(this.board.player, direction);
+    } else if (!this.board.player.hasPlayedThisTurn) {
+      this.characterController.talk(this.board.player, "pwet");
+    }
 
     delta;
-    this.map.render();
-    this.character.render();
+    this.renderService.renderCharacter(this.board.player.entity);
   }
 }
 

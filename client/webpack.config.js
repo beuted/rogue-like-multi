@@ -42,10 +42,14 @@ module.exports = {
         proxy: {
           '/api': {
             target: 'http://localhost:19689',
+            cookieDomainRewrite: "localhost:8080",
+            changeOrigin: true
           },
           '/hub': {
             target: 'http://localhost:19689',
-            ws: true
+            cookieDomainRewrite: "localhost:8080",
+            ws: true,
+            changeOrigin: true
           }
         }
     },

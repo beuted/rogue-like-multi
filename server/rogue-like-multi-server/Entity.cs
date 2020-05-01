@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace rogue_like_multi_server
 {
-    public class Entitiy
+    public class Entity
     {
         [JsonProperty("coord")]
         public Coord Coord;
@@ -13,7 +13,7 @@ namespace rogue_like_multi_server
         [JsonProperty("spriteId")]
         public int SpriteId;
 
-        public Entitiy(Coord coord, string name, int spriteId)
+        public Entity(Coord coord, string name, int spriteId)
         {
             Coord = coord;
             Name = name;

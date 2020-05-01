@@ -15,16 +15,16 @@ namespace rogue_like_multi_server
 
         public static Map Generate()
         {
-            var map = new Map();
-            map.Cells = new Cell[MapHeight][];
+            var board = new Map();
+            board.Cells = new Cell[MapHeight][];
             for (int i = 0; i < MapHeight; i++) {
-                map.Cells[i] = new Cell[MapWidth];
+                board.Cells[i] = new Cell[MapWidth];
                 for (int j = 0; j < MapWidth; j++) {
-                    map.Cells[i][j] = new Cell(GetRandomSpriteId());
+                    board.Cells[i][j] = new Cell(GetRandomSpriteId());
                 }
             }
 
-            return map;
+            return board;
         }
 
         private static FloorType GetRandomSpriteId() {

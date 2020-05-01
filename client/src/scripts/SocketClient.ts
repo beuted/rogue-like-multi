@@ -7,9 +7,11 @@ export class SocketClient {
 
   }
 
-  public async init() {
+  public async init(user: {username: string, password: string}) {
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl("/hub")
+      .withUrl("/hub", {
+        httpClient: new CustomHttpClient(signalR.NullLogger.instance, user),
+        accessTokenFactory: () => btoa(`${user.username}:${user.password}`) })
       .build();
 
     await this.connection.start().catch(err => console.error(err)).then(() => {
@@ -17,9 +19,9 @@ export class SocketClient {
     });
   }
 
-  public SendMessage(messageName: SocketMessageSent, username: string, ...args : any[]) {
-    this.connection.send(messageName, username, ...args)
-      .then(() => console.log(`Msg ${messageName} sent (${username}): ${args.join(", ")}`));
+  public SendMessage(messageName: SocketMessageSent, ...args : any[]) {
+    this.connection.send(messageName, ...args)
+      .then(() => console.log(`Msg ${messageName} sent: ${args.join(", ")}`));
   }
 
   public registerListener(messageName: SocketMessageReceived, cb: (...args: any[]) => void) {
@@ -29,8 +31,24 @@ export class SocketClient {
 
 export enum SocketMessageSent {
   Move = "Move",
+  Talk = "Talk",
 }
 
 export enum SocketMessageReceived {
-  SetMapStateDynamic = "setMapStateDynamic",
+  SetBoardStateDynamic = "setBoardStateDynamic",
+  NewMessage = "newMessage"
+}
+
+class CustomHttpClient extends signalR.DefaultHttpClient {
+  constructor(logger: signalR.ILogger, private user: {username: string, password: string}) {
+    super(logger)
+  }
+  public send(request: signalR.HttpRequest): Promise<signalR.HttpResponse> {
+    request.headers = {
+      ...request.headers,
+      'Authorization': `Basic ${btoa (`${this.user.username}:${this.user.password}`)}`
+    };
+    request.url = request.url + `&access_token=${btoa (`${this.user.username}:${this.user.password}`)}` //USELESS ??????
+    return super.send(request);
+  }
 }

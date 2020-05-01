@@ -2,3 +2,22 @@ body, html {
     margin: 0;
     padding: 0;
 }
+
+.chat-box {
+    position: fixed;
+    height: 200px;
+    width: 100%;
+    bottom: 0;
+    background-color: white;
+}
+
+.chat-box-messages {
+    height: 180px;
+}
+
+.chat-box-input {
+    bottom: 0;
+    height: 20px;
+    width: 100%;
+    resize: none;
+}

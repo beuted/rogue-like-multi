@@ -1,5 +1,5 @@
 import { settings, utils, Application, SCALE_MODES } from 'pixi.js';
-import { MapScene } from './scripts/MapScene';
+import { BoardScene } from './scripts/BoardScene';
 
 let type = "WebGL";
 if (!utils.isWebGLSupported()){
@@ -17,19 +17,16 @@ let app = new Application({
   height: 256,        // default: 600
   antialias: true,    // default: false
   transparent: false, // default: false
-  resolution: 1       // default: 1
+  resolution: 1,       // default: 1
+  resizeTo: window
 });
 
+document.getElementById('game').appendChild(app.view);
+//app.renderer.resize(window.innerWidth, window.innerHeight);
 
-document.body.appendChild(app.view);
-app.renderer.resize(window.innerWidth, window.innerHeight);
+let boardScene = new BoardScene(app);
 
-//Add the canvas that Pixi automatically created for you to the HTML document
-document.body.appendChild(app.view);
-
-let mapScene = new MapScene(app);
-
-mapScene.init();
+boardScene.init();
 
 
 

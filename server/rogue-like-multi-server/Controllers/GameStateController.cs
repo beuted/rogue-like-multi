@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace rogue_like_multi_server.Controllers
 {
+    [Authorize]
     [Route("api/game-state")]
     [ApiController]
     public class GameStateController : ControllerBase
@@ -19,9 +21,9 @@ namespace rogue_like_multi_server.Controllers
 
         // GET api/game-state
         [HttpGet]
-        public MapState Get()
+        public BoardState Get()
         {
-            return _gameService.MapState;
+            return _gameService.BoardState;
         }
     }
 }

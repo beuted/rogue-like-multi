@@ -33,8 +33,8 @@ namespace rogue_like_multi_server
             {
                 var begin= DateTime.UtcNow.Ticks;
                 receive_from_clients(); // poll, accept, receive, decode, validate
-                update(); // AI, simulate
-                await send_updates_clients();
+                Update(); // AI, simulate
+                await SendUpdatesClients();
                 var elapsed = DateTime.UtcNow.Ticks - begin;
                 if (elapsed < TicksPerServerTick)
                 {
@@ -58,13 +58,14 @@ namespace rogue_like_multi_server
         {
         }
 
-        private void update()
+        private void Update()
         {
+            _gameService.Update();
         }
 
-        private async Task send_updates_clients()
+        private async Task SendUpdatesClients()
         {
-            await _chatHubContext.Clients.All.SendAsync("setMapStateDynamic", _gameService.MapState.MapStateDynamic);
+            await _chatHubContext.Clients.All.SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic);
         }
     }
 }

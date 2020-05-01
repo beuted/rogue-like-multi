@@ -10,12 +10,9 @@ export class InputManager {
 
   public get() {
     var res = {
-      vx: this.vx,
-      vy: this.vy
+      x: this.vx,
+      y: this.vy
     }
-
-    this.vx = 0;
-    this.vy = 0;
 
     return res;
   }
