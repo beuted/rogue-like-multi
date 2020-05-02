@@ -1,6 +1,11 @@
 body, html {
     margin: 0;
     padding: 0;
+    overflow: hidden;
+}
+
+#game {
+    overflow: hidden;
 }
 
 .chat-box {
@@ -9,15 +14,52 @@ body, html {
     width: 100%;
     bottom: 0;
     background-color: white;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-box-messages {
     height: 180px;
+    padding: 3px;
+    flex-grow: 1;
+    overflow: auto;
+    color: #222323;
+}
+
+.chat-box-message {
+    padding: 2px;
+    border-bottom: solid 1px #eee;
 }
 
 .chat-box-input {
     bottom: 0;
-    height: 20px;
+    display: flex;
     width: 100%;
+    height: 30px;
+}
+
+.chat-box-input-text {
+    height: 20px;
     resize: none;
+    align-items: stretch;
+    flex-grow: 1;
+}
+
+.chat-box-input-btn {
+    height: 22px;
+    width: 60px;
+    padding-top: 3px;
+    text-align: center;
+    background-color: lightblue;
+    cursor: pointer;
+}
+
+.chat-box-messages-date {
+    color: grey;
+    margin-right: 5px;
+}
+
+.chat-box-messages-author {
+    font-weight: bold;
+    margin-right: 5px;
 }

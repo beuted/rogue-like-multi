@@ -7,6 +7,7 @@ import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
 import { CharacterController } from "./CharacterController";
+import { ChatController } from "./ChatController";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -66,9 +67,9 @@ export class BoardScene {
       this.board.render(boardStateDynamic);
     });
 
-    this.socketClient.registerListener(SocketMessageReceived.NewMessage, (message) => {
-      console.log('message', message);
-    });
+    var chatController = new ChatController(this.socketClient);
+
+    chatController.init(document.getElementById('chat-box'), (message) => this.characterController.talk(this.board.player, message));
 
     // Game loop
 
@@ -85,7 +86,7 @@ export class BoardScene {
     if ((direction.x != 0 || direction.y != 0) && !this.board.player.hasPlayedThisTurn) {
       this.characterController.move(this.board.player, direction);
     } else if (!this.board.player.hasPlayedThisTurn) {
-      this.characterController.talk(this.board.player, "pwet");
+
     }
 
     delta;
