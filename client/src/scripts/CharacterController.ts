@@ -5,11 +5,10 @@ import { Player } from "./Board";
 export class CharacterController {
   constructor(private socketClient: SocketClient) {}
 
-  public move(player: Player, vector: Coord) {
+  public move(player: Player, newPlayerPosition: Coord) {
+    //player.entity.coord = newPlayerPosition
     player.hasPlayedThisTurn = true;
-    player.entity.coord.x += vector.x;
-    player.entity.coord.y += vector.y;
-    this.socketClient.SendMessage(SocketMessageSent.Move, player.entity.coord);
+    this.socketClient.SendMessage(SocketMessageSent.Move, newPlayerPosition);
   }
 
   public talk(player: Player, message: string) {

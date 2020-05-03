@@ -10,10 +10,14 @@ namespace rogue_like_multi_server
         [JsonIgnore]
         public bool HasPlayedThisTurn;
 
-        public Player(Entity entity, bool hasPlayedThisTurn)
+        [JsonIgnore]
+        public bool IsConnected;
+
+        public Player(Entity entity, bool hasPlayedThisTurn, bool isConnected)
         {
             Entity = entity;
             HasPlayedThisTurn = hasPlayedThisTurn;
+            IsConnected = isConnected;
         }
     }
 }

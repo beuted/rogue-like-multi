@@ -33,7 +33,7 @@ namespace rogue_like_multi_server
 
         public void SetPlayerPosition(string playerName, Coord coord)
         {
-            BoardState.BoardStateDynamic = _boardStateService.SetPlayerPosition(BoardState.BoardStateDynamic, playerName, coord);
+            BoardState.BoardStateDynamic = _boardStateService.SetPlayerPosition(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerName, coord);
         }
 
         public async Task SendPlayerMessage(string playerName, string message)

@@ -52,7 +52,8 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, string playerName, Coord coord)
+        public BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, Map map, string playerName,
+            Coord coord)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
@@ -72,7 +73,20 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
             }
 
+            if (!map.Cells[coord.X][coord.Y].FloorType.IsWalkable())
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move on {coord} but it is not walkable");
+                return boardStateDynamic;
+            }
+
             player.Entity.Coord = coord;
+
+            if (map.Cells[coord.X][coord.Y].ItemType != null)
+            {
+                player.Entity.Inventory.Add(map.Cells[coord.X][coord.Y].ItemType.Value);
+                map.Cells[coord.X][coord.Y].ItemType = null;
+            }
+
             player.HasPlayedThisTurn = true;
 
             return boardStateDynamic;
@@ -82,22 +96,24 @@ namespace rogue_like_multi_server
         {
             if (boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to be added at {coord} but he already exist at position {player.Entity.Coord} on the server");
+                _logger.Log(LogLevel.Information, $"Player {playerName} tried to be added at {coord} but he already exist at position {player.Entity.Coord} on the server");
+                player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6), true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new ItemType[0]), true, true));
 
             return boardStateDynamic;
         }
 
         public BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName)
         {
-            if (!boardStateDynamic.Players.TryGetValue(playerName, out _))
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to be removed but he doesn't exist on the server");
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Remove(playerName);
+            // We just mark it as disconnected to remember his coord and all if he reconnects
+            player.IsConnected = false;
 
             return boardStateDynamic;
         }
@@ -115,16 +131,16 @@ namespace rogue_like_multi_server
         private BoardStateStatic GenerateStatic()
         {
             return new BoardStateStatic(
-                Map.Generate()
             );
         }
 
         private BoardStateDynamic GenerateDynamic()
         {
             return new BoardStateDynamic(
+                Map.Generate(),
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7) }
+                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new ItemType[0]) }
                 },
                 new Dictionary<string, Player>()
             );
@@ -137,7 +153,8 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic Update(BoardStateDynamic boardStateDynamic);
 
-        BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, string playerName, Coord coord);
+        BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, Map name, string playerName,
+            Coord coord);
 
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, Coord coord);
 

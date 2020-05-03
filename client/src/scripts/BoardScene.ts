@@ -1,7 +1,7 @@
 import { Application, Container } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board } from "./Board";
+import { Board, BoardStateDynamic } from "./Board";
 import { InputManager } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
@@ -26,7 +26,7 @@ export class BoardScene {
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.socketClient = new SocketClient();
     this.renderService = new RenderService(this.spriteManager);
-    this.board = new Board(this.spriteManager, this.renderService);
+    this.board = new Board();
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
     this.characterController = new CharacterController(this.socketClient)
@@ -54,17 +54,21 @@ export class BoardScene {
     sceneContainer.scale.set(4);
     let mapContainer = new Container();
     sceneContainer.addChild(mapContainer);
-    this.renderService.init(mapContainer)
+    let entityContainer = new Container();
+    sceneContainer.addChild(entityContainer);
+    let inventoryContainer = new Container();
+    sceneContainer.addChild(inventoryContainer);
+    this.renderService.init(mapContainer, entityContainer, inventoryContainer);
 
     var gameState = await this.gameServerClient.getState();
 
-    this.board.init(mapContainer, gameState, user.username);
+    this.board.init(gameState, user.username);
 
     this.app.stage.addChild(sceneContainer);
 
-    this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic) => {
-      console.log('SetBoardStateDynamic');
-      this.board.render(boardStateDynamic);
+    this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
+      console.log('update board');
+      this.board.update(boardStateDynamic);
     });
 
     var chatController = new ChatController(this.socketClient);
@@ -84,13 +88,18 @@ export class BoardScene {
   private play(delta: number) {
     let direction = this.inputManager.get();
     if ((direction.x != 0 || direction.y != 0) && !this.board.player.hasPlayedThisTurn) {
-      this.characterController.move(this.board.player, direction);
-    } else if (!this.board.player.hasPlayedThisTurn) {
-
+      var newPlayerPosition = {
+        x: this.board.player.entity.coord.x + direction.x,
+        y: this.board.player.entity.coord.y + direction.y
+      }
+      if (this.board.isWalkable(newPlayerPosition))
+        this.characterController.move(this.board.player, newPlayerPosition);
     }
 
     delta;
+    this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities)
     this.renderService.renderCharacter(this.board.player.entity);
+    this.renderService.renderInventory(this.board.player.entity);
   }
 }
 

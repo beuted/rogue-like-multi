@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace rogue_like_multi_server
@@ -13,11 +15,15 @@ namespace rogue_like_multi_server
         [JsonProperty("spriteId")]
         public int SpriteId;
 
-        public Entity(Coord coord, string name, int spriteId)
+        [JsonProperty("inventory")]
+        public IList<ItemType> Inventory;
+
+        public Entity(Coord coord, string name, int spriteId, IList<ItemType> inventory)
         {
             Coord = coord;
             Name = name;
             SpriteId = spriteId;
+            Inventory = inventory.ToList();
         }
     }
 }

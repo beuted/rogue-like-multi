@@ -14,7 +14,7 @@ namespace rogue_like_multi_server
         private bool _running = true;
         private IHubContext<ChatHub> _chatHubContext;
         private IGameService _gameService;
-        private const long TicksPerServerTick = 1000*TimeSpan.TicksPerMillisecond;
+        private const long TicksPerServerTick = 300*TimeSpan.TicksPerMillisecond;
 
         public GameHostedService(ILogger<GameHostedService> logger, IHubContext<ChatHub> context, IGameService gameService)
         {
@@ -65,7 +65,7 @@ namespace rogue_like_multi_server
 
         private async Task SendUpdatesClients()
         {
-            await _chatHubContext.Clients.All.SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic);
+            await _chatHubContext.Clients.All.SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetClientView());
         }
     }
 }

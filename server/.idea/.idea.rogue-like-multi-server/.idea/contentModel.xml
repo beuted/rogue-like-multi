@@ -27,6 +27,7 @@
         <e p="Hubs" t="Include">
           <e p="ChatHubs.cs" t="Include" />
         </e>
+        <e p="ItemType.cs" t="Include" />
         <e p="Map.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
