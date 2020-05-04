@@ -60,7 +60,9 @@ export class BoardScene {
     sceneContainer.addChild(inventoryContainer);
     let effectContainer = new Container();
     sceneContainer.addChild(effectContainer);
-    this.renderService.init(mapContainer, entityContainer, inventoryContainer, effectContainer);
+    let pvContainer = new Container();
+    sceneContainer.addChild(pvContainer);
+    this.renderService.init(mapContainer, entityContainer, inventoryContainer, effectContainer, pvContainer);
 
     var gameState = await this.gameServerClient.getState();
 
@@ -103,7 +105,8 @@ export class BoardScene {
     this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities)
     this.renderService.renderCharacter(this.board.player.entity);
     this.renderService.renderInventory(this.board.player.entity);
-    this.renderService.renderEffects(this.board.player)
+    this.renderService.renderPv(this.board.player.entity);
+    this.renderService.renderEffects(this.board.player);
   }
 }
 

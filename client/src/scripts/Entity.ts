@@ -5,5 +5,7 @@ export class Entity {
   public coord: Coord;
   public name: string = null;
   public spriteId = 6;
+  public pv: number;
+  public maxPv: number;
   public inventory: ItemType[];
 }

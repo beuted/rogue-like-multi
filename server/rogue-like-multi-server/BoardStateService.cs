@@ -100,7 +100,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new ItemType[0]), true, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new ItemType[0], 3), true, true));
 
             return boardStateDynamic;
         }
@@ -114,6 +114,33 @@ namespace rogue_like_multi_server
             }
             // We just mark it as disconnected to remember his coord and all if he reconnects
             player.IsConnected = false;
+
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName)
+        {
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var attackingPlayer))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+
+            foreach (var entity in boardStateDynamic.Entities)
+            {
+                if (Coord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
+                {
+                    entity.Value.Pv--;
+                }
+            }
+
+            foreach (var player in boardStateDynamic.Players)
+            {
+                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && Coord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
+                {
+                    player.Value.Entity.Pv--;
+                }
+            }
 
             return boardStateDynamic;
         }
@@ -140,7 +167,7 @@ namespace rogue_like_multi_server
                 Map.Generate(),
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new ItemType[0]) }
+                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new ItemType[0], 3) }
                 },
                 new Dictionary<string, Player>()
             );
@@ -159,5 +186,7 @@ namespace rogue_like_multi_server
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, Coord coord);
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
+
+        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName);
     }
 }

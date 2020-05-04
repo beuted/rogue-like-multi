@@ -11,20 +11,24 @@ export class RenderService {
   private mapContainer: Container;
   private inventoryContainer: Container;
   private effectContainer: Container;
+  private pvContainer: Container;
 
   private entitySprites: {[name: string] : Sprite} = {};
   private characterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
+  private pvSprites: Sprite[] = [];
+
   private effects: { position: Coord, graphic: Graphics }[] = [];
 
   constructor(private spriteManager: SpriteManager) {
   }
 
-  public init(mapContainer: Container, entityContainer: Container, inventoryContainer: Container, effectContainer: Container) {
+  public init(mapContainer: Container, entityContainer: Container, inventoryContainer: Container, effectContainer: Container, pvContainer: Container) {
     this.entityContainer = entityContainer;
     this.mapContainer = mapContainer;
     this.inventoryContainer = inventoryContainer;
     this.effectContainer = effectContainer;
+    this.pvContainer = pvContainer;
   }
 
   public renderEntity(entity: Entity, playerPosition: Coord) {
@@ -58,7 +62,7 @@ export class RenderService {
 
   //TODO: there should be an "effectService"
   public addEffect(coord: Coord, color: number) {
-    var graphic = new Graphics();
+    let graphic = new Graphics();
     graphic.beginFill(color, 0.5);
     graphic.drawRect(0, 0, this.spriteManager.tilesetSize, this.spriteManager.tilesetSize)
     this.effects.push({ position: coord, graphic: graphic });
@@ -87,7 +91,7 @@ export class RenderService {
         this.inventorySprites[i] = new Sprite();
         this.inventorySprites[i].x = 21*this.spriteManager.tilesetSize;
         this.inventorySprites[i].y = (i+1)*this.spriteManager.tilesetSize;
-        this.inventoryContainer.addChild(this.inventorySprites[i])
+        this.inventoryContainer.addChild(this.inventorySprites[i]);
       }
       this.inventorySprites[i].texture = this.spriteManager.textures[CellHelper.getItemSpriteId(item)]
     }
@@ -96,6 +100,24 @@ export class RenderService {
       this.inventoryContainer.removeChild(this.inventorySprites[i]);
       delete this.inventorySprites[i];
       this.inventorySprites.pop();
+    }
+  }
+  public renderPv(character: Entity) {
+    if (this.pvSprites.length == 0) {
+      for (let i = 0; i < character.maxPv; i++) {
+        this.pvSprites[i] = new Sprite();
+        this.pvSprites[i].x = 23*this.spriteManager.tilesetSize;
+        this.pvSprites[i].y = (i+1)*this.spriteManager.tilesetSize;
+        this.pvContainer.addChild(this.pvSprites[i]);
+      }
+    }
+
+    for (let i = 0; i < character.pv; i++) {
+      this.pvSprites[i].texture = this.spriteManager.textures[66]; // full heart
+    }
+
+    for (let i = Math.max(0, character.pv); i < character.maxPv; i++) {
+      this.pvSprites[i].texture = this.spriteManager.textures[64]; // empty heart
     }
   }
 

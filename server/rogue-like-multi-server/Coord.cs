@@ -65,5 +65,10 @@ namespace rogue_like_multi_server
         {
             return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
         }
+
+        public static int Distance2d(Coord a, Coord b)
+        {
+            return Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
+        }
     }
 }

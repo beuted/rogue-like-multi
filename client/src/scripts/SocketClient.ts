@@ -32,6 +32,7 @@ export class SocketClient {
 export enum SocketMessageSent {
   Move = "Move",
   Talk = "Talk",
+  Attack = "Attack",
 }
 
 export enum SocketMessageReceived {

@@ -55,6 +55,11 @@ namespace rogue_like_multi_server
         {
             BoardState.BoardStateDynamic = _boardStateService.RemovePlayer(BoardState.BoardStateDynamic, playerName);
         }
+
+        public void PlayerActionAttack(string playerName)
+        {
+            BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerName);
+        }
     }
 
     public interface IGameService
@@ -72,5 +77,7 @@ namespace rogue_like_multi_server
         void AddPlayer(string username, Coord coord);
 
         void RemovePlayer(string username);
+
+        void PlayerActionAttack(string identityName);
     }
 }
