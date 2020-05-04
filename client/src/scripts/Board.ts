@@ -41,11 +41,11 @@ export class Board {
   }
 
   public update(boardStateDynamic: BoardStateDynamic) {
-    this.player.hasPlayedThisTurn = false;
     this.entities = boardStateDynamic.entities;
     this.players = boardStateDynamic.players;
     this.cells = boardStateDynamic.map.cells;
     this.player = boardStateDynamic.players[this.player.entity.name];
+    console.log("update ", this.player.hasPlayedThisTurn);
   }
 
   isWalkable(coord: Coord) {

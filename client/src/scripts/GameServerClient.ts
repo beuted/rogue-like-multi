@@ -18,11 +18,14 @@ export class GameServerClient {
       body: JSON.stringify({ Username: this.username, Password: GameServerClient.password }),
     })
     .then(response => {
-      if (!response.ok) {
+      if (response.status == 400) {
         alert(`Failed to authenticate with user ${this.username}, please refresh the page to try again`);
         localStorage.setItem('username', '');
         this.username = null;
-        return null
+        return null;
+      } else if (!response.ok) {
+        alert(`Server not responding, please try again later`);
+        return null;
       }
       return {username: this.username, password: GameServerClient.password }
     })

@@ -21,7 +21,7 @@ export class SocketClient {
 
   public SendMessage(messageName: SocketMessageSent, ...args : any[]) {
     this.connection.send(messageName, ...args)
-      .then(() => console.log(`Msg ${messageName} sent: ${args.map(x => JSON.stringify(x)).join(", ")}`));
+      //.then(() => console.log(`Msg ${messageName} sent: ${args.map(x => JSON.stringify(x)).join(", ")}`));
   }
 
   public registerListener(messageName: SocketMessageReceived, cb: (...args: any[]) => void) {

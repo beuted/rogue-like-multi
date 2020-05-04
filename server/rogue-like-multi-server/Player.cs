@@ -7,7 +7,7 @@ namespace rogue_like_multi_server
         [JsonProperty("entity")]
         public Entity Entity;
 
-        [JsonIgnore]
+        [JsonProperty("hasPlayedThisTurn")]
         public bool HasPlayedThisTurn;
 
         [JsonIgnore]

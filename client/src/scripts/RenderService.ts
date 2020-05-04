@@ -1,6 +1,6 @@
 import { Entity } from "./Entity";
 import { SpriteManager } from "./SpriteManager";
-import { Sprite, Container } from "pixi.js";
+import { Sprite, Container, Graphics } from "pixi.js";
 import { Cell, CellHelper } from "./Cell";
 import { Coord } from "./Coord";
 import { Player } from "./Board";
@@ -10,17 +10,21 @@ export class RenderService {
   private entityContainer: Container;
   private mapContainer: Container;
   private inventoryContainer: Container;
+  private effectContainer: Container;
+
   private entitySprites: {[name: string] : Sprite} = {};
   private characterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
+  private effects: { position: Coord, graphic: Graphics }[] = [];
 
   constructor(private spriteManager: SpriteManager) {
   }
 
-  public init(mapContainer: Container, entityContainer: Container, inventoryContainer: Container) {
+  public init(mapContainer: Container, entityContainer: Container, inventoryContainer: Container, effectContainer: Container) {
     this.entityContainer = entityContainer;
     this.mapContainer = mapContainer;
     this.inventoryContainer = inventoryContainer;
+    this.effectContainer = effectContainer;
   }
 
   public renderEntity(entity: Entity, playerPosition: Coord) {
@@ -52,6 +56,29 @@ export class RenderService {
     this.characterSprite.y = 10*this.spriteManager.tilesetSize;
   }
 
+  //TODO: there should be an "effectService"
+  public addEffect(coord: Coord, color: number) {
+    var graphic = new Graphics();
+    graphic.beginFill(color, 0.5);
+    graphic.drawRect(0, 0, this.spriteManager.tilesetSize, this.spriteManager.tilesetSize)
+    this.effects.push({ position: coord, graphic: graphic });
+    this.effectContainer.addChild(graphic);
+  }
+
+  public renderEffects(currentPlayer: Player) {
+    const playerPosition = currentPlayer.entity.coord;
+    for (let effect of this.effects) {
+      // 0.25 = adjustment variable due to the back stripes around my assets
+      effect.graphic.x = (effect.position.x - playerPosition.x + 10 + (0.5 - effect.graphic.scale.x/2)) * this.spriteManager.tilesetSize - 0.25;
+      effect.graphic.y = (effect.position.y - playerPosition.y + 10 + (0.5 - effect.graphic.scale.y/2)) * this.spriteManager.tilesetSize - 0.25;
+      effect.graphic.scale.set(effect.graphic.scale.x - 0.04);
+      if (effect.graphic.scale.x <= 0) {
+        this.effectContainer.removeChild(effect.graphic);
+      }
+    }
+    //TODO clear the queue of effect.
+  }
+
   public renderInventory(character: Entity) {
     let i = 0;
     for (; i < character.inventory.length; i++) {
@@ -65,9 +92,10 @@ export class RenderService {
       this.inventorySprites[i].texture = this.spriteManager.textures[CellHelper.getItemSpriteId(item)]
     }
     // Clean the rest of the inventory
-    for (let j = i; j < this.inventorySprites.length; j++) {
-      delete this.inventorySprites[i];
+    for (let j = this.inventorySprites.length; j > i; j--) {
       this.inventoryContainer.removeChild(this.inventorySprites[i]);
+      delete this.inventorySprites[i];
+      this.inventorySprites.pop();
     }
   }
 

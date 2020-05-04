@@ -1,17 +1,21 @@
 import { keyboard } from "./Keyboard";
+import { Coord } from "./Coord";
 
 export class InputManager {
   private vx: number = 0;
   private vy: number = 0;
-
+  private attack: boolean = false;
   constructor() {
 
   }
 
-  public get() {
+  public get(): { direction: Coord , attack: boolean} {
     var res = {
-      x: this.vx,
-      y: this.vy
+      direction: {
+        x: this.vx,
+        y: this.vy
+      },
+      attack: this.attack
     }
 
     return res;
@@ -22,7 +26,16 @@ export class InputManager {
     let left = keyboard("ArrowLeft"),
     up = keyboard("ArrowUp"),
     right = keyboard("ArrowRight"),
-    down = keyboard("ArrowDown");
+    down = keyboard("ArrowDown"),
+    space = keyboard(" ");
+
+
+    space.press = () => {
+      this.attack = true;
+    }
+    space.release = () => {
+      this.attack = false;
+    }
 
     //Left arrow key `press` method
     left.press = () => {

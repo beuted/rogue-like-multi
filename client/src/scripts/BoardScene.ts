@@ -29,7 +29,7 @@ export class BoardScene {
     this.board = new Board();
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
-    this.characterController = new CharacterController(this.socketClient)
+    this.characterController = new CharacterController(this.socketClient, this.renderService)
   }
 
   public async init() {
@@ -58,7 +58,9 @@ export class BoardScene {
     sceneContainer.addChild(entityContainer);
     let inventoryContainer = new Container();
     sceneContainer.addChild(inventoryContainer);
-    this.renderService.init(mapContainer, entityContainer, inventoryContainer);
+    let effectContainer = new Container();
+    sceneContainer.addChild(effectContainer);
+    this.renderService.init(mapContainer, entityContainer, inventoryContainer, effectContainer);
 
     var gameState = await this.gameServerClient.getState();
 
@@ -67,7 +69,6 @@ export class BoardScene {
     this.app.stage.addChild(sceneContainer);
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
-      console.log('update board');
       this.board.update(boardStateDynamic);
     });
 
@@ -86,11 +87,13 @@ export class BoardScene {
   }
 
   private play(delta: number) {
-    let direction = this.inputManager.get();
-    if ((direction.x != 0 || direction.y != 0) && !this.board.player.hasPlayedThisTurn) {
+    let input = this.inputManager.get();
+    if (input.attack && !this.board.player.hasPlayedThisTurn) {
+      this.characterController.attack(this.board.player);
+    } else if ((input.direction.x != 0 || input.direction.y != 0) && !this.board.player.hasPlayedThisTurn) {
       var newPlayerPosition = {
-        x: this.board.player.entity.coord.x + direction.x,
-        y: this.board.player.entity.coord.y + direction.y
+        x: this.board.player.entity.coord.x + input.direction.x,
+        y: this.board.player.entity.coord.y + input.direction.y
       }
       if (this.board.isWalkable(newPlayerPosition))
         this.characterController.move(this.board.player, newPlayerPosition);
@@ -100,6 +103,7 @@ export class BoardScene {
     this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities)
     this.renderService.renderCharacter(this.board.player.entity);
     this.renderService.renderInventory(this.board.player.entity);
+    this.renderService.renderEffects(this.board.player)
   }
 }
 
