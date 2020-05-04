@@ -19,8 +19,8 @@ export class CharacterController {
     this.socketClient.SendMessage(SocketMessageSent.Talk, message);
 
     const playerCoord = player.entity.coord;
-    for (var i = -9; i <=9; i++) {
-      for (var j = -9; j <=9; j++) {
+    for (var i = -8; i <=8; i++) {
+      for (var j = -8; j <=8; j++) {
         this.renderService.addEffect({x: playerCoord.x+i, y: playerCoord.y+j}, 0x5dde87);
       }
     }

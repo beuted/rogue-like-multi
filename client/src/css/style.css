@@ -10,9 +10,10 @@ body, html {
 
 .chat-box {
     position: fixed;
-    height: 200px;
-    width: 100%;
-    bottom: 0;
+    left: 684px;
+    top: 216px;
+    width: 400px;
+    height: 464px;
     background-color: white;
     display: flex;
     flex-direction: column;

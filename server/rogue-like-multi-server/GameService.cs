@@ -42,7 +42,7 @@ namespace rogue_like_multi_server
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move but he doesn't exist on the server");
             }
-            var playersInRange = BoardState.BoardStateDynamic.Players.Values.Where(p => Coord.Distance(p.Entity.Coord, player.Entity.Coord) < 10 && p.Entity.Name != playerName);
+            var playersInRange = BoardState.BoardStateDynamic.Players.Values.Where(p => Coord.Distance2d(p.Entity.Coord, player.Entity.Coord) <= 8 && p.Entity.Name != playerName);
             await _chatHubContext.Clients.Users(playersInRange.Select(x => x.Entity.Name).ToArray()).SendAsync("newMessage", playerName, message);
         }
 

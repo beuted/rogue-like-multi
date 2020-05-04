@@ -23,6 +23,19 @@ namespace rogue_like_multi_server
 
         public BoardStateDynamic Update(BoardStateDynamic boardStateDynamic)
         {
+            // Kill entities with 0 pv (remove them from map)
+            var keysToRemove = new List<string>();
+            foreach (var entity in boardStateDynamic.Entities)
+            {
+                if (entity.Value.Pv <= 0)
+                {
+                    keysToRemove.Add(entity.Key);
+                }
+            }
+            foreach (var keyToRemove in keysToRemove)
+            {
+                boardStateDynamic.Entities.Remove(keyToRemove);
+            }
 
             // IA Stuff
             foreach (var entity in boardStateDynamic.Entities)
@@ -100,7 +113,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new ItemType[0], 3), true, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3), true, true));
 
             return boardStateDynamic;
         }
@@ -167,7 +180,7 @@ namespace rogue_like_multi_server
                 Map.Generate(),
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new ItemType[0], 3) }
+                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>(), 3) }
                 },
                 new Dictionary<string, Player>()
             );
