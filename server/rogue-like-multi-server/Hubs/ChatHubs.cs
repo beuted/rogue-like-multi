@@ -18,19 +18,19 @@ namespace rogue_like_multi_server.Hubs
             _logger = logger;
         }
 
-        public async Task Move(Coord coord)
+        public async Task Move(long time, Coord coord)
         {
-            _gameService.SetPlayerPosition(Context.User.Identity.Name, coord);
+            _gameService.SetPlayerPosition(time, Context.User.Identity.Name, coord);
         }
 
-        public async Task Talk(string message)
+        public async Task Talk(long time, string message)
         {
             await _gameService.SendPlayerMessage(Context.User.Identity.Name, message);
         }
 
-        public async Task Attack()
+        public async Task Attack(long time)
         {
-            _gameService.PlayerActionAttack(Context.User.Identity.Name);
+            _gameService.PlayerActionAttack(time, Context.User.Identity.Name);
         }
 
         public override Task OnConnectedAsync()

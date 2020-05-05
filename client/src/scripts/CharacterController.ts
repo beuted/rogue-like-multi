@@ -7,16 +7,15 @@ export class CharacterController {
   constructor(private socketClient: SocketClient, private renderService: RenderService) {}
 
   public move(player: Player, newPlayerPosition: Coord) {
-    //player.entity.coord = newPlayerPosition
-    console.log("move ", player.hasPlayedThisTurn);
-    player.hasPlayedThisTurn = true;
+    //player.entity.coord = newPlayerPosition // No prediction client side (for now (?))
+    player.lastAction = Date.now();
+    console.log("move ", player.lastAction);
     this.socketClient.SendMessage(SocketMessageSent.Move, newPlayerPosition);
   }
 
   public talk(player: Player, message: string) {
-    player.hasPlayedThisTurn = true;
-
-    this.socketClient.SendMessage(SocketMessageSent.Talk, message);
+    // Doesn't count like an action, might be a separate canal at some point
+    this.socketClient.SendMessage(SocketMessageSent.Talk, 0, message);
 
     const playerCoord = player.entity.coord;
     for (var i = -8; i <=8; i++) {
@@ -27,7 +26,7 @@ export class CharacterController {
   }
 
   public attack(player: Player) {
-    player.hasPlayedThisTurn = true;
+    player.lastAction = Date.now();
 
     this.socketClient.SendMessage(SocketMessageSent.Attack);
 

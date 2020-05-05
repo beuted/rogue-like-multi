@@ -142,6 +142,12 @@ export class RenderService {
         this.renderEntity(players[playerName].entity, playerPosition);
     }
 
-    //TODO if players or entites have been removed from list we need to clean them
+    //If players or entites have been removed from list we need to clean them
+    for (let entitySpriteName in this.entitySprites) {
+      if (!players[entitySpriteName] && !entities[entitySpriteName]) {
+        this.entityContainer.removeChild(this.entitySprites[entitySpriteName]);
+        delete this.entitySprites[entitySpriteName];
+      }
+    }
   }
 }

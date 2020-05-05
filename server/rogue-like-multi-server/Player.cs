@@ -7,17 +7,18 @@ namespace rogue_like_multi_server
         [JsonProperty("entity")]
         public Entity Entity;
 
-        [JsonProperty("hasPlayedThisTurn")]
-        public bool HasPlayedThisTurn;
+        [JsonProperty("lastAction")]
+        public long? LastAction;
 
         [JsonIgnore]
         public bool IsConnected;
 
-        public Player(Entity entity, bool hasPlayedThisTurn, bool isConnected)
+        public Player(Entity entity, long? lastAction, bool isConnected)
         {
             Entity = entity;
-            HasPlayedThisTurn = hasPlayedThisTurn;
+            LastAction = lastAction;
             IsConnected = isConnected;
         }
+
     }
 }

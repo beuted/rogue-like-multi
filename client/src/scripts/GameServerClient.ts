@@ -6,7 +6,6 @@ export class GameServerClient {
     this.username = localStorage.getItem('username');
     while (!this.username || this.username == '') {
       this.username = prompt('Please enter your username');
-      console.log('nope')
       localStorage.setItem('username', this.username);
     }
 

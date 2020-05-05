@@ -59,15 +59,13 @@ namespace rogue_like_multi_server
                     entity.Value.Coord = new Coord(entity.Value.Coord.X, 0);
             }
 
-            // reset who can play
-            boardStateDynamic = FinishTurn(boardStateDynamic);
-
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, Map map, string playerName,
+        public BoardStateDynamic SetPlayerPosition(long time, BoardStateDynamic boardStateDynamic, Map map, string playerName,
             Coord coord)
         {
+            _logger.Log(LogLevel.Warning, $"Set Player {playerName} pos: {coord}");
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move but he doesn't exist on the server");
@@ -80,7 +78,7 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
             }
 
-            if (player.HasPlayedThisTurn)
+            if (player.LastAction == time)
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to play twice this turn");
                 return boardStateDynamic;
@@ -100,7 +98,7 @@ namespace rogue_like_multi_server
                 map.Cells[coord.X][coord.Y].ItemType = null;
             }
 
-            player.HasPlayedThisTurn = true;
+            player.LastAction = time;
 
             return boardStateDynamic;
         }
@@ -113,7 +111,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3), true, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3), null, true));
 
             return boardStateDynamic;
         }
@@ -131,7 +129,7 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName)
+        public BoardStateDynamic PlayerActionAttack(long time, BoardStateDynamic boardStateDynamic, string playerName)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var attackingPlayer))
             {
@@ -155,18 +153,11 @@ namespace rogue_like_multi_server
                 }
             }
 
-            return boardStateDynamic;
-        }
-
-        private BoardStateDynamic FinishTurn(BoardStateDynamic boardStateDynamic)
-        {
-            foreach (var player in boardStateDynamic.Players)
-            {
-                player.Value.HasPlayedThisTurn = false;
-            }
+            attackingPlayer.LastAction = time;
 
             return boardStateDynamic;
         }
+
 
         private BoardStateStatic GenerateStatic()
         {
@@ -193,13 +184,13 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic Update(BoardStateDynamic boardStateDynamic);
 
-        BoardStateDynamic SetPlayerPosition(BoardStateDynamic boardStateDynamic, Map name, string playerName,
+        BoardStateDynamic SetPlayerPosition(long time, BoardStateDynamic boardStateDynamic, Map name, string playerName,
             Coord coord);
 
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, Coord coord);
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 
-        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName);
+        BoardStateDynamic PlayerActionAttack(long time, BoardStateDynamic boardStateDynamic, string playerName);
     }
 }

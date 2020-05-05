@@ -31,9 +31,9 @@ namespace rogue_like_multi_server
             BoardState.BoardStateDynamic = _boardStateService.Update(BoardState.BoardStateDynamic);
         }
 
-        public void SetPlayerPosition(string playerName, Coord coord)
+        public void SetPlayerPosition(long time, string playerName, Coord coord)
         {
-            BoardState.BoardStateDynamic = _boardStateService.SetPlayerPosition(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerName, coord);
+            BoardState.BoardStateDynamic = _boardStateService.SetPlayerPosition(time, BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerName, coord);
         }
 
         public async Task SendPlayerMessage(string playerName, string message)
@@ -56,9 +56,9 @@ namespace rogue_like_multi_server
             BoardState.BoardStateDynamic = _boardStateService.RemovePlayer(BoardState.BoardStateDynamic, playerName);
         }
 
-        public void PlayerActionAttack(string playerName)
+        public void PlayerActionAttack(long time, string playerName)
         {
-            BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerName);
+            BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(time, BoardState.BoardStateDynamic, playerName);
         }
     }
 
@@ -70,7 +70,7 @@ namespace rogue_like_multi_server
 
         void Update();
 
-        void SetPlayerPosition(string playerName, Coord coord);
+        void SetPlayerPosition(long time, string playerName, Coord coord);
 
         Task SendPlayerMessage(string playerName, string message);
 
@@ -78,6 +78,6 @@ namespace rogue_like_multi_server
 
         void RemovePlayer(string username);
 
-        void PlayerActionAttack(string identityName);
+        void PlayerActionAttack(long time, string identityName);
     }
 }

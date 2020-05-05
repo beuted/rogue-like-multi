@@ -4,7 +4,7 @@ import { Coord } from "./Coord";
 
 
 export class Player {
-  hasPlayedThisTurn: boolean;
+  lastAction: number;
   entity: Entity;
 }
 
@@ -40,12 +40,14 @@ export class Board {
     }
   }
 
-  public update(boardStateDynamic: BoardStateDynamic) {
+  public update(boardStateDynamic: BoardStateDynamic): boolean {
     this.entities = boardStateDynamic.entities;
     this.players = boardStateDynamic.players;
     this.cells = boardStateDynamic.map.cells;
+    const lastActionWasTakenIntoAccount = this.player.lastAction == boardStateDynamic.players[this.player.entity.name].lastAction || boardStateDynamic.players[this.player.entity.name].lastAction == null;
     this.player = boardStateDynamic.players[this.player.entity.name];
-    console.log("update ", this.player.hasPlayedThisTurn);
+    console.log("update ", this.player.lastAction);
+    return lastActionWasTakenIntoAccount;
   }
 
   isWalkable(coord: Coord) {
