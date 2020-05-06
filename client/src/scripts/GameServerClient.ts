@@ -1,3 +1,5 @@
+import { GameState } from "./Board";
+
 export class GameServerClient {
   public username: string;
   public static password = 'toto';
@@ -32,7 +34,7 @@ export class GameServerClient {
     return user;
   }
 
-  public async getState(): Promise<any> {
+  public async getState(): Promise<GameState | null> {
     return await fetch('/api/game-state', {
       method: 'GET',
       headers: new Headers({
@@ -41,9 +43,24 @@ export class GameServerClient {
     })
     .then(response => {
       if (!response.ok) {
-        return {};
+        return null;
       }
       return response.json();
+    })
+  }
+
+  public async resetGame(): Promise<boolean> {
+    return await fetch('/api/game-state/reset', {
+      method: 'POST',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa (`${this.username}:${GameServerClient.password}`)}`
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return false;
+      }
+      return true;
     })
   }
 }

@@ -1,4 +1,4 @@
-import { Application, Container } from "pixi.js";
+import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
 import { Board, BoardStateDynamic, Team } from "./Board";
@@ -52,21 +52,14 @@ export class BoardScene {
     this.state = GameState.Play;
 
     // Display stuff
-    let sceneContainer = new Container();
-    sceneContainer.scale.set(4);
-    let mapContainer = new Container();
-    sceneContainer.addChild(mapContainer);
-    let entityContainer = new Container();
-    sceneContainer.addChild(entityContainer);
-    let inventoryContainer = new Container();
-    sceneContainer.addChild(inventoryContainer);
-    let effectContainer = new Container();
-    sceneContainer.addChild(effectContainer);
-    let pvContainer = new Container();
-    sceneContainer.addChild(pvContainer);
-    this.renderService.init(mapContainer, entityContainer, inventoryContainer, effectContainer, pvContainer);
+
+    const sceneContainer = this.renderService.init();
 
     var gameState = await this.gameServerClient.getState();
+    if (!gameState) {
+      console.error("Could not fetch game state");
+      return;
+    }
 
     this.board.init(gameState, user.username);
 
@@ -92,6 +85,14 @@ export class BoardScene {
   private gameLoop(delta: number) {
     if (this.state == GameState.Play)
       this.play(delta)
+
+    // In case of victory (a bit hacky)
+    if (this.board.winnerTeam != Team.None) {
+      this.gameServerClient.resetGame();
+      window.alert(`${this.board.winnerTeam == Team.Good ? 'The villagers' : 'The werewoves'} won the game !`);
+      this.board.winnerTeam = Team.None
+      location.reload();
+    }
   }
 
   private play(delta: number) {
@@ -99,7 +100,6 @@ export class BoardScene {
     if (input.attack && this.playerLastActionWasTakenIntoAccount()) {
       this.characterController.attack(this.board.player);
     } else if ((input.direction.x != 0 || input.direction.y != 0) && this.playerLastActionWasTakenIntoAccount()) {
-      console.log("input", JSON.stringify(input));
       var newPlayerPosition = {
         x: this.board.player.entity.coord.x + input.direction.x,
         y: this.board.player.entity.coord.y + input.direction.y
@@ -107,16 +107,14 @@ export class BoardScene {
       if (this.board.isWalkable(newPlayerPosition))
         this.characterController.move(this.board.player, newPlayerPosition);
     }
-    // In case of victory
-    if (this.board.winnerTeam != Team.None) {
-      window.alert(`${this.board.winnerTeam == Team.Good ? 'The villagers' : 'The werewoves'} won the game !`);
-    }
 
     delta;
-    this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities)
+    var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 200; // 300 is the time between server update
+    this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, interpolFactor)
     this.renderService.renderCharacter(this.board.player.entity);
     this.renderService.renderInventory(this.board.player.entity);
     this.renderService.renderPv(this.board.player.entity);
+    this.renderService.renderGameState(this.board.nbBagsFound);
     this.renderService.renderEffects(this.board.player);
   }
 }

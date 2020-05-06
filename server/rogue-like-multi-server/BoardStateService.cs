@@ -58,13 +58,12 @@ namespace rogue_like_multi_server
             foreach (var entity in boardStateDynamic.Entities)
             {
                 Random random = new Random();
-                var diffX = random.Next(0, 3) - 1;
+                var diffDistance = random.Next(0, 3) - 1;
 
                 Random random2 = new Random();
-                var diffY = random2.Next(0, 3) -1;
+                var axeRandom = random2.Next(0, 2);
 
-                entity.Value.Coord += new Coord(diffX, diffY);
-
+                entity.Value.Coord += axeRandom == 1 ? new Coord(diffDistance, 0) : new Coord(0, diffDistance);
 
                 if (entity.Value.Coord.X > 19)
                     entity.Value.Coord = new Coord(19, entity.Value.Coord.Y);
@@ -229,6 +228,9 @@ namespace rogue_like_multi_server
                 {
                     { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>()
                     {
+                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
+                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
+                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
                         ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag
                     }, 3) }
                 },

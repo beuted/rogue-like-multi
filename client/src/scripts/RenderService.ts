@@ -1,8 +1,8 @@
 import { Entity } from "./Entity";
 import { SpriteManager } from "./SpriteManager";
-import { Sprite, Container, Graphics } from "pixi.js";
+import { Sprite, Container, Graphics, Text } from "pixi.js";
 import { Cell, CellHelper } from "./Cell";
-import { Coord } from "./Coord";
+import { Coord, MathHelper } from "./Coord";
 import { Player } from "./Board";
 
 export class RenderService {
@@ -12,6 +12,7 @@ export class RenderService {
   private inventoryContainer: Container;
   private effectContainer: Container;
   private pvContainer: Container;
+  private cellsContainer: Container;
 
   private entitySprites: {[name: string] : Sprite} = {};
   private characterSprite: Sprite;
@@ -19,19 +20,40 @@ export class RenderService {
   private pvSprites: Sprite[] = [];
 
   private effects: { position: Coord, graphic: Graphics }[] = [];
+  private nbBagFoundText: Text;
 
   constructor(private spriteManager: SpriteManager) {
   }
 
-  public init(mapContainer: Container, entityContainer: Container, inventoryContainer: Container, effectContainer: Container, pvContainer: Container) {
-    this.entityContainer = entityContainer;
-    this.mapContainer = mapContainer;
-    this.inventoryContainer = inventoryContainer;
-    this.effectContainer = effectContainer;
-    this.pvContainer = pvContainer;
+  public init() {
+    let sceneContainer = new Container();
+    sceneContainer.scale.set(4);
+    this.mapContainer = new Container();
+    sceneContainer.addChild(this.mapContainer);
+    this.cellsContainer = new Container();
+    this.mapContainer.addChild(this.cellsContainer);
+    this.entityContainer = new Container();
+    this.mapContainer.addChild(this.entityContainer);
+    let graphic = new Graphics();
+    this.mapContainer.mask = graphic;
+    graphic.beginFill(0xFFFFFF);
+    // 19 = tiles displayed on screen, 4 = scale factor
+    graphic.drawRect(0, 0, this.spriteManager.tilesetSize*19*4, this.spriteManager.tilesetSize*19*4);
+
+
+    this.effectContainer = new Container();
+    sceneContainer.addChild(this.effectContainer);
+    this.inventoryContainer = new Container();
+    sceneContainer.addChild(this.inventoryContainer);
+    this.pvContainer = new Container();
+    sceneContainer.addChild(this.pvContainer);
+
+    return sceneContainer;
   }
 
-  public renderEntity(entity: Entity, playerPosition: Coord) {
+  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number) {
+    if (!previousEntityPosition)
+      previousEntityPosition = entity.coord;
     // Remove if out of bounds
     if (entity.coord.x < playerPosition.x-9 || entity.coord.x > playerPosition.x+9 || entity.coord.y < playerPosition.y-9 || entity.coord.y > playerPosition.y+9) {
       if (this.entitySprites[entity.name]) {
@@ -46,14 +68,20 @@ export class RenderService {
       this.entityContainer.addChild(this.entitySprites[entity.name]);
     }
 
-    this.entitySprites[entity.name].x = (entity.coord.x - playerPosition.x + 9) * this.spriteManager.tilesetSize;
-    this.entitySprites[entity.name].y = (entity.coord.y - playerPosition.y + 9) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].x = MathHelper.lerp(
+      previousEntityPosition.x * this.spriteManager.tilesetSize,
+      entity.coord.x * this.spriteManager.tilesetSize,
+      interpolFactor);
+    this.entitySprites[entity.name].y = MathHelper.lerp(
+      previousEntityPosition.y * this.spriteManager.tilesetSize,
+      entity.coord.y * this.spriteManager.tilesetSize,
+      interpolFactor);
   }
 
   public renderCharacter(character: Entity) {
     if (!this.characterSprite) {
       this.characterSprite = new Sprite(this.spriteManager.textures[character.spriteId]);
-      this.entityContainer.addChild(this.characterSprite);
+      this.effectContainer.addChild(this.characterSprite);
     }
 
     this.characterSprite.x = 9*this.spriteManager.tilesetSize;
@@ -102,6 +130,7 @@ export class RenderService {
       this.inventorySprites.pop();
     }
   }
+
   public renderPv(character: Entity) {
     if (this.pvSprites.length == 0) {
       for (let i = 0; i < character.maxPv; i++) {
@@ -121,25 +150,46 @@ export class RenderService {
     }
   }
 
-  public renderMap(cells: Cell[][], currentPlayer: Player, players: {[name: string]: Player}, entities: {[name: string]: Entity}) {
+  public renderGameState(nbBagsFound: number) {
+    if (!this.nbBagFoundText) {
+      this.nbBagFoundText = new Text('', {fontFamily : 'Arial', fontSize: this.spriteManager.tilesetSize, fill : 0xffffff, align : 'center'});
+      this.nbBagFoundText.x = 20*this.spriteManager.tilesetSize;
+      this.nbBagFoundText.y = 1*this.spriteManager.tilesetSize;
+      this.pvContainer.addChild(this.nbBagFoundText);
+    }
+    this.nbBagFoundText.text = 'bags found: ' + String(nbBagsFound);
+  }
+
+  public renderMap(cells: Cell[][], currentPlayer: Player, players: {[name: string]: Player}, entities: {[name: string]: Entity}, entitiesPreviousCoords: { [name: string]: Coord }, interpolFactor: number) {
     const playerPosition = currentPlayer.entity.coord;
-    this.mapContainer.removeChildren();
-    for (let i = Math.max(0, playerPosition.x-9); i <= Math.min(cells.length-1, playerPosition.x+9); i++) {
-      for (let j = Math.max(0, playerPosition.y-9); j <= Math.min(cells[0].length-1, playerPosition.y+9); j++) {
+    this.cellsContainer.removeChildren();
+    for (let i = Math.max(0, playerPosition.x-9-1); i <= Math.min(cells.length-1, playerPosition.x+9+1); i++) {
+      for (let j = Math.max(0, playerPosition.y-9-1); j <= Math.min(cells[0].length-1, playerPosition.y+9+1); j++) {
         const spriteId = CellHelper.getCellSpriteId(cells[i][j]);
         let cell = new Sprite(this.spriteManager.textures[spriteId]);
-        cell.x = (i - playerPosition.x + 9) * this.spriteManager.tilesetSize;
-        cell.y = (j - playerPosition.y + 9) * this.spriteManager.tilesetSize;
-        this.mapContainer.addChild(cell);
+        cell.x = i * this.spriteManager.tilesetSize;
+        cell.y = j * this.spriteManager.tilesetSize;
+        this.cellsContainer.addChild(cell);
       }
     }
+
+    const prevCoord = entitiesPreviousCoords[currentPlayer.entity.name] ? entitiesPreviousCoords[currentPlayer.entity.name] : playerPosition;
+    this.mapContainer.x = MathHelper.lerp(
+      (9 - prevCoord.x) * this.spriteManager.tilesetSize,
+      (9 - playerPosition.x) * this.spriteManager.tilesetSize,
+      interpolFactor);
+    this.mapContainer.y = MathHelper.lerp(
+        (9 - prevCoord.y) * this.spriteManager.tilesetSize,
+        (9 - playerPosition.y) * this.spriteManager.tilesetSize,
+        interpolFactor);
+
     for (let entityName in entities) {
-      this.renderEntity(entities[entityName], playerPosition);
+      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor);
     }
 
     for (let playerName in players) {
       if (playerName != currentPlayer.entity.name)
-        this.renderEntity(players[playerName].entity, playerPosition);
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor);
     }
 
     //If players or entites have been removed from list we need to clean them

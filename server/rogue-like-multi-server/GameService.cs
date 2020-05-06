@@ -21,9 +21,18 @@ namespace rogue_like_multi_server
 
         public BoardState BoardState { get; private set; }
 
-        public void Init()
+        public BoardState Init()
         {
             BoardState = _boardStateService.Generate();
+            return BoardState;
+        }
+
+        public bool TryReset()
+        {
+            if (BoardState.BoardStateDynamic.WinnerTeam == Team.None)
+                return false;
+            BoardState = _boardStateService.Generate();
+            return true;
         }
 
         public void Update()
@@ -66,7 +75,9 @@ namespace rogue_like_multi_server
     {
         BoardState BoardState { get; }
 
-        void Init();
+        BoardState Init();
+
+        bool TryReset();
 
         void Update();
 
