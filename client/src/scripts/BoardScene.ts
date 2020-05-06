@@ -1,7 +1,7 @@
 import { Application, Container } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board, BoardStateDynamic } from "./Board";
+import { Board, BoardStateDynamic, Team } from "./Board";
 import { InputManager } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
@@ -21,7 +21,7 @@ export class BoardScene {
   private renderService: RenderService;
   private characterController: CharacterController;
 
-  private lastActionWasTakenIntoAccount: boolean = true; // should be somewhere else... with the input handling
+  private serverLastAction: number = null; // should be somewhere else... with the input handling
 
   constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/colored_tilemap.png", 9, 10, 10);
@@ -73,7 +73,7 @@ export class BoardScene {
     this.app.stage.addChild(sceneContainer);
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
-      this.lastActionWasTakenIntoAccount = this.board.update(boardStateDynamic);
+      this.serverLastAction = this.board.update(boardStateDynamic);
     });
 
     var chatController = new ChatController(this.socketClient);
@@ -85,6 +85,10 @@ export class BoardScene {
     this.app.ticker.add((delta: number) => this.gameLoop(delta));
   }
 
+  private playerLastActionWasTakenIntoAccount() {
+    return this.serverLastAction == this.board.player.lastAction || this.board.player.lastAction == null;
+  }
+
   private gameLoop(delta: number) {
     if (this.state == GameState.Play)
       this.play(delta)
@@ -92,9 +96,9 @@ export class BoardScene {
 
   private play(delta: number) {
     let input = this.inputManager.get();
-    if (input.attack && this.lastActionWasTakenIntoAccount) {
+    if (input.attack && this.playerLastActionWasTakenIntoAccount()) {
       this.characterController.attack(this.board.player);
-    } else if ((input.direction.x != 0 || input.direction.y != 0) && this.lastActionWasTakenIntoAccount) {
+    } else if ((input.direction.x != 0 || input.direction.y != 0) && this.playerLastActionWasTakenIntoAccount()) {
       console.log("input", JSON.stringify(input));
       var newPlayerPosition = {
         x: this.board.player.entity.coord.x + input.direction.x,
@@ -102,6 +106,10 @@ export class BoardScene {
       }
       if (this.board.isWalkable(newPlayerPosition))
         this.characterController.move(this.board.player, newPlayerPosition);
+    }
+    // In case of victory
+    if (this.board.winnerTeam != Team.None) {
+      window.alert(`${this.board.winnerTeam == Team.Good ? 'The villagers' : 'The werewoves'} won the game !`);
     }
 
     delta;

@@ -12,20 +12,18 @@ export enum FloorType {
   Sprout = 45,
   Evergreen = 54,
   Tree = 55,
-  Trees = 56
+  Trees = 56,
+  CampFire = 89
 }
 
 export enum ItemType {
-  Key = 1,
+  Key = 57,
+  Bag = 27
 }
 
 export class CellHelper {
-  private static itemSpiteIds: {[id in ItemType]: number} = {
-    [ItemType.Key]: 57
-  }
-
   private static walkableFloorTypes: FloorType[] = [FloorType.Plain, FloorType.Flowers, FloorType.Sprout,
-    FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor];
+    FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor, FloorType.CampFire];
 
   public static isWalkable(cell: Cell) {
     return CellHelper.walkableFloorTypes.findIndex(x => x == cell.floorType) != -1;
@@ -34,10 +32,6 @@ export class CellHelper {
   public static getCellSpriteId(cell: Cell) : number {
     if (cell.itemType == null)
       return cell.floorType;
-    return CellHelper.getItemSpriteId(cell.itemType);
-  }
-
-  public static getItemSpriteId(item: ItemType): number {
-    return CellHelper.itemSpiteIds[item];
+    return cell.itemType;
   }
 }

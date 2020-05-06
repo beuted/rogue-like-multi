@@ -16,7 +16,7 @@ namespace rogue_like_multi_server
         public int SpriteId;
 
         [JsonProperty("inventory")]
-        public IList<ItemType> Inventory;
+        public List<ItemType> Inventory;
 
         [JsonProperty("pv")]
         public int Pv;
@@ -24,7 +24,7 @@ namespace rogue_like_multi_server
         [JsonProperty("maxPv")]
         public int MaxPv;
 
-        public Entity(Coord coord, string name, int spriteId, IList<ItemType> inventory, int maxPv)
+        public Entity(Coord coord, string name, int spriteId, List<ItemType> inventory, int maxPv)
         {
             Coord = coord;
             Name = name;

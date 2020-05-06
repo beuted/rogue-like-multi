@@ -10,7 +10,7 @@ export class CharacterController {
     //player.entity.coord = newPlayerPosition // No prediction client side (for now (?))
     player.lastAction = Date.now();
     console.log("move ", player.lastAction);
-    this.socketClient.SendMessage(SocketMessageSent.Move, newPlayerPosition);
+    this.socketClient.SendMessage(SocketMessageSent.Move, Date.now(), newPlayerPosition);
   }
 
   public talk(player: Player, message: string) {
@@ -28,7 +28,7 @@ export class CharacterController {
   public attack(player: Player) {
     player.lastAction = Date.now();
 
-    this.socketClient.SendMessage(SocketMessageSent.Attack);
+    this.socketClient.SendMessage(SocketMessageSent.Attack, Date.now());
 
     const playerCoord = player.entity.coord;
     for (var i = -1; i <=1; i++) {

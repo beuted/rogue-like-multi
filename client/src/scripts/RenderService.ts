@@ -93,12 +93,12 @@ export class RenderService {
         this.inventorySprites[i].y = 3*this.spriteManager.tilesetSize;
         this.inventoryContainer.addChild(this.inventorySprites[i]);
       }
-      this.inventorySprites[i].texture = this.spriteManager.textures[CellHelper.getItemSpriteId(item)]
+      this.inventorySprites[i].texture = this.spriteManager.textures[item]
     }
     // Clean the rest of the inventory
-    for (let j = this.inventorySprites.length; j > i; j--) {
-      this.inventoryContainer.removeChild(this.inventorySprites[i]);
-      delete this.inventorySprites[i];
+    for (let j = this.inventorySprites.length-1; j >= i; j--) {
+      this.inventoryContainer.removeChild(this.inventorySprites[j]);
+      delete this.inventorySprites[j];
       this.inventorySprites.pop();
     }
   }

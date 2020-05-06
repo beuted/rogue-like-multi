@@ -20,7 +20,7 @@ export class SocketClient {
   }
 
   public SendMessage(messageName: SocketMessageSent, ...args : any[]) {
-    this.connection.send(messageName, Date.now(), ...args)
+    this.connection.send(messageName, ...args)
   }
 
   public registerListener(messageName: SocketMessageReceived, cb: (...args: any[]) => void) {

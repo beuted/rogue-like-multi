@@ -12,13 +12,15 @@ namespace rogue_like_multi_server
         Sprout = 45,
         Evergreen = 54,
         Tree = 55,
-        Trees = 56
+        Trees = 56,
+        CampFire = 89
     }
 
     public static class FloorTypeExtensions
     {
         private static readonly FloorType[] WalkableFloorTypes = { FloorType.Plain, FloorType.Flowers, FloorType.Sprout,
-                                                          FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor };
+                                                          FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor,
+                                                          FloorType.CampFire };
 
         public static bool IsWalkable(this FloorType floorType)
         {

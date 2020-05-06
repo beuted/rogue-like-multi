@@ -8,6 +8,11 @@ export class Player {
   entity: Entity;
 }
 
+export enum Team {
+  None = 0,
+  Good = 1,
+  Evil = 2
+}
 type GameState = {
   boardStateDynamic: BoardStateDynamic;
   boardStateStatic: {};
@@ -19,6 +24,8 @@ export type BoardStateDynamic = {
   map: {
     cells: Cell[][];
   };
+  nbBagsFound: number,
+  winnerTeam: Team
 }
 
 export class Board {
@@ -26,6 +33,8 @@ export class Board {
   public entities: { [name: string]: Entity } = {};
   public players: { [name: string]: Player } = {};
   public player: Player;
+  public nbBagsFound: number = 0;
+  public winnerTeam: Team = Team.None;
 
   constructor() {
   }
@@ -40,14 +49,16 @@ export class Board {
     }
   }
 
-  public update(boardStateDynamic: BoardStateDynamic): boolean {
+  public update(boardStateDynamic: BoardStateDynamic): number {
     this.entities = boardStateDynamic.entities;
     this.players = boardStateDynamic.players;
     this.cells = boardStateDynamic.map.cells;
-    const lastActionWasTakenIntoAccount = this.player.lastAction == boardStateDynamic.players[this.player.entity.name].lastAction || boardStateDynamic.players[this.player.entity.name].lastAction == null;
+    const playerLastAction = boardStateDynamic.players[this.player.entity.name].lastAction;
     this.player = boardStateDynamic.players[this.player.entity.name];
+    this.winnerTeam = boardStateDynamic.winnerTeam;
+    this.nbBagsFound = boardStateDynamic.nbBagsFound;
     console.log("update ", this.player.lastAction);
-    return lastActionWasTakenIntoAccount;
+    return playerLastAction;
   }
 
   isWalkable(coord: Coord) {

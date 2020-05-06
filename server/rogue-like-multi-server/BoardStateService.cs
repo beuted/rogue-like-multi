@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace rogue_like_multi_server
@@ -34,7 +35,23 @@ namespace rogue_like_multi_server
             }
             foreach (var keyToRemove in keysToRemove)
             {
+                boardStateDynamic = DropItems(boardStateDynamic, boardStateDynamic.Entities[keyToRemove].Inventory, boardStateDynamic.Entities[keyToRemove].Coord);
                 boardStateDynamic.Entities.Remove(keyToRemove);
+            }
+
+            // Kill players with 0 pv (remove them from map)
+            var keysToRemovePlayers = new List<string>();
+            foreach (var player in boardStateDynamic.Players)
+            {
+                if (player.Value.Entity.Pv <= 0)
+                {
+                    keysToRemovePlayers.Add(player.Key);
+                }
+            }
+            foreach (var keyToRemove in keysToRemovePlayers)
+            {
+                boardStateDynamic = DropItems(boardStateDynamic, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord);
+                boardStateDynamic.Players.Remove(keyToRemove);
             }
 
             // IA Stuff
@@ -62,10 +79,37 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
+        private BoardStateDynamic DropItems(BoardStateDynamic boardStateDynamic, IList<ItemType> items, Coord coord)
+        {
+            foreach (var item in items)
+            {
+                boardStateDynamic = DropItem(boardStateDynamic, item, coord);
+            }
+
+            return boardStateDynamic;
+        }
+
+        private BoardStateDynamic DropItem(BoardStateDynamic boardStateDynamic, ItemType item, Coord baseCoord)
+        {
+            // 10 is just a hard limit
+            for (var distance = 0; distance < 10; distance++)
+            for (var i = -distance; i <= distance; i++)
+            for (var j = -distance; j <= distance; j++)
+            {
+                var newCoord = baseCoord + new Coord(i, j);
+                if (boardStateDynamic.Map.IsInRange(newCoord) &&
+                    boardStateDynamic.Map.Cells[newCoord.X][newCoord.Y].ItemType == null)
+                {
+                    boardStateDynamic.Map.Cells[newCoord.X][newCoord.Y].ItemType = item;
+                    return boardStateDynamic;
+                }
+            }
+            return boardStateDynamic;
+        }
+
         public BoardStateDynamic SetPlayerPosition(long time, BoardStateDynamic boardStateDynamic, Map map, string playerName,
             Coord coord)
         {
-            _logger.Log(LogLevel.Warning, $"Set Player {playerName} pos: {coord}");
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move but he doesn't exist on the server");
@@ -92,10 +136,22 @@ namespace rogue_like_multi_server
 
             player.Entity.Coord = coord;
 
+            // Pickup objects
             if (map.Cells[coord.X][coord.Y].ItemType != null)
             {
                 player.Entity.Inventory.Add(map.Cells[coord.X][coord.Y].ItemType.Value);
                 map.Cells[coord.X][coord.Y].ItemType = null;
+            }
+
+            // Drop bags at CampFire
+            if (map.Cells[coord.X][coord.Y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Bag))
+            {
+                int nbBags = player.Entity.Inventory.RemoveAll(item => item == ItemType.Bag);
+                boardStateDynamic.NbBagsFound += nbBags;
+                if (boardStateDynamic.NbBagsFound >= 4)
+                {
+                    boardStateDynamic.WinnerTeam = Team.Good;
+                }
             }
 
             player.LastAction = time;
@@ -171,9 +227,14 @@ namespace rogue_like_multi_server
                 Map.Generate(),
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>(), 3) }
+                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>()
+                    {
+                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag
+                    }, 3) }
                 },
-                new Dictionary<string, Player>()
+                new Dictionary<string, Player>(),
+                0,
+                Team.None
             );
         }
     }
