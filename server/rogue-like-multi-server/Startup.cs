@@ -43,6 +43,7 @@ namespace rogue_like_multi_server
             services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<IBoardStateService, BoardStateService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddSingleton<IMapService, MapService>();
 
             // Hosted Service
             services.AddHostedService<GameHostedService>();

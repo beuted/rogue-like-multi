@@ -2,6 +2,33 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="C:\src\dkj\rogue-like-multi\server" t="IncludeFlat">
+      <e p="EpPathFinding.cs" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="EpPathFinding.cs.csproj" t="IncludeRecursive" />
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="packages.config" t="Include" />
+        <e p="PathFinder" t="Include">
+          <e p="AStarFinder.cs" t="Include" />
+          <e p="DiagonalMovement.cs" t="Include" />
+          <e p="Grid" t="Include">
+            <e p="BaseGrid.cs" t="Include" />
+            <e p="DynamicGrid.cs" t="Include" />
+            <e p="DynamicGridWPool.cs" t="Include" />
+            <e p="PartialGridWPool.cs" t="Include" />
+            <e p="StaticGrid.cs" t="Include" />
+          </e>
+          <e p="GridPos.cs" t="Include" />
+          <e p="GridRect.cs" t="Include" />
+          <e p="Heuristic.cs" t="Include" />
+          <e p="JumpPointFinder.cs" t="Include" />
+          <e p="NodePool.cs" t="Include" />
+          <e p="ParamBase.cs" t="Include" />
+          <e p="Util.cs" t="Include" />
+        </e>
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+        </e>
+      </e>
       <e p="packages" t="ExcludeRecursive" />
       <e p="rogue-like-multi-server" t="IncludeRecursive">
         <e p=".gitignore" t="Include" />
@@ -9,26 +36,32 @@
         <e p="appsettings.json" t="Include" />
         <e p="BasicAuthenticationHandler.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
-        <e p="BoardState.cs" t="Include" />
-        <e p="BoardStateDynamic.cs" t="Include" />
         <e p="BoardStateService.cs" t="Include" />
-        <e p="BoardStateStatic.cs" t="Include" />
-        <e p="Cell.cs" t="Include" />
         <e p="Controllers" t="Include">
           <e p="GameStateController.cs" t="Include" />
           <e p="UserController.cs" t="Include" />
           <e p="ValuesController.cs" t="Include" />
         </e>
-        <e p="Coord.cs" t="Include" />
-        <e p="Entity.cs" t="Include" />
-        <e p="FloorType.cs" t="Include" />
+        <e p="Entities" t="Include">
+          <e p="BoardState.cs" t="Include" />
+          <e p="BoardStateDynamic.cs" t="Include" />
+          <e p="BoardStateStatic.cs" t="Include" />
+          <e p="Cell.cs" t="Include" />
+          <e p="Coord.cs" t="Include" />
+          <e p="Entity.cs" t="Include" />
+          <e p="FloorType.cs" t="Include" />
+          <e p="ItemType.cs" t="Include" />
+          <e p="Player.cs" t="Include" />
+          <e p="Team.cs" t="Include" />
+          <e p="User.cs" t="Include" />
+        </e>
         <e p="GameHostedService.cs" t="Include" />
         <e p="GameService.cs" t="Include" />
         <e p="Hubs" t="Include">
           <e p="ChatHubs.cs" t="Include" />
         </e>
-        <e p="ItemType.cs" t="Include" />
         <e p="Map.cs" t="Include" />
+        <e p="MapService.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp2.1" t="Include">
@@ -37,15 +70,12 @@
             </e>
           </e>
         </e>
-        <e p="Player.cs" t="Include" />
         <e p="Program.cs" t="Include" />
         <e p="Properties" t="Include">
           <e p="launchSettings.json" t="Include" />
         </e>
         <e p="rogue-like-multi-server.csproj" t="IncludeRecursive" />
         <e p="Startup.cs" t="Include" />
-        <e p="Team.cs" t="Include" />
-        <e p="User.cs" t="Include" />
         <e p="UserIdProvider.cs" t="Include" />
         <e p="UserService.cs" t="Include" />
         <e p="WebSocketMiddleware.cs" t="Include" />

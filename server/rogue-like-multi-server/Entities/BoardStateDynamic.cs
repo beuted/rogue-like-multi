@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using rogue_like_multi_server;
 
-namespace rogue_like_multi_server
+namespace rogue
 {
     public class BoardStateDynamic
     {

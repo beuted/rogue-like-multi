@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using rogue;
 
 namespace rogue_like_multi_server.Hubs
 {

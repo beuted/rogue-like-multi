@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using rogue;
 using rogue_like_multi_server.Hubs;
 
 namespace rogue_like_multi_server

@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EpPathFinding.cs;
 using Microsoft.Extensions.Logging;
+using rogue;
 
 namespace rogue_like_multi_server
 {
     public class BoardStateService: IBoardStateService
     {
         private readonly ILogger<BoardStateService> _logger;
+        private readonly IMapService _mapService;
 
-        public BoardStateService(ILogger<BoardStateService> logger)
+        public BoardStateService(ILogger<BoardStateService> logger, IMapService mapService)
         {
             _logger = logger;
+            _mapService = mapService;
         }
 
         public BoardState Generate()
@@ -35,7 +39,7 @@ namespace rogue_like_multi_server
             }
             foreach (var keyToRemove in keysToRemove)
             {
-                boardStateDynamic = DropItems(boardStateDynamic, boardStateDynamic.Entities[keyToRemove].Inventory, boardStateDynamic.Entities[keyToRemove].Coord);
+                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[keyToRemove].Inventory, boardStateDynamic.Entities[keyToRemove].Coord);
                 boardStateDynamic.Entities.Remove(keyToRemove);
             }
 
@@ -50,59 +54,41 @@ namespace rogue_like_multi_server
             }
             foreach (var keyToRemove in keysToRemovePlayers)
             {
-                boardStateDynamic = DropItems(boardStateDynamic, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord);
+                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord);
                 boardStateDynamic.Players.Remove(keyToRemove);
             }
 
             // IA Stuff
             foreach (var entity in boardStateDynamic.Entities)
             {
+                // If on the fire estinguish it
+                if (entity.Value.Coord == new Coord(5, 5))
+                {
+                    boardStateDynamic.NbBagsFound = Math.Max(boardStateDynamic.NbBagsFound - 1, 0);
+                }
+
+                // Move
+                entity.Value.JpParam.Reset(entity.Value.Coord.ToGridPos(), new GridPos(5,5));
+                List<GridPos> resultPathList = JumpPointFinder.FindPath(entity.Value.JpParam);
+                if (resultPathList.Count > 1)
+                {
+                    var random3 = new Random();
+                    if (random3.Next(0, 3) == 0) // 1 chance out of 3 to move
+                        entity.Value.Coord = Coord.FromGridPos(resultPathList[1]);
+
+                    break;
+                }
+
                 Random random = new Random();
-                var diffDistance = random.Next(0, 3) - 1;
+                var x = random.Next(0, 100);
 
                 Random random2 = new Random();
-                var axeRandom = random2.Next(0, 2);
+                var y = random2.Next(0, 100);
 
-                entity.Value.Coord += axeRandom == 1 ? new Coord(diffDistance, 0) : new Coord(0, diffDistance);
-
-                if (entity.Value.Coord.X > 19)
-                    entity.Value.Coord = new Coord(19, entity.Value.Coord.Y);
-                if (entity.Value.Coord.X < 0)
-                    entity.Value.Coord = new Coord(0, entity.Value.Coord.Y);
-                if (entity.Value.Coord.Y > 19)
-                    entity.Value.Coord = new Coord(entity.Value.Coord.X, 19);
-                if (entity.Value.Coord.Y < 0)
-                    entity.Value.Coord = new Coord(entity.Value.Coord.X, 0);
+                _logger.Log(LogLevel.Information, $"Entity reset to {x}, {y}");
+                entity.Value.Coord = new Coord(x, y);
             }
 
-            return boardStateDynamic;
-        }
-
-        private BoardStateDynamic DropItems(BoardStateDynamic boardStateDynamic, IList<ItemType> items, Coord coord)
-        {
-            foreach (var item in items)
-            {
-                boardStateDynamic = DropItem(boardStateDynamic, item, coord);
-            }
-
-            return boardStateDynamic;
-        }
-
-        private BoardStateDynamic DropItem(BoardStateDynamic boardStateDynamic, ItemType item, Coord baseCoord)
-        {
-            // 10 is just a hard limit
-            for (var distance = 0; distance < 10; distance++)
-            for (var i = -distance; i <= distance; i++)
-            for (var j = -distance; j <= distance; j++)
-            {
-                var newCoord = baseCoord + new Coord(i, j);
-                if (boardStateDynamic.Map.IsInRange(newCoord) &&
-                    boardStateDynamic.Map.Cells[newCoord.X][newCoord.Y].ItemType == null)
-                {
-                    boardStateDynamic.Map.Cells[newCoord.X][newCoord.Y].ItemType = item;
-                    return boardStateDynamic;
-                }
-            }
             return boardStateDynamic;
         }
 
@@ -166,7 +152,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3), null, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3, boardStateDynamic.Map.SearchGrid), null, true));
 
             return boardStateDynamic;
         }
@@ -222,17 +208,15 @@ namespace rogue_like_multi_server
 
         private BoardStateDynamic GenerateDynamic()
         {
+            var map = _mapService.Generate(100, 100);
             return new BoardStateDynamic(
-                Map.Generate(),
+                map,
                 new Dictionary<string, Entity>()
                 {
                     { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>()
                     {
-                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
-                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
-                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag,
-                        ItemType.Bag, ItemType.Bag, ItemType.Key, ItemType.Key, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag, ItemType.Bag
-                    }, 3) }
+                        ItemType.Bag
+                    }, 3, map.SearchGrid) }
                 },
                 new Dictionary<string, Player>(),
                 0,

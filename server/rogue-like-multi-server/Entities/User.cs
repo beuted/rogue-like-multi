@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace rogue_like_multi_server
+namespace rogue
 {
     // https://jasonwatmore.com/post/2018/09/08/aspnet-core-21-basic-authentication-tutorial-with-example-api
     public class User

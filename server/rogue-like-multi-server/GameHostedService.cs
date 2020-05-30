@@ -36,6 +36,7 @@ namespace rogue_like_multi_server
                 Update(); // AI, simulate
                 await SendUpdatesClients();
                 var elapsed = DateTime.UtcNow.Ticks - begin;
+                _logger.Log(LogLevel.Information, $"Turn took {elapsed/TimeSpan.TicksPerMillisecond} ms");
                 if (elapsed < TicksPerServerTick)
                 {
                     await Task.Delay(Convert.ToInt32((TicksPerServerTick - elapsed) / TimeSpan.TicksPerMillisecond));

@@ -14,4 +14,8 @@
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\EpPathFinding.cs\EpPathFinding.cs.csproj" />
+    </ItemGroup>
+
 </Project>

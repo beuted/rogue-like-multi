@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace rogue_like_multi_server
+namespace rogue
 {
     public enum FloorType
     {
@@ -27,5 +27,4 @@ namespace rogue_like_multi_server
             return WalkableFloorTypes.Contains(floorType);
         }
     }
-
 }

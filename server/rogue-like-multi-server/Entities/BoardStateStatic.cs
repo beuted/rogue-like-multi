@@ -1,6 +1,4 @@
-using Newtonsoft.Json;
-
-namespace rogue_like_multi_server
+namespace rogue
 {
     public class BoardStateStatic
     {

@@ -1,7 +1,8 @@
 using System;
+using EpPathFinding.cs;
 using Newtonsoft.Json;
 
-namespace rogue_like_multi_server
+namespace rogue
 {
     public struct Coord : IEquatable<Coord>
     {
@@ -56,11 +57,6 @@ namespace rogue_like_multi_server
             return new Coord(lhs.X - rhs.X, lhs.Y - rhs.Y);
         }
 
-        public override string ToString()
-        {
-            return $"({X}, {Y})";
-        }
-
         public static int Distance(Coord a, Coord b)
         {
             return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
@@ -69,6 +65,21 @@ namespace rogue_like_multi_server
         public static int Distance2d(Coord a, Coord b)
         {
             return Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
+        }
+
+        public GridPos ToGridPos()
+        {
+            return new GridPos(X, Y);
+        }
+
+        public static Coord FromGridPos(GridPos gridPos)
+        {
+            return new Coord(gridPos.x, gridPos.y);
+        }
+
+        public override string ToString()
+        {
+            return $"({X}, {Y})";
         }
     }
 }
