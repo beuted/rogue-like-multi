@@ -1,16 +1,13 @@
 import { SocketClient, SocketMessageSent } from "./SocketClient";
-import { Coord } from "./Coord";
 import { Player } from "./Board";
 import { RenderService } from "./RenderService";
+import { Input } from "./InputManager";
 
 export class CharacterController {
   constructor(private socketClient: SocketClient, private renderService: RenderService) {}
 
-  public move(player: Player, newPlayerPosition: Coord) {
-    //player.entity.coord = newPlayerPosition // No prediction client side (for now (?))
-    player.lastAction = Date.now();
-    console.log("move ", player.lastAction);
-    this.socketClient.SendMessage(SocketMessageSent.Move, Date.now(), newPlayerPosition);
+  public sendInput(input: Input) {
+    this.socketClient.SendMessage(SocketMessageSent.SendInput, Date.now(), input);
   }
 
   public talk(player: Player, message: string) {
@@ -26,8 +23,6 @@ export class CharacterController {
   }
 
   public attack(player: Player) {
-    player.lastAction = Date.now();
-
     this.socketClient.SendMessage(SocketMessageSent.Attack, Date.now());
 
     const playerCoord = player.entity.coord;

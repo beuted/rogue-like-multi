@@ -1,4 +1,4 @@
-﻿/*! 
+﻿/*!
 @file StaticGrid.cs
 @author Woong Gyu La a.k.a Chris. <juhgiyo@gmail.com>
 		<http://github.com/juhgiyo/eppathfinding.cs>
@@ -69,7 +69,7 @@ namespace EpPathFinding.cs
                 tMatrix[widthTrav] = new bool[b.height];
                 for (int heightTrav = 0; heightTrav < b.height; heightTrav++)
                 {
-                    if(b.IsWalkableAt(widthTrav,heightTrav))
+                    if (b.IsWalkableAt(widthTrav,heightTrav))
                         tMatrix[widthTrav][heightTrav] = true;
                     else
                         tMatrix[widthTrav][heightTrav] = false;
@@ -77,7 +77,7 @@ namespace EpPathFinding.cs
             }
             this.m_nodes = buildNodes(b.width, b.height, tMatrix);
         }
-       
+
         private Node[][] buildNodes(int iWidth, int iHeight, bool[][] iMatrix)
         {
 
@@ -126,10 +126,10 @@ namespace EpPathFinding.cs
 
         public override bool IsWalkableAt(int iX, int iY)
         {
-            return isInside(iX, iY) && this.m_nodes[iX][iY].walkable;
+            return IsInside(iX, iY) && this.m_nodes[iX][iY].walkable;
         }
 
-        protected bool isInside(int iX, int iY)
+        private bool IsInside(int iX, int iY)
         {
             return (iX >= 0 && iX < width) && (iY >= 0 && iY < height);
         }
@@ -142,7 +142,7 @@ namespace EpPathFinding.cs
 
         protected bool isInside(GridPos iPos)
         {
-            return isInside(iPos.x, iPos.y);
+            return IsInside(iPos.x, iPos.y);
         }
 
         public override Node GetNodeAt(GridPos iPos)

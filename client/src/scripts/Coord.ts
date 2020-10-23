@@ -3,6 +3,18 @@ export interface Coord {
   y: number
 }
 
+export interface FloatingCoord {
+  x: number,
+  y: number
+}
+
+export class CoordHelper {
+  public static getClosestCoord(fCoord: FloatingCoord): Coord {
+    return { x: Math.round(fCoord.x), y: Math.round(fCoord.y) };
+
+  }
+}
+
 export class MathHelper {
   public static lerp(value1: number, value2: number, amount: number) {
     amount = amount < 0 ? 0 : amount;

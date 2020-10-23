@@ -19,9 +19,9 @@ namespace rogue_like_multi_server.Hubs
             _logger = logger;
         }
 
-        public async Task Move(long time, Coord coord)
+        public async Task SendInput(long time, Input input)
         {
-            _gameService.SetPlayerPosition(time, Context.User.Identity.Name, coord);
+            _gameService.ReceivePlayerInput(time, Context.User.Identity.Name, input);
         }
 
         public async Task Talk(long time, string message)
@@ -37,7 +37,7 @@ namespace rogue_like_multi_server.Hubs
         public override Task OnConnectedAsync()
         {
             _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has connected");
-            _gameService.AddPlayer(Context.User.Identity.Name, new Coord(10, 10));
+            _gameService.AddPlayer(Context.User.Identity.Name, new FloatingCoord(10, 10));
             return base.OnConnectedAsync();
         }
 

@@ -8,7 +8,7 @@ namespace rogue
     public class Entity
     {
         [JsonProperty("coord")]
-        public Coord Coord;
+        public FloatingCoord Coord;
 
         [JsonProperty("name")]
         public string Name;
@@ -28,7 +28,7 @@ namespace rogue
         [JsonIgnore]
         public JumpPointParam JpParam;
 
-        public Entity(Coord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, BaseGrid searchGrid)
+        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, BaseGrid searchGrid)
         {
             Coord = coord;
             Name = name;

@@ -1,10 +1,11 @@
 import { Cell, CellHelper } from "./Cell";
 import { Entity } from "./Entity";
 import { Coord } from "./Coord";
+import { Input } from "./InputManager";
 
 
 export class Player {
-  lastAction: number;
+  inputSequenceNumber: number;
   entity: Entity;
 }
 
@@ -31,6 +32,7 @@ export type BoardStateDynamic = {
 
 export class Board {
   public cells: Cell[][] = [];
+  public mapLength: number;
   public entities: { [name: string]: Entity } = {};
   public players: { [name: string]: Player } = {};
   public entitiesPreviousCoords: { [name: string]: Coord } = {}; // Could be stored at the renderservice level
@@ -45,6 +47,7 @@ export class Board {
   public init(gameState: GameState, username: string) {
     // Init map grid
     this.cells = gameState.boardStateDynamic.map.cells;
+    this.mapLength = this.cells.length;
     if (gameState.boardStateDynamic.players) {
       var player = gameState.boardStateDynamic.players[username];
       if (player)
@@ -52,8 +55,7 @@ export class Board {
     }
   }
 
-  public update(boardStateDynamic: BoardStateDynamic): number {
-    const playerLastAction = boardStateDynamic.players[this.player.entity.name].lastAction;
+  public update(boardStateDynamic: BoardStateDynamic) {
     this.computeEntitiesPreviousCoord();
     this.lastUpdateTime = Date.now();
 
@@ -63,13 +65,22 @@ export class Board {
     this.player = boardStateDynamic.players[this.player.entity.name];
     this.winnerTeam = boardStateDynamic.winnerTeam;
     this.nbBagsFound = boardStateDynamic.nbBagsFound;
-    console.log("update ", this.player.lastAction);
-
-    return playerLastAction;
   }
 
-  isWalkable(coord: Coord) {
-    return CellHelper.isWalkable(this.cells[coord.x][coord.y]);
+  public applyInput(input: Input) {
+    let newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
+    let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
+
+    if (!this.isWalkable(Math.floor(newX+0.5), Math.floor(newY+0.5))) {
+      return;
+    }
+
+    this.player.entity.coord.x = newX;
+    this.player.entity.coord.y = newY;
+  }
+
+  isWalkable(x: number, y: number) {
+    return x >= 0 && y >= 0 && x <= this.mapLength -1 && y <= this.mapLength-1 && CellHelper.isWalkable(this.cells[x][y]);
   }
 
   private computeEntitiesPreviousCoord() {

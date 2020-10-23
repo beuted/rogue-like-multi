@@ -32,6 +32,7 @@ export enum SocketMessageSent {
   Move = "Move",
   Talk = "Talk",
   Attack = "Attack",
+  SendInput = "SendInput"
 }
 
 export enum SocketMessageReceived {

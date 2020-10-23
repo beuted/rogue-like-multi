@@ -2,7 +2,7 @@ import { Entity } from "./Entity";
 import { SpriteManager } from "./SpriteManager";
 import { Sprite, Container, Graphics, Text } from "pixi.js";
 import { Cell, CellHelper } from "./Cell";
-import { Coord, MathHelper } from "./Coord";
+import { Coord, MathHelper, CoordHelper } from "./Coord";
 import { Player } from "./Board";
 
 export class RenderService {
@@ -161,10 +161,11 @@ export class RenderService {
   }
 
   public renderMap(cells: Cell[][], currentPlayer: Player, players: {[name: string]: Player}, entities: {[name: string]: Entity}, entitiesPreviousCoords: { [name: string]: Coord }, interpolFactor: number) {
+    const roundedPlayerPosition = CoordHelper.getClosestCoord(currentPlayer.entity.coord);
     const playerPosition = currentPlayer.entity.coord;
     this.cellsContainer.removeChildren();
-    for (let i = Math.max(0, playerPosition.x-9-1); i <= Math.min(cells.length-1, playerPosition.x+9+1); i++) {
-      for (let j = Math.max(0, playerPosition.y-9-1); j <= Math.min(cells[0].length-1, playerPosition.y+9+1); j++) {
+    for (let i = Math.max(0, roundedPlayerPosition.x-9-1); i <= Math.min(cells.length-1, roundedPlayerPosition.x+9+1); i++) {
+      for (let j = Math.max(0, roundedPlayerPosition.y-9-1); j <= Math.min(cells[0].length-1, roundedPlayerPosition.y+9+1); j++) {
         const spriteId = CellHelper.getCellSpriteId(cells[i][j]);
         let cell = new Sprite(this.spriteManager.textures[spriteId]);
         cell.x = i * this.spriteManager.tilesetSize;
@@ -173,15 +174,10 @@ export class RenderService {
       }
     }
 
-    const prevCoord = entitiesPreviousCoords[currentPlayer.entity.name] ? entitiesPreviousCoords[currentPlayer.entity.name] : playerPosition;
-    this.mapContainer.x = MathHelper.lerp(
-      (9 - prevCoord.x) * this.spriteManager.tilesetSize,
-      (9 - playerPosition.x) * this.spriteManager.tilesetSize,
-      interpolFactor);
-    this.mapContainer.y = MathHelper.lerp(
-        (9 - prevCoord.y) * this.spriteManager.tilesetSize,
-        (9 - playerPosition.y) * this.spriteManager.tilesetSize,
-        interpolFactor);
+    this.mapContainer.x =
+      (9 - playerPosition.x) * this.spriteManager.tilesetSize;
+    this.mapContainer.y =
+      (9 - playerPosition.y) * this.spriteManager.tilesetSize;
 
     for (let entityName in entities) {
       this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor);

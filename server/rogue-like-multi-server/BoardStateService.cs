@@ -39,7 +39,7 @@ namespace rogue_like_multi_server
             }
             foreach (var keyToRemove in keysToRemove)
             {
-                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[keyToRemove].Inventory, boardStateDynamic.Entities[keyToRemove].Coord);
+                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[keyToRemove].Inventory, boardStateDynamic.Entities[keyToRemove].Coord.ToCoord());
                 boardStateDynamic.Entities.Remove(keyToRemove);
             }
 
@@ -54,15 +54,17 @@ namespace rogue_like_multi_server
             }
             foreach (var keyToRemove in keysToRemovePlayers)
             {
-                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord);
+                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord.ToCoord());
                 boardStateDynamic.Players.Remove(keyToRemove);
             }
+
+            return boardStateDynamic;
 
             // IA Stuff
             foreach (var entity in boardStateDynamic.Entities)
             {
                 // If on the fire estinguish it
-                if (entity.Value.Coord == new Coord(5, 5))
+                if (entity.Value.Coord == new FloatingCoord(5, 5))
                 {
                     boardStateDynamic.NbBagsFound = Math.Max(boardStateDynamic.NbBagsFound - 1, 0);
                 }
@@ -74,7 +76,7 @@ namespace rogue_like_multi_server
                 {
                     var random3 = new Random();
                     if (random3.Next(0, 3) == 0) // 1 chance out of 3 to move
-                        entity.Value.Coord = Coord.FromGridPos(resultPathList[1]);
+                        entity.Value.Coord = FloatingCoord.FromGridPos(resultPathList[1]);
 
                     break;
                 }
@@ -86,14 +88,14 @@ namespace rogue_like_multi_server
                 var y = random2.Next(0, 100);
 
                 _logger.Log(LogLevel.Information, $"Entity reset to {x}, {y}");
-                entity.Value.Coord = new Coord(x, y);
+                entity.Value.Coord = new FloatingCoord(x, y);
             }
 
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic SetPlayerPosition(long time, BoardStateDynamic boardStateDynamic, Map map, string playerName,
-            Coord coord)
+        public BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
+            FloatingCoord velocity, double inputSequenceNumber)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
@@ -101,19 +103,12 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
             }
 
-            if (Coord.Distance(player.Entity.Coord, coord) > 1)
-            {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move farther than 1 in a single turn");
-                return boardStateDynamic;
-            }
+            player.InputSequenceNumber = inputSequenceNumber;
 
-            if (player.LastAction == time)
-            {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to play twice this turn");
-                return boardStateDynamic;
-            }
+            var coord = player.Entity.Coord + velocity;
 
-            if (!map.Cells[coord.X][coord.Y].FloorType.IsWalkable())
+            var gridCoord = coord.ToGridPos();
+            if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move on {coord} but it is not walkable");
                 return boardStateDynamic;
@@ -122,14 +117,14 @@ namespace rogue_like_multi_server
             player.Entity.Coord = coord;
 
             // Pickup objects
-            if (map.Cells[coord.X][coord.Y].ItemType != null)
+            if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null)
             {
-                player.Entity.Inventory.Add(map.Cells[coord.X][coord.Y].ItemType.Value);
-                map.Cells[coord.X][coord.Y].ItemType = null;
+                player.Entity.Inventory.Add(map.Cells[gridCoord.x][gridCoord.y].ItemType.Value);
+                map.Cells[gridCoord.x][gridCoord.y].ItemType = null;
             }
 
             // Drop bags at CampFire
-            if (map.Cells[coord.X][coord.Y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Bag))
+            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Bag))
             {
                 int nbBags = player.Entity.Inventory.RemoveAll(item => item == ItemType.Bag);
                 boardStateDynamic.NbBagsFound += nbBags;
@@ -139,12 +134,10 @@ namespace rogue_like_multi_server
                 }
             }
 
-            player.LastAction = time;
-
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, Coord coord)
+        public BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord)
         {
             if (boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
@@ -152,7 +145,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3, boardStateDynamic.Map.SearchGrid), null, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3, boardStateDynamic.Map.SearchGrid), -1, true));
 
             return boardStateDynamic;
         }
@@ -180,7 +173,7 @@ namespace rogue_like_multi_server
 
             foreach (var entity in boardStateDynamic.Entities)
             {
-                if (Coord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
+                if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
                 {
                     entity.Value.Pv--;
                 }
@@ -188,13 +181,12 @@ namespace rogue_like_multi_server
 
             foreach (var player in boardStateDynamic.Players)
             {
-                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && Coord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
+                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
                 {
                     player.Value.Entity.Pv--;
                 }
             }
 
-            attackingPlayer.LastAction = time;
 
             return boardStateDynamic;
         }
@@ -213,7 +205,7 @@ namespace rogue_like_multi_server
                 map,
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new Coord(10, 10), "pwet", 7, new List<ItemType>()
+                    { "pwet", new Entity(new FloatingCoord(10, 10), "pwet", 7, new List<ItemType>()
                     {
                         ItemType.Bag
                     }, 3, map.SearchGrid) }
@@ -231,10 +223,10 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic Update(BoardStateDynamic boardStateDynamic);
 
-        BoardStateDynamic SetPlayerPosition(long time, BoardStateDynamic boardStateDynamic, Map name, string playerName,
-            Coord coord);
+        BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map name, string playerName,
+            FloatingCoord velocity, double inputSequenceNumber);
 
-        BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, Coord coord);
+        BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 

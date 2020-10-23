@@ -49,7 +49,9 @@
           <e p="Cell.cs" t="Include" />
           <e p="Coord.cs" t="Include" />
           <e p="Entity.cs" t="Include" />
+          <e p="FloatingCoord.cs" t="Include" />
           <e p="FloorType.cs" t="Include" />
+          <e p="Input.cs" t="Include" />
           <e p="ItemType.cs" t="Include" />
           <e p="Player.cs" t="Include" />
           <e p="Team.cs" t="Include" />

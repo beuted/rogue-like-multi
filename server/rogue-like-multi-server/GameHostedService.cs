@@ -32,14 +32,24 @@ namespace rogue_like_multi_server
             while(_running)
             {
                 var begin= DateTime.UtcNow.Ticks;
-                receive_from_clients(); // poll, accept, receive, decode, validate
-                Update(); // AI, simulate
+
+                // Apply all inputs received
+                _gameService.ApplyPlayerInputs();
+
+                // Simulate world, do AI work ...
+                _gameService.Update();
+
+                // Send the updated world to clients
                 await SendUpdatesClients();
+
                 var elapsed = DateTime.UtcNow.Ticks - begin;
-                _logger.Log(LogLevel.Information, $"Turn took {elapsed/TimeSpan.TicksPerMillisecond} ms");
                 if (elapsed < TicksPerServerTick)
                 {
                     await Task.Delay(Convert.ToInt32((TicksPerServerTick - elapsed) / TimeSpan.TicksPerMillisecond));
+                }
+                else
+                {
+                    _logger.Log(LogLevel.Information, $"Turn is late, it took {elapsed/TimeSpan.TicksPerMillisecond} ms");
                 }
             }
         }
@@ -53,15 +63,6 @@ namespace rogue_like_multi_server
         {
             _logger.LogInformation("Timed Background Service is stopping.");
             return Task.CompletedTask;
-        }
-
-        private void receive_from_clients()
-        {
-        }
-
-        private void Update()
-        {
-            _gameService.Update();
         }
 
         private async Task SendUpdatesClients()

@@ -2,7 +2,7 @@ import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
 import { Board, BoardStateDynamic, Team } from "./Board";
-import { InputManager } from "./InputManager";
+import { InputManager, Input } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
@@ -21,7 +21,7 @@ export class BoardScene {
   private renderService: RenderService;
   private characterController: CharacterController;
 
-  private serverLastAction: number = null; // should be somewhere else... with the input handling
+  private pendingInputs: Input[] = [];
 
   constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/colored_tilemap.png", 9, 10, 10);
@@ -66,7 +66,23 @@ export class BoardScene {
     this.app.stage.addChild(sceneContainer);
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
-      this.serverLastAction = this.board.update(boardStateDynamic);
+      this.board.update(boardStateDynamic);
+
+      // Server Reconciliation. Re-apply all the inputs not yet processed by
+      // the server.
+      let j = 0;
+      while (j < this.pendingInputs.length) {
+        var input = this.pendingInputs[j];
+        if (input.inputSequenceNumber <= this.board.player.inputSequenceNumber) {
+          // Already processed. Its effect is already taken into account into the world update
+          // we just got, so we can drop it.
+          this.pendingInputs.splice(j, 1);
+        } else {
+          // Not processed by the server yet. Re-apply it.
+          this.board.applyInput(input);
+          j++;
+        }
+      }
     });
 
     var chatController = new ChatController(this.socketClient);
@@ -76,10 +92,6 @@ export class BoardScene {
     // Game loop
 
     this.app.ticker.add((delta: number) => this.gameLoop(delta));
-  }
-
-  private playerLastActionWasTakenIntoAccount() {
-    return this.serverLastAction == this.board.player.lastAction || this.board.player.lastAction == null;
   }
 
   private gameLoop(delta: number) {
@@ -96,20 +108,21 @@ export class BoardScene {
   }
 
   private play(delta: number) {
-    let input = this.inputManager.get();
-    if (input.attack && this.playerLastActionWasTakenIntoAccount()) {
-      this.characterController.attack(this.board.player);
-    } else if ((input.direction.x != 0 || input.direction.y != 0) && this.playerLastActionWasTakenIntoAccount()) {
-      var newPlayerPosition = {
-        x: this.board.player.entity.coord.x + input.direction.x,
-        y: this.board.player.entity.coord.y + input.direction.y
-      }
-      if (this.board.isWalkable(newPlayerPosition))
-        this.characterController.move(this.board.player, newPlayerPosition);
+    const speed = 0.04;
+    let input = this.inputManager.get(parseFloat((delta * speed).toFixed(3)));
+
+    if ((input.direction.x != 0 || input.direction.y != 0)) {
+      this.characterController.sendInput(input);
+
+      // Apply the inputs will be overriden by the server when we receive a notif from it
+      this.board.applyInput(input);
+
+      // Save this input for later reconciliation.
+      this.pendingInputs.push(input);
     }
 
-    delta;
-    var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 200; // 300 is the time between server update
+    // Render
+    var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 300; // 300 is the time between server update
     this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, interpolFactor)
     this.renderService.renderCharacter(this.board.player.entity);
     this.renderService.renderInventory(this.board.player.entity);

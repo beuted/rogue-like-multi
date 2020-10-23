@@ -57,6 +57,11 @@ namespace rogue
             return new Coord(lhs.X - rhs.X, lhs.Y - rhs.Y);
         }
 
+        public static FloatingCoord operator *(decimal mult, Coord coord)
+        {
+            return new FloatingCoord(mult * coord.X, mult * coord.Y);
+        }
+
         public static int Distance(Coord a, Coord b)
         {
             return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);

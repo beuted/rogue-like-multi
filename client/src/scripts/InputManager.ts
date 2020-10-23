@@ -1,21 +1,36 @@
 import { keyboard } from "./Keyboard";
 import { Coord } from "./Coord";
 
+export interface Input {
+  direction: Coord,
+  attack: boolean,
+  pressTime: number,
+  inputSequenceNumber: number
+}
+
 export class InputManager {
   private vx: number = 0;
   private vy: number = 0;
   private attack: boolean = false;
+  private inputSequenceNumber: number = 0;
+
   constructor() {
 
   }
 
-  public get(): { direction: Coord , attack: boolean} {
+  public get(delta: number): Input {
+    if (this.vx != 0 || this.vy != 0 || this.attack) {
+      this.inputSequenceNumber++;
+    }
+
     var res = {
       direction: {
         x: this.vx,
         y: this.vy
       },
-      attack: this.attack
+      attack: this.attack,
+      pressTime: delta,
+      inputSequenceNumber: this.inputSequenceNumber
     }
 
     return res;
@@ -41,7 +56,6 @@ export class InputManager {
     left.press = () => {
       //Change the player's velocity when the key is pressed
       this.vx = -1;
-      this.vy = 0;
     };
 
     //Left arrow key `release` method
@@ -49,7 +63,7 @@ export class InputManager {
       //If the left arrow has been released, and the right arrow isn't down,
       //and the player isn't moving vertically:
       //Stop the player
-      if (!right.isDown && this.vy === 0) {
+      if (!right.isDown) {
         this.vx = 0;
       }
     };
@@ -57,10 +71,9 @@ export class InputManager {
     //Up
     up.press = () => {
       this.vy = -1;
-      this.vx = 0;
     };
     up.release = () => {
-      if (!down.isDown && this.vx === 0) {
+      if (!down.isDown) {
         this.vy = 0;
       }
     };
@@ -68,10 +81,9 @@ export class InputManager {
     //Right
     right.press = () => {
       this.vx = 1;
-      this.vy = 0;
     };
     right.release = () => {
-      if (!left.isDown && this.vy === 0) {
+      if (!left.isDown) {
         this.vx = 0;
       }
     };
@@ -79,10 +91,9 @@ export class InputManager {
     //Down
     down.press = () => {
       this.vy = 1;
-      this.vx = 0;
     };
     down.release = () => {
-      if (!up.isDown && this.vx === 0) {
+      if (!up.isDown) {
         this.vy = 0;
       }
     };
