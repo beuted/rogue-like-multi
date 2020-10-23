@@ -31,7 +31,7 @@ export class BoardScene {
     this.board = new Board();
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
-    this.characterController = new CharacterController(this.socketClient, this.renderService)
+    this.characterController = new CharacterController(this.socketClient)
   }
 
   public async init() {
@@ -87,7 +87,7 @@ export class BoardScene {
 
     var chatController = new ChatController(this.socketClient);
 
-    chatController.init(document.getElementById('chat-box'), (message) => this.characterController.talk(this.board.player, message));
+    chatController.init(document.getElementById('chat-box'), (message) => this.characterController.talk(message));
 
     // Game loop
 
@@ -129,6 +129,7 @@ export class BoardScene {
     this.renderService.renderInventory(this.board.player.entity);
     this.renderService.renderPv(this.board.player.entity);
     this.renderService.renderGameState(this.board.nbBagsFound);
+    this.renderService.renderEffects();
   }
 }
 

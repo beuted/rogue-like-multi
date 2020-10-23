@@ -9,6 +9,7 @@ export class RenderService {
 
   private entityContainer: Container;
   private mapContainer: Container;
+  private mapSceneContainer: Container;
   private inventoryContainer: Container;
   private effectContainer: Container;
   private pvContainer: Container;
@@ -18,8 +19,8 @@ export class RenderService {
   private characterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
   private pvSprites: Sprite[] = [];
+  private overlaySprite: Graphics = null;
 
-  private effects: { position: Coord, graphic: Graphics }[] = [];
   private nbBagFoundText: Text;
 
   constructor(private spriteManager: SpriteManager) {
@@ -28,8 +29,10 @@ export class RenderService {
   public init() {
     let sceneContainer = new Container();
     sceneContainer.scale.set(4);
+    this.mapSceneContainer = new Container();
     this.mapContainer = new Container();
-    sceneContainer.addChild(this.mapContainer);
+    this.mapSceneContainer.addChild(this.mapContainer)
+    sceneContainer.addChild(this.mapSceneContainer);
     this.cellsContainer = new Container();
     this.mapContainer.addChild(this.cellsContainer);
     this.entityContainer = new Container();
@@ -39,7 +42,6 @@ export class RenderService {
     graphic.beginFill(0xFFFFFF);
     // 19 = tiles displayed on screen, 4 = scale factor
     graphic.drawRect(0, 0, this.spriteManager.tilesetSize*19*4, this.spriteManager.tilesetSize*19*4);
-
 
     this.effectContainer = new Container();
     sceneContainer.addChild(this.effectContainer);
@@ -87,6 +89,34 @@ export class RenderService {
     this.characterSprite.x = 9*this.spriteManager.tilesetSize;
     this.characterSprite.y = 9*this.spriteManager.tilesetSize;
   }
+
+  public renderEffects() {
+    if (!this.overlaySprite) {
+      // extrude it with the proper graphic
+      this.overlaySprite = new Graphics();
+      this.overlaySprite.scale.set(1);
+      this.overlaySprite.beginFill(0xFF3300);
+      const R = 9*this.spriteManager.tilesetSize;
+      this.overlaySprite.drawCircle(
+        0,
+        0,
+        R);
+
+      // 0.25 = adjustment variable due to the black stripes around my assets
+      this.overlaySprite.endFill();
+
+      this.mapSceneContainer.mask = this.overlaySprite;
+      this.mapSceneContainer.addChild(this.overlaySprite);
+    }
+
+    this.overlaySprite.scale.set(0.5);
+    this.overlaySprite.x = (9.5 * this.spriteManager.tilesetSize - 0.5);
+    this.overlaySprite.y = (9.5 * this.spriteManager.tilesetSize - 0.5);
+
+
+
+  }
+
 
   public renderInventory(character: Entity) {
     let i = 0;
