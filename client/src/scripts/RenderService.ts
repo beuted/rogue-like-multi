@@ -88,29 +88,6 @@ export class RenderService {
     this.characterSprite.y = 9*this.spriteManager.tilesetSize;
   }
 
-  //TODO: there should be an "effectService"
-  public addEffect(coord: Coord, color: number) {
-    let graphic = new Graphics();
-    graphic.beginFill(color, 0.5);
-    graphic.drawRect(0, 0, this.spriteManager.tilesetSize, this.spriteManager.tilesetSize)
-    this.effects.push({ position: coord, graphic: graphic });
-    this.effectContainer.addChild(graphic);
-  }
-
-  public renderEffects(currentPlayer: Player) {
-    const playerPosition = currentPlayer.entity.coord;
-    for (let effect of this.effects) {
-      // 0.25 = adjustment variable due to the back stripes around my assets
-      effect.graphic.x = (effect.position.x - playerPosition.x + 9 + (0.5 - effect.graphic.scale.x/2)) * this.spriteManager.tilesetSize - 0.25;
-      effect.graphic.y = (effect.position.y - playerPosition.y + 9 + (0.5 - effect.graphic.scale.y/2)) * this.spriteManager.tilesetSize - 0.25;
-      effect.graphic.scale.set(effect.graphic.scale.x - 0.04);
-      if (effect.graphic.scale.x <= 0) {
-        this.effectContainer.removeChild(effect.graphic);
-      }
-    }
-    //TODO clear the queue of effect.
-  }
-
   public renderInventory(character: Entity) {
     let i = 0;
     for (; i < character.inventory.length; i++) {

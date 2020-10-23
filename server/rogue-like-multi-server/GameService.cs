@@ -56,7 +56,10 @@ namespace rogue_like_multi_server
                 var playerInput = playerInputs[0];
                 playerInputs.RemoveAt(0);
 
-                BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime * playerInput.Item2.Direction, playerInput.Item2.InputSequenceNumber);
+                if (playerInput.Item2.Direction.X != 0 || playerInput.Item2.Direction.Y != 0)
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime * playerInput.Item2.Direction, playerInput.Item2.InputSequenceNumber);
+                if (playerInput.Item2.Attack)
+                    BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
             }
         }
 
@@ -79,11 +82,6 @@ namespace rogue_like_multi_server
         {
             BoardState.BoardStateDynamic = _boardStateService.RemovePlayer(BoardState.BoardStateDynamic, playerName);
         }
-
-        public void PlayerActionAttack(long time, string playerName)
-        {
-            BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(time, BoardState.BoardStateDynamic, playerName);
-        }
     }
 
     public interface IGameService
@@ -105,7 +103,5 @@ namespace rogue_like_multi_server
         void AddPlayer(string username, FloatingCoord coord);
 
         void RemovePlayer(string username);
-
-        void PlayerActionAttack(long time, string identityName);
     }
 }

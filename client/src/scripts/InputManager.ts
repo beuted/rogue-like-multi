@@ -33,6 +33,9 @@ export class InputManager {
       inputSequenceNumber: this.inputSequenceNumber
     }
 
+    if (this.attack)
+      console.log("attack")
+
     return res;
   }
 

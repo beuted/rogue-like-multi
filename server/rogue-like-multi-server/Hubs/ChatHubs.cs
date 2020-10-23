@@ -29,11 +29,6 @@ namespace rogue_like_multi_server.Hubs
             await _gameService.SendPlayerMessage(Context.User.Identity.Name, message);
         }
 
-        public async Task Attack(long time)
-        {
-            _gameService.PlayerActionAttack(time, Context.User.Identity.Name);
-        }
-
         public override Task OnConnectedAsync()
         {
             _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has connected");

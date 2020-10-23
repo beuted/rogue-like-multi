@@ -163,13 +163,16 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic PlayerActionAttack(long time, BoardStateDynamic boardStateDynamic, string playerName)
+        public BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber)
         {
+            _logger.Log(LogLevel.Information, $"{playerName} attack");
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var attackingPlayer))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he doesn't exist on the server");
                 return boardStateDynamic;
             }
+
+            attackingPlayer.InputSequenceNumber = inputSequenceNumber;
 
             foreach (var entity in boardStateDynamic.Entities)
             {
@@ -230,6 +233,6 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 
-        BoardStateDynamic PlayerActionAttack(long time, BoardStateDynamic boardStateDynamic, string playerName);
+        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
     }
 }

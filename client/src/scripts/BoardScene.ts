@@ -111,7 +111,8 @@ export class BoardScene {
     const speed = 0.04;
     let input = this.inputManager.get(parseFloat((delta * speed).toFixed(3)));
 
-    if ((input.direction.x != 0 || input.direction.y != 0)) {
+    // TODO: Cooldown coté client pour l'attack ? ou coté server ?
+    if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
       this.characterController.sendInput(input);
 
       // Apply the inputs will be overriden by the server when we receive a notif from it
@@ -128,7 +129,6 @@ export class BoardScene {
     this.renderService.renderInventory(this.board.player.entity);
     this.renderService.renderPv(this.board.player.entity);
     this.renderService.renderGameState(this.board.nbBagsFound);
-    this.renderService.renderEffects(this.board.player);
   }
 }
 
