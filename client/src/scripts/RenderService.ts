@@ -4,6 +4,7 @@ import { Sprite, Container, Graphics, Text } from "pixi.js";
 import { Cell, CellHelper } from "./Cell";
 import { Coord, MathHelper, CoordHelper } from "./Coord";
 import { Player } from "./Board";
+import { LightRenderService } from "./LightRenderService";
 
 export class RenderService {
 
@@ -19,11 +20,10 @@ export class RenderService {
   private characterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
   private pvSprites: Sprite[] = [];
-  private overlaySprite: Graphics = null;
 
   private nbBagFoundText: Text;
 
-  constructor(private spriteManager: SpriteManager) {
+  constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService) {
   }
 
   public init() {
@@ -49,6 +49,8 @@ export class RenderService {
     sceneContainer.addChild(this.inventoryContainer);
     this.pvContainer = new Container();
     sceneContainer.addChild(this.pvContainer);
+
+    this.lightRenderService.init(this.mapContainer);
 
     return sceneContainer;
   }
@@ -90,31 +92,8 @@ export class RenderService {
     this.characterSprite.y = 9*this.spriteManager.tilesetSize;
   }
 
-  public renderEffects() {
-    if (!this.overlaySprite) {
-      // extrude it with the proper graphic
-      this.overlaySprite = new Graphics();
-      this.overlaySprite.scale.set(1);
-      this.overlaySprite.beginFill(0xFF3300);
-      const R = 9*this.spriteManager.tilesetSize;
-      this.overlaySprite.drawCircle(
-        0,
-        0,
-        R);
-
-      // 0.25 = adjustment variable due to the black stripes around my assets
-      this.overlaySprite.endFill();
-
-      this.mapSceneContainer.mask = this.overlaySprite;
-      this.mapSceneContainer.addChild(this.overlaySprite);
-    }
-
-    this.overlaySprite.scale.set(0.5);
-    this.overlaySprite.x = (9.5 * this.spriteManager.tilesetSize - 0.5);
-    this.overlaySprite.y = (9.5 * this.spriteManager.tilesetSize - 0.5);
-
-
-
+  public renderEffects(character: Entity) {
+    this.lightRenderService.render(character);
   }
 
 

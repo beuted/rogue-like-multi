@@ -8,6 +8,7 @@ import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
 import { CharacterController } from "./CharacterController";
 import { ChatController } from "./ChatController";
+import { LightRenderService } from "./LightRenderService";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -18,6 +19,7 @@ export class BoardScene {
 
   private state: GameState = GameState.Pause;
   private gameServerClient: GameServerClient;
+  private lightRenderService : LightRenderService;
   private renderService: RenderService;
   private characterController: CharacterController;
 
@@ -27,7 +29,8 @@ export class BoardScene {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/colored_tilemap.png", 9, 10, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.socketClient = new SocketClient();
-    this.renderService = new RenderService(this.spriteManager);
+    this.lightRenderService = new LightRenderService(this.spriteManager);
+    this.renderService = new RenderService(this.spriteManager, this.lightRenderService);
     this.board = new Board();
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
@@ -129,7 +132,7 @@ export class BoardScene {
     this.renderService.renderInventory(this.board.player.entity);
     this.renderService.renderPv(this.board.player.entity);
     this.renderService.renderGameState(this.board.nbBagsFound);
-    this.renderService.renderEffects();
+    this.renderService.renderEffects(this.board.player.entity);
   }
 }
 
