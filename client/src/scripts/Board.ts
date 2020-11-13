@@ -15,9 +15,20 @@ export enum Team {
   Evil = 2
 }
 
+export enum GameStatus {
+  Pause = 0,
+  Play = 1,
+  Discuss = 2
+}
+
 export type GameState = {
   boardStateDynamic: BoardStateDynamic;
   boardStateStatic: {};
+}
+
+export type GameConfig = {
+  nbSecsPerCycle: number;
+  nbSecsDiscuss: number;
 }
 
 export type BoardStateDynamic = {
@@ -27,7 +38,11 @@ export type BoardStateDynamic = {
     cells: Cell[][];
   };
   nbBagsFound: number,
-  winnerTeam: Team
+  winnerTeam: Team,
+  nowTimestamp: number,
+  startTimestamp: number,
+  gameStatus: GameStatus;
+  gameConfig: GameConfig
 }
 
 export class Board {
@@ -40,6 +55,10 @@ export class Board {
   public nbBagsFound: number = 0;
   public winnerTeam: Team = Team.None;
   public lastUpdateTime: number = null;
+  public nowTimestamp: number;
+  public startTimestamp: number;
+  public gameStatus: GameStatus;
+  public gameConfig: GameConfig;
 
   constructor() {
   }
@@ -65,6 +84,10 @@ export class Board {
     this.player = boardStateDynamic.players[this.player.entity.name];
     this.winnerTeam = boardStateDynamic.winnerTeam;
     this.nbBagsFound = boardStateDynamic.nbBagsFound;
+    this.nowTimestamp = boardStateDynamic.nowTimestamp;
+    this.startTimestamp = boardStateDynamic.startTimestamp;
+    this.gameStatus = boardStateDynamic.gameStatus;
+    this.gameConfig = boardStateDynamic.gameConfig;
   }
 
   public applyInput(input: Input) {

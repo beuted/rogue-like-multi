@@ -1,7 +1,7 @@
 import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board, BoardStateDynamic, Team } from "./Board";
+import { Board, BoardStateDynamic, Team, GameStatus } from "./Board";
 import { InputManager, Input } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
@@ -111,28 +111,38 @@ export class BoardScene {
   }
 
   private play(delta: number) {
-    const speed = 0.04;
-    let input = this.inputManager.get(parseFloat((delta * speed).toFixed(3)));
 
-    // TODO: Cooldown coté client pour l'attack ? ou coté server ?
-    if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
-      this.characterController.sendInput(input);
+    switch(this.board.gameStatus) {
+      case GameStatus.Play:
+        const speed = 0.04;
+        let input = this.inputManager.get(parseFloat((delta * speed).toFixed(3)));
 
-      // Apply the inputs will be overriden by the server when we receive a notif from it
-      this.board.applyInput(input);
+        // TODO: Cooldown coté client pour l'attack ? ou coté server ?
+        if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
+          this.characterController.sendInput(input);
 
-      // Save this input for later reconciliation.
-      this.pendingInputs.push(input);
+          // Apply the inputs will be overriden by the server when we receive a notif from it
+          this.board.applyInput(input);
+
+          // Save this input for later reconciliation.
+          this.pendingInputs.push(input);
+        }
+
+        // Render
+        var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 300; // 300 is the time between server update
+        this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, interpolFactor)
+        this.renderService.renderCharacter(this.board.player.entity);
+        this.renderService.renderInventory(this.board.player.entity);
+        this.renderService.renderPv(this.board.player.entity);
+        this.renderService.renderGameState(this.board.nowTimestamp - this.board.startTimestamp);
+        this.renderService.renderEffects(this.board.player.entity, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
+        break;
+      case GameStatus.Discuss:
+        this.renderService.renderGameState(this.board.nowTimestamp - this.board.startTimestamp);
+        break;
+      case GameStatus.Pause:
+        break;
     }
-
-    // Render
-    var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 300; // 300 is the time between server update
-    this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, interpolFactor)
-    this.renderService.renderCharacter(this.board.player.entity);
-    this.renderService.renderInventory(this.board.player.entity);
-    this.renderService.renderPv(this.board.player.entity);
-    this.renderService.renderGameState(this.board.nbBagsFound);
-    this.renderService.renderEffects(this.board.player.entity);
   }
 }
 

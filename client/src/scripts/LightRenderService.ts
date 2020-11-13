@@ -56,14 +56,15 @@ export class LightRenderService {
     this.staticLightsGraphics[id] = light;
   }
 
-  render(character: Entity) {
+  render(character: Entity, timestampDiff: number, nbSecsPerCycle: number) {
     // Move the light that follows the entities to their position
     this.playerLightOverlaySprite.x = ((character.coord.x + 0.5) * this.spriteManager.tilesetSize - 0.5);
     this.playerLightOverlaySprite.y = ((character.coord.y + 0.5) * this.spriteManager.tilesetSize - 0.5);
 
     // Make all lights flycker
-    this.playerLightOverlaySprite.scale.set(0.5 + 0.02 * Math.sin(Date.now()/100)); // flyckering
+    var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbSecsPerCycle - Math.PI/2 ) + 1;
+    this.playerLightOverlaySprite.scale.set(0.1 + 0.5 * daylightFactor + 0.005 * Math.sin(Date.now()/100)); // flyckering
 
-    this.staticLightsGraphics['fire'].scale.set(0.5 + 0.02 * Math.sin(Date.now()/100)); // flyckering
+    this.staticLightsGraphics['fire'].scale.set(0.5 + 0.005 * Math.sin(Date.now()/100)); // flyckering
   }
 }

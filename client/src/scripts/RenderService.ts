@@ -92,8 +92,8 @@ export class RenderService {
     this.characterSprite.y = 9*this.spriteManager.tilesetSize;
   }
 
-  public renderEffects(character: Entity) {
-    this.lightRenderService.render(character);
+  public renderEffects(character: Entity, timestampDiff: number, nbSecsPerCycle: number) {
+    this.lightRenderService.render(character, timestampDiff, nbSecsPerCycle);
   }
 
 
@@ -136,14 +136,14 @@ export class RenderService {
     }
   }
 
-  public renderGameState(nbBagsFound: number) {
+  public renderGameState(time: number) {
     if (!this.nbBagFoundText) {
       this.nbBagFoundText = new Text('', {fontFamily : 'Arial', fontSize: this.spriteManager.tilesetSize, fill : 0xffffff, align : 'center'});
       this.nbBagFoundText.x = 20*this.spriteManager.tilesetSize;
       this.nbBagFoundText.y = 1*this.spriteManager.tilesetSize;
       this.pvContainer.addChild(this.nbBagFoundText);
     }
-    this.nbBagFoundText.text = 'bags found: ' + String(nbBagsFound);
+    this.nbBagFoundText.text = 'Time: ' + String(time);
   }
 
   public renderMap(cells: Cell[][], currentPlayer: Player, players: {[name: string]: Player}, entities: {[name: string]: Entity}, entitiesPreviousCoords: { [name: string]: Coord }, interpolFactor: number) {

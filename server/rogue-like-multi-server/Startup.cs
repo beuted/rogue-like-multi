@@ -59,9 +59,9 @@ namespace rogue_like_multi_server
             else
             {
                 app.UseHsts();
+                app.UseHttpsRedirection();
             }
 
-            app.UseHttpsRedirection();
             app.UseDefaultFiles();
             app.UseStaticFiles();
 

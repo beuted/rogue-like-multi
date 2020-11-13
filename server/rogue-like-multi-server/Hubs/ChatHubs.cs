@@ -21,7 +21,8 @@ namespace rogue_like_multi_server.Hubs
 
         public async Task SendInput(long time, Input input)
         {
-            _gameService.ReceivePlayerInput(time, Context.User.Identity.Name, input);
+            if (input != null)
+                _gameService.ReceivePlayerInput(time, Context.User.Identity.Name, input);
         }
 
         public async Task Talk(long time, string message)

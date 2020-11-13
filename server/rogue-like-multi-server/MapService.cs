@@ -7,7 +7,8 @@ namespace rogue_like_multi_server
     public interface IMapService
     {
         Map Generate(int mapWidth, int mapHeight);
-        Map DropItems(Map boardStateDynamic, IList<ItemType> items, Coord coord);
+        Map DropItems(Map map, IList<ItemType> items, Coord coord);
+        Map PickupItem(Map map, Coord coord);
     }
 
     public class MapService: IMapService
@@ -46,6 +47,12 @@ namespace rogue_like_multi_server
             map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
                 ItemType.Bag);
 
+            // 2 Food
+            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
+                ItemType.Food);
+            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
+                ItemType.Food);
+
             return map;
         }
 
@@ -54,6 +61,21 @@ namespace rogue_like_multi_server
             foreach (var item in items)
             {
                 map = DropItem(map, item, coord);
+            }
+
+            return map;
+        }
+
+        public Map PickupItem(Map map, Coord coord)
+        {
+            var itemType = map.Cells[coord.X][coord.Y].ItemType;
+            map.SetItem(coord.X, coord.Y, null);
+
+            // If it was food make it respawn
+            if (itemType == ItemType.Food)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
+                ItemType.Food);
             }
 
             return map;
@@ -70,7 +92,7 @@ namespace rogue_like_multi_server
                 if (IsInRange(newCoord, map) &&
                     map.Cells[newCoord.X][newCoord.Y].ItemType == null)
                 {
-                    map.SetItem(newCoord.X,newCoord.Y, item);
+                    map.SetItem(newCoord.X, newCoord.Y, item);
                     return map;
                 }
             }

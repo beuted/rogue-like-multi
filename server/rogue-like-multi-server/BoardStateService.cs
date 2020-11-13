@@ -58,6 +58,19 @@ namespace rogue_like_multi_server
                 boardStateDynamic.Players.Remove(keyToRemove);
             }
 
+            // Change GameState if needed
+            if (boardStateDynamic.GameStatus == GameStatus.Play && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + boardStateDynamic.GameConfig.NbSecsPerCycle)
+            {
+                boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                boardStateDynamic.GameStatus = GameStatus.Discuss;
+            }
+
+            if (boardStateDynamic.GameStatus == GameStatus.Discuss && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + boardStateDynamic.GameConfig.NbSecsDiscuss)
+            {
+                boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                boardStateDynamic.GameStatus = GameStatus.Play;
+            }
+
             return boardStateDynamic;
 
             // IA Stuff
@@ -120,7 +133,7 @@ namespace rogue_like_multi_server
             if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null)
             {
                 player.Entity.Inventory.Add(map.Cells[gridCoord.x][gridCoord.y].ItemType.Value);
-                map.Cells[gridCoord.x][gridCoord.y].ItemType = null;
+                _mapService.PickupItem(map, Coord.FromGridPos(gridCoord));
             }
 
             // Drop bags at CampFire
@@ -197,13 +210,13 @@ namespace rogue_like_multi_server
 
         private BoardStateStatic GenerateStatic()
         {
-            return new BoardStateStatic(
-            );
+            return new BoardStateStatic();
         }
 
         private BoardStateDynamic GenerateDynamic()
         {
             var map = _mapService.Generate(100, 100);
+            var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             return new BoardStateDynamic(
                 map,
                 new Dictionary<string, Entity>()
@@ -215,7 +228,11 @@ namespace rogue_like_multi_server
                 },
                 new Dictionary<string, Player>(),
                 0,
-                Team.None
+                Team.None,
+                now,
+                now,
+                GameStatus.Play,
+                new GameConfig(20, 10)
             );
         }
     }
