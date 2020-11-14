@@ -29,11 +29,39 @@ namespace rogue_like_multi_server.Controllers
 
         // GET api/game-state
         [HttpPost("reset")]
-        public IActionResult ResetGame()
+        public IActionResult ResetGame([FromBody] GameConfig gameConfig)
         {
-            if (_gameService.TryReset())
+            if (_gameService.TryReset(gameConfig))
                 return Ok();
             return BadRequest();
+        }
+
+        [HttpPost("create")]
+        public IActionResult CreateGame([FromBody] GameConfig gameConfig)
+        {
+            var gameHash = _gameService.Init(gameConfig, User.Identity.Name);
+            return Ok(gameHash);
+        }
+
+        [HttpPost("{gameHash}/join")]
+        public IActionResult JoinGame(string gameHash)
+        {
+            _gameService.AddPlayer(User.Identity.Name);
+            return Ok(gameHash);
+        }
+
+        [HttpPost("{gameHash}/start")]
+        public async Task<IActionResult> StartGame(string gameHash)
+        {
+            await _gameService.StartGame();
+            return Ok();
+        }
+
+        [HttpGet("{gameHash}/players")]
+        public IActionResult GetPlayers(string gameHash)
+        {
+            var players = _gameService.GetPlayers();
+            return Ok(players);
         }
     }
 }

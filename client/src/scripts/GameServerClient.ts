@@ -49,6 +49,71 @@ export class GameServerClient {
     })
   }
 
+  public async createGame(nbSecsPerCycle: number, nbSecsDiscuss: number): Promise<string | null> {
+    return await fetch('/api/game-state/create', {
+      method: 'POST',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa (`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+      body: JSON.stringify({ nbSecsPerCycle: nbSecsPerCycle, nbSecsDiscuss: nbSecsDiscuss }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return null;
+      }
+      return response.text();
+    })
+  }
+
+  public async joinGame(gameHash: string): Promise<string | null> {
+    return await fetch(`/api/game-state/${gameHash}/join`, {
+      method: 'POST',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa (`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return null;
+      }
+      return response.text();
+    })
+  }
+
+  public async startGame(gameHash: string): Promise<any> {
+    return await fetch(`/api/game-state/${gameHash}/start`, {
+      method: 'POST',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa (`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return null;
+      }
+      return response.text();
+    })
+  }
+
+  public async getPlayers(gameHash: string): Promise<string[] | null> {
+    return await fetch(`/api/game-state/${gameHash}/players`, {
+      method: 'GET',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa (`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    })
+  }
+
   public async resetGame(): Promise<boolean> {
     return await fetch('/api/game-state/reset', {
       method: 'POST',

@@ -4,6 +4,7 @@ namespace rogue
     {
         Pause = 0,
         Play = 1,
-        Discuss = 2
+        Discuss = 2,
+        Prepare = 3,
     }
 }

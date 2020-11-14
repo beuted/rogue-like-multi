@@ -30,18 +30,20 @@ namespace rogue_like_multi_server.Hubs
             await _gameService.SendPlayerMessage(Context.User.Identity.Name, message);
         }
 
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
             _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has connected");
-            _gameService.AddPlayer(Context.User.Identity.Name, new FloatingCoord(10, 10));
-            return base.OnConnectedAsync();
+
+            _gameService.ConnectPlayer(Context.User.Identity.Name);
+            await _gameService.SendPlayerInit(Context.User.Identity.Name);
+            await base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
             _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has disconnected");
             _gameService.RemovePlayer(Context.User.Identity.Name);
-            return base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception);
         }
 
     }

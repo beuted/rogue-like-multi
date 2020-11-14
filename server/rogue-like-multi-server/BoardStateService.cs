@@ -18,15 +18,33 @@ namespace rogue_like_multi_server
             _mapService = mapService;
         }
 
-        public BoardState Generate()
+        public BoardState Generate(GameConfig gameConfig)
         {
             return new BoardState(
-                GenerateStatic(),
+                GenerateStatic(gameConfig),
                 GenerateDynamic()
             );
         }
 
-        public BoardStateDynamic Update(BoardStateDynamic boardStateDynamic)
+        public BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic)
+        {
+            boardStateDynamic.GameStatus = GameStatus.Play;
+
+            // Set a random player to be the Bad guy the other ones are still good guys
+            foreach (var kvp in boardStateDynamic.Players)
+            {
+                kvp.Value.Role = Role.Good;
+            }
+
+            Random rnd = new Random();
+            var i = rnd.Next(1, boardStateDynamic.Players.Count);
+            var players = Enumerable.ToList(boardStateDynamic.Players.Values);
+            players[i].Role = Role.Bad;
+            
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig config)
         {
             // Kill entities with 0 pv (remove them from map)
             var keysToRemove = new List<string>();
@@ -55,17 +73,17 @@ namespace rogue_like_multi_server
             foreach (var keyToRemove in keysToRemovePlayers)
             {
                 boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord.ToCoord());
-                boardStateDynamic.Players.Remove(keyToRemove);
+                 boardStateDynamic.Players.Remove(keyToRemove);
             }
 
             // Change GameState if needed
-            if (boardStateDynamic.GameStatus == GameStatus.Play && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + boardStateDynamic.GameConfig.NbSecsPerCycle)
+            if (boardStateDynamic.GameStatus == GameStatus.Play && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle)
             {
                 boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
                 boardStateDynamic.GameStatus = GameStatus.Discuss;
             }
 
-            if (boardStateDynamic.GameStatus == GameStatus.Discuss && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + boardStateDynamic.GameConfig.NbSecsDiscuss)
+            if (boardStateDynamic.GameStatus == GameStatus.Discuss && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
             {
                 boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
                 boardStateDynamic.GameStatus = GameStatus.Play;
@@ -143,10 +161,22 @@ namespace rogue_like_multi_server
                 boardStateDynamic.NbBagsFound += nbBags;
                 if (boardStateDynamic.NbBagsFound >= 4)
                 {
-                    boardStateDynamic.WinnerTeam = Team.Good;
+                    boardStateDynamic.WinnerTeam = Role.Good;
                 }
             }
 
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName)
+        {
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Error, $"Player {playerName} tried to connect but he doesn't exist on this game");
+                return boardStateDynamic;
+            }
+
+            player.IsConnected = true;
             return boardStateDynamic;
         }
 
@@ -163,11 +193,22 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
+        public List<string> GetPlayers(BoardStateDynamic boardStateDynamic)
+        {
+            return boardStateDynamic.Players.Keys.ToList();
+          
+        }
+
         public BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to be removed but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (boardStateDynamic.GameStatus == GameStatus.Prepare)
+            {
+                boardStateDynamic.Players.Remove(playerName);
                 return boardStateDynamic;
             }
             // We just mark it as disconnected to remember his coord and all if he reconnects
@@ -185,7 +226,13 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
             }
 
+            if (attackingPlayer.CoolDownAttack > new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds())
+            {
+                return boardStateDynamic;
+            }
+
             attackingPlayer.InputSequenceNumber = inputSequenceNumber;
+            attackingPlayer.CoolDownAttack = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() + 2000;
 
             foreach (var entity in boardStateDynamic.Entities)
             {
@@ -208,9 +255,9 @@ namespace rogue_like_multi_server
         }
 
 
-        private BoardStateStatic GenerateStatic()
+        private BoardStateStatic GenerateStatic(GameConfig gameConfig)
         {
-            return new BoardStateStatic();
+            return new BoardStateStatic(gameConfig);
         }
 
         private BoardStateDynamic GenerateDynamic()
@@ -228,25 +275,30 @@ namespace rogue_like_multi_server
                 },
                 new Dictionary<string, Player>(),
                 0,
-                Team.None,
+                Role.None,
                 now,
                 now,
-                GameStatus.Play,
-                new GameConfig(20, 10)
+                GameStatus.Prepare
             );
         }
     }
 
     public interface IBoardStateService
     {
-        BoardState Generate();
+        BoardState Generate(GameConfig gameConfig);
 
-        BoardStateDynamic Update(BoardStateDynamic boardStateDynamic);
+        BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic);
+
+        BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig gameConfig);
 
         BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map name, string playerName,
             FloatingCoord velocity, double inputSequenceNumber);
 
+        BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
+
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
+
+        List<string> GetPlayers(BoardStateDynamic boardStateDynamic);
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 

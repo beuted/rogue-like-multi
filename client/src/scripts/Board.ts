@@ -7,23 +7,26 @@ import { Input } from "./InputManager";
 export class Player {
   inputSequenceNumber: number;
   entity: Entity;
+  role: Role;
+  coolDownAttack: number;
 }
 
-export enum Team {
+export enum Role {
   None = 0,
   Good = 1,
-  Evil = 2
+  Bad = 2
 }
 
 export enum GameStatus {
   Pause = 0,
   Play = 1,
-  Discuss = 2
+  Discuss = 2,
+  Prepare = 3
 }
 
 export type GameState = {
   boardStateDynamic: BoardStateDynamic;
-  boardStateStatic: {};
+  boardStateStatic: { gameConfig: GameConfig };
 }
 
 export type GameConfig = {
@@ -32,17 +35,16 @@ export type GameConfig = {
 }
 
 export type BoardStateDynamic = {
-  players: {[name: string]: Player};
-  entities: {[name: string]: Entity};
+  players: {[name: string]: Player},
+  entities: {[name: string]: Entity},
   map: {
     cells: Cell[][];
-  };
+  },
   nbBagsFound: number,
-  winnerTeam: Team,
+  winnerTeam: Role,
   nowTimestamp: number,
   startTimestamp: number,
-  gameStatus: GameStatus;
-  gameConfig: GameConfig
+  gameStatus: GameStatus
 }
 
 export class Board {
@@ -53,7 +55,7 @@ export class Board {
   public entitiesPreviousCoords: { [name: string]: Coord } = {}; // Could be stored at the renderservice level
   public player: Player;
   public nbBagsFound: number = 0;
-  public winnerTeam: Team = Team.None;
+  public winnerTeam: Role = Role.None;
   public lastUpdateTime: number = null;
   public nowTimestamp: number;
   public startTimestamp: number;
@@ -65,13 +67,15 @@ export class Board {
 
   public init(gameState: GameState, username: string) {
     // Init map grid
-    this.cells = gameState.boardStateDynamic.map.cells;
-    this.mapLength = this.cells.length;
+    this.gameConfig = gameState.boardStateStatic.gameConfig;
+    this.mapLength = gameState.boardStateDynamic.map.cells.length;
     if (gameState.boardStateDynamic.players) {
       var player = gameState.boardStateDynamic.players[username];
       if (player)
         this.player = player;
     }
+
+    this.update(gameState.boardStateDynamic);
   }
 
   public update(boardStateDynamic: BoardStateDynamic) {
@@ -87,7 +91,6 @@ export class Board {
     this.nowTimestamp = boardStateDynamic.nowTimestamp;
     this.startTimestamp = boardStateDynamic.startTimestamp;
     this.gameStatus = boardStateDynamic.gameStatus;
-    this.gameConfig = boardStateDynamic.gameConfig;
   }
 
   public applyInput(input: Input) {
@@ -100,6 +103,8 @@ export class Board {
 
     this.player.entity.coord.x = newX;
     this.player.entity.coord.y = newY;
+    if (input.attack)
+      this.player.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
   }
 
   isWalkable(x: number, y: number) {

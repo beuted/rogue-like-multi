@@ -1,7 +1,7 @@
 import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board, BoardStateDynamic, Team, GameStatus } from "./Board";
+import { Board, BoardStateDynamic, GameStatus, GameState, Role } from "./Board";
 import { InputManager, Input } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
@@ -9,6 +9,7 @@ import { RenderService } from "./RenderService";
 import { CharacterController } from "./CharacterController";
 import { ChatController } from "./ChatController";
 import { LightRenderService } from "./LightRenderService";
+import { ModalController } from "./ModalController";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -17,11 +18,12 @@ export class BoardScene {
   private inputManager: InputManager;
   private socketClient: SocketClient;
 
-  private state: GameState = GameState.Pause;
   private gameServerClient: GameServerClient;
   private lightRenderService : LightRenderService;
   private renderService: RenderService;
   private characterController: CharacterController;
+
+  private modalController: ModalController;
 
   private pendingInputs: Input[] = [];
 
@@ -35,6 +37,7 @@ export class BoardScene {
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
     this.characterController = new CharacterController(this.socketClient)
+    this.modalController = new ModalController(this.gameServerClient);
   }
 
   public async init() {
@@ -47,26 +50,22 @@ export class BoardScene {
     await this.soundManager.init();
     this.inputManager.init();
 
+    // HTML UI controllers
+    this.modalController.init();
+
     //this.soundManager.play();
 
     console.log("Everything initialized");
 
-    // Set state
-    this.state = GameState.Play;
-
     // Display stuff
-
     const sceneContainer = this.renderService.init();
-
-    var gameState = await this.gameServerClient.getState();
-    if (!gameState) {
-      console.error("Could not fetch game state");
-      return;
-    }
-
-    this.board.init(gameState, user.username);
-
     this.app.stage.addChild(sceneContainer);
+
+    // Called once for init
+    this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
+      this.board.init(gameState, user.username);
+      this.modalController.showComponent(false);
+    });
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
@@ -88,6 +87,9 @@ export class BoardScene {
       }
     });
 
+    // We start after registering listeners !
+    this.socketClient.start();
+
     var chatController = new ChatController(this.socketClient);
 
     chatController.init(document.getElementById('chat-box'), (message) => this.characterController.talk(message));
@@ -98,24 +100,24 @@ export class BoardScene {
   }
 
   private gameLoop(delta: number) {
-    if (this.state == GameState.Play)
-      this.play(delta)
+    this.play(delta)
 
     // In case of victory (a bit hacky)
-    if (this.board.winnerTeam != Team.None) {
+    if (this.board.winnerTeam != Role.None) {
       this.gameServerClient.resetGame();
-      window.alert(`${this.board.winnerTeam == Team.Good ? 'The villagers' : 'The werewoves'} won the game !`);
-      this.board.winnerTeam = Team.None
+      window.alert(`${this.board.winnerTeam == Role.Good ? 'The villagers' : 'The werewoves'} won the game !`);
+      this.board.winnerTeam = Role.None
       location.reload();
     }
   }
 
   private play(delta: number) {
-
     switch(this.board.gameStatus) {
+      case GameStatus.Prepare:
+        break;
       case GameStatus.Play:
         const speed = 0.04;
-        let input = this.inputManager.get(parseFloat((delta * speed).toFixed(3)));
+        let input = this.inputManager.get(this.board.player.coolDownAttack, this.board.player.role, parseFloat((delta * speed).toFixed(3)));
 
         // TODO: Cooldown coté client pour l'attack ? ou coté server ?
         if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
@@ -134,19 +136,14 @@ export class BoardScene {
         this.renderService.renderCharacter(this.board.player.entity);
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
-        this.renderService.renderGameState(this.board.nowTimestamp - this.board.startTimestamp);
+        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
         this.renderService.renderEffects(this.board.player.entity, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
         break;
       case GameStatus.Discuss:
-        this.renderService.renderGameState(this.board.nowTimestamp - this.board.startTimestamp);
+        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
         break;
       case GameStatus.Pause:
         break;
     }
   }
-}
-
-enum GameState {
-  Pause = 0,
-  Play = 1,
 }

@@ -21,7 +21,7 @@ namespace rogue
         public int NbBagsFound;
 
         [JsonProperty("winnerTeam")]
-        public Team WinnerTeam;
+        public Role WinnerTeam;
 
         [JsonProperty("startTimestamp")]
         public long StartTimestamp;
@@ -32,10 +32,7 @@ namespace rogue
         [JsonProperty("gameStatus")]
         public GameStatus GameStatus;
 
-        [JsonProperty("gameConfig")]
-        public GameConfig GameConfig;
-
-        public BoardStateDynamic(Map map, Dictionary<string, Entity> entities, Dictionary<string, Player> players, int nbBagsFound, Team winnerTeam, long startTimestamp, long nowTimestamp, GameStatus gameStatus, GameConfig gameConfig)
+        public BoardStateDynamic(Map map, Dictionary<string, Entity> entities, Dictionary<string, Player> players, int nbBagsFound, Role winnerTeam, long startTimestamp, long nowTimestamp, GameStatus gameStatus)
         {
             Map = map;
             Entities = entities;
@@ -45,7 +42,6 @@ namespace rogue
             StartTimestamp = startTimestamp;
             NowTimestamp = nowTimestamp;
             GameStatus = gameStatus;
-            GameConfig = gameConfig;
         }
 
         public BoardStateDynamic GetClientView()
@@ -53,7 +49,7 @@ namespace rogue
             var playersFiltered = Players
                 .Where(kvp => kvp.Value.IsConnected)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            return new BoardStateDynamic(Map, Entities, playersFiltered, NbBagsFound, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(), GameStatus, GameConfig);
+            return new BoardStateDynamic(Map, Entities, playersFiltered, NbBagsFound, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(), GameStatus);
         }
     }
 }

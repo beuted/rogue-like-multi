@@ -10,6 +10,12 @@ namespace rogue
         [JsonProperty("inputSequenceNumber")]
         public double InputSequenceNumber;
 
+        [JsonProperty("coolDownAttack")]
+        public double CoolDownAttack;
+
+        [JsonProperty("role")]
+        public Role Role;
+
         [JsonIgnore]
         public bool IsConnected;
 
@@ -17,7 +23,9 @@ namespace rogue
         {
             Entity = entity;
             InputSequenceNumber = inputSequenceNumber;
+            CoolDownAttack = 0;
             IsConnected = isConnected;
+            Role = Role.None;
         }
 
     }

@@ -10,8 +10,6 @@ namespace rogue
         [JsonProperty("nbSecsDiscuss")]
         public int NbSecsDiscuss;
 
-        
-
         public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss)
         {
             NbSecsPerCycle = nbSecsPerCycle;

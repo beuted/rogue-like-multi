@@ -25,23 +25,50 @@ namespace rogue_like_multi_server
 
         public BoardState BoardState { get; private set; }
 
-        public BoardState Init()
+        public string Init(GameConfig gameConfig, string playerName)
         {
-            BoardState = _boardStateService.Generate();
-            return BoardState;
+            if (BoardState != null)
+                return null; // We don't allow to create a game if one is already running
+            BoardState = _boardStateService.Generate(gameConfig);
+            AddPlayer(playerName);
+            return "random-hash";
         }
 
-        public bool TryReset()
+        public async Task StartGame()
         {
-            if (BoardState.BoardStateDynamic.WinnerTeam == Team.None)
+            BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic);
+            if (BoardState == null)
+                return;
+
+            var players = _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
+            await _chatHubContext.Clients.Users(players).SendAsync("initBoardState", BoardState.GetClientView());
+        }
+
+        public async Task SendPlayerInit(string user)
+        {
+            var client = _chatHubContext.Clients.Users(user);
+            if (client == null)
+            {
+                _logger.Log(LogLevel.Error, $"Could not find user {user} in hub");
+                return;
+            }
+            if (BoardState == null)
+                return;
+            await client.SendAsync("initBoardState", BoardState.GetClientView());
+        }
+
+        public bool TryReset(GameConfig gameConfig)
+        {
+            if (BoardState.BoardStateDynamic.WinnerTeam == Role.None)
                 return false;
-            BoardState = _boardStateService.Generate();
+            BoardState = _boardStateService.Generate(gameConfig);
             return true;
         }
 
         public void Update()
         {
-            BoardState.BoardStateDynamic = _boardStateService.Update(BoardState.BoardStateDynamic);
+            if (BoardState != null)
+                BoardState.BoardStateDynamic = _boardStateService.Update(BoardState.BoardStateDynamic, BoardState.BoardStateStatic.GameConfig);
         }
 
         public void ReceivePlayerInput(long time, string playerName, Input input)
@@ -51,6 +78,9 @@ namespace rogue_like_multi_server
 
         public void ApplyPlayerInputs()
         {
+            if (BoardState == null)
+                return;
+
             while (playerInputs.Count > 0)
             {
                 var playerInput = playerInputs[0];
@@ -73,13 +103,30 @@ namespace rogue_like_multi_server
             await _chatHubContext.Clients.Users(playersInRange.Select(x => x.Entity.Name).ToArray()).SendAsync("newMessage", playerName, message);
         }
 
-        public void AddPlayer(string playerName, FloatingCoord coord)
+        public void ConnectPlayer(string playerName)
         {
-            BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, coord);
+            if (BoardState != null)
+                BoardState.BoardStateDynamic = _boardStateService.ConnectPlayer(BoardState.BoardStateDynamic, playerName);
+        }
+
+        public void AddPlayer(string playerName)
+        {
+            if (BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare)
+                return; // You cannot join a game that is already running
+            BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(10, 10));
+        }
+
+        public List<string> GetPlayers()
+        {
+            if (BoardState == null)
+                return new List<string>();
+            return _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
         }
 
         public void RemovePlayer(string playerName)
         {
+            if (BoardState == null)
+                return;
             BoardState.BoardStateDynamic = _boardStateService.RemovePlayer(BoardState.BoardStateDynamic, playerName);
         }
     }
@@ -88,9 +135,11 @@ namespace rogue_like_multi_server
     {
         BoardState BoardState { get; }
 
-        BoardState Init();
+        string Init(GameConfig gameConfig, string playerName);
 
-        bool TryReset();
+        Task StartGame();
+
+        bool TryReset(GameConfig gameConfig);
 
         void Update();
 
@@ -98,9 +147,15 @@ namespace rogue_like_multi_server
 
         void ApplyPlayerInputs();
 
-        Task SendPlayerMessage(string playerName, string message);
+        Task SendPlayerInit(string playerName);
 
-        void AddPlayer(string username, FloatingCoord coord);
+        Task SendPlayerMessage(string playerName, string message);
+        
+        void ConnectPlayer(string playerName);
+
+        void AddPlayer(string username);
+
+        List<string> GetPlayers();
 
         void RemovePlayer(string username);
     }

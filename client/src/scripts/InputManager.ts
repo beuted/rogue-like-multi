@@ -1,11 +1,13 @@
 import { keyboard } from "./Keyboard";
 import { Coord } from "./Coord";
+import { Role } from "./Board";
 
 export interface Input {
   direction: Coord,
   attack: boolean,
   pressTime: number,
-  inputSequenceNumber: number
+  inputSequenceNumber: number,
+  time: number;
 }
 
 export class InputManager {
@@ -18,22 +20,25 @@ export class InputManager {
 
   }
 
-  public get(delta: number): Input {
+  public get(coolDownAttack: number, role: Role, delta: number): Input {
     if (this.vx != 0 || this.vy != 0 || this.attack) {
       this.inputSequenceNumber++;
     }
+
+    let canAttack = role == Role.Bad && Date.now() > coolDownAttack;
 
     var res = {
       direction: {
         x: this.vx,
         y: this.vy
       },
-      attack: this.attack,
+      attack: canAttack ? this.attack : false,
       pressTime: delta,
-      inputSequenceNumber: this.inputSequenceNumber
+      inputSequenceNumber: this.inputSequenceNumber,
+      time: Date.now()
     }
 
-    if (this.attack)
+    if (res.attack)
       console.log("attack")
 
     return res;

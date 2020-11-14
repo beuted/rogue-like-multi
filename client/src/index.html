@@ -7,6 +7,28 @@
     </head>
     <body>
         <div id="game"></div>
+        <div class="init-game" id="init-game">
+            <div class="modal" id="select-game-modal">
+                <div class="modal-block">
+                    <div>Time per Cycle (secs): <input type="number" placeholder="120" id="time-per-cycle-input"></div>
+                    <div>Time To Discuss (secs): <input type="number" placeholder="20" id="time-to-discuss-input"></div>
+                    <div><button id="create-game-btn">Create Game</button></div>
+                </div>
+                <div class="modal-block">
+                    <div><input type="text" placeholder="Game id" id="join-game-id-input"> <button id="join-game-btn">Join Game</button></div>
+                </div>
+            </div>
+
+            <div class="modal" id="lobby-modal" style="display: none">
+                <div class="modal-block">
+                    <div>Players:</div>
+                    <div class="player-list" id="player-list"></div>
+                </div>
+                <div class="modal-block">
+                    <div><button id="start-game-btn">Start Game</button></div>
+                </div>
+            </div>
+        </div>
         <div id="chat-box" class="chat-box">
             <div class="chat-box-messages">
                 <!--<div class="chat-box-message"><span class="chat-box-messages-date">[10:23]</span> <span class="chat-box-messages-author">author</span>: message 1</div>-->

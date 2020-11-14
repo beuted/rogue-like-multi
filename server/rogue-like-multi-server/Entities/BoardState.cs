@@ -16,5 +16,10 @@ namespace rogue
             BoardStateStatic = boardStateStatic;
             BoardStateDynamic = boardStateDynamic;
         }
+
+        public BoardState GetClientView()
+        {
+            return new BoardState(BoardStateStatic, BoardStateDynamic.GetClientView());
+        }
     }
 }

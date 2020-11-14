@@ -27,11 +27,9 @@ namespace rogue_like_multi_server
         {
             _logger.LogInformation("GameHostedService is starting.");
 
-            _gameService.Init();
-
             while(_running)
             {
-                var begin= DateTime.UtcNow.Ticks;
+                var begin = DateTime.UtcNow.Ticks;
 
                 // Apply all inputs received
                 _gameService.ApplyPlayerInputs();
@@ -54,11 +52,6 @@ namespace rogue_like_multi_server
             }
         }
 
-        private void DoWork(object state)
-        {
-            _logger.LogInformation("Timed Background Service is working.");
-        }
-
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Timed Background Service is stopping.");
@@ -67,7 +60,10 @@ namespace rogue_like_multi_server
 
         private async Task SendUpdatesClients()
         {
-            await _chatHubContext.Clients.All.SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetClientView());
+            if (_gameService.BoardState == null)
+                return;
+            var players = _gameService.GetPlayers();
+            await _chatHubContext.Clients.Users(players).SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetClientView());
         }
     }
 }

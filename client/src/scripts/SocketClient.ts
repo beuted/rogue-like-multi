@@ -4,7 +4,6 @@ export class SocketClient {
   private connection: signalR.HubConnection;
 
   constructor() {
-
   }
 
   public async init(user: {username: string, password: string}) {
@@ -13,7 +12,9 @@ export class SocketClient {
         httpClient: new CustomHttpClient(signalR.NullLogger.instance, user),
         accessTokenFactory: () => btoa(`${user.username}:${user.password}`) })
       .build();
+  }
 
+  public async start() {
     await this.connection.start().catch(err => console.error(err)).then(() => {
       console.log('[SocketClient] Connection established');
     });
@@ -37,6 +38,7 @@ export enum SocketMessageSent {
 
 export enum SocketMessageReceived {
   SetBoardStateDynamic = "setBoardStateDynamic",
+  InitBoardState = "initBoardState",
   NewMessage = "newMessage"
 }
 
