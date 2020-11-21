@@ -34,11 +34,38 @@ export type GameConfig = {
   nbSecsDiscuss: number;
 }
 
+export enum ActionEventType {
+  Attack = 0,
+}
+
+export type ActionEvent = {
+  type: ActionEventType,
+  coord: Coord,
+  timestamp: number
+}
+
+export type Vote = {
+  from: string,
+  for: string
+}
+
+export type Gift = {
+  from: string
+}
+
+export type NightState = {
+  votes: Vote[],
+  foodGiven: Gift[],
+  materialGiven: Gift[]
+}
+
 export type BoardStateDynamic = {
-  players: {[name: string]: Player},
-  entities: {[name: string]: Entity},
+  players: { [name: string]: Player },
+  entities: { [name: string]: Entity },
+  events: ActionEvent[],
+  nightState: NightState
   map: {
-    cells: Cell[][];
+    cells: Cell[][]
   },
   nbBagsFound: number,
   winnerTeam: Role,
@@ -59,8 +86,9 @@ export class Board {
   public lastUpdateTime: number = null;
   public nowTimestamp: number;
   public startTimestamp: number;
-  public gameStatus: GameStatus;
+  public gameStatus: GameStatus = GameStatus.Prepare;
   public gameConfig: GameConfig;
+  public nightState: NightState
 
   constructor() {
   }
@@ -91,13 +119,14 @@ export class Board {
     this.nowTimestamp = boardStateDynamic.nowTimestamp;
     this.startTimestamp = boardStateDynamic.startTimestamp;
     this.gameStatus = boardStateDynamic.gameStatus;
+    this.nightState = boardStateDynamic.nightState;
   }
 
   public applyInput(input: Input) {
     let newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
     let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
 
-    if (!this.isWalkable(Math.floor(newX+0.5), Math.floor(newY+0.5))) {
+    if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
       return;
     }
 
@@ -108,7 +137,7 @@ export class Board {
   }
 
   isWalkable(x: number, y: number) {
-    return x >= 0 && y >= 0 && x <= this.mapLength -1 && y <= this.mapLength-1 && CellHelper.isWalkable(this.cells[x][y]);
+    return x >= 0 && y >= 0 && x <= this.mapLength - 1 && y <= this.mapLength - 1 && CellHelper.isWalkable(this.cells[x][y]);
   }
 
   private computeEntitiesPreviousCoord() {

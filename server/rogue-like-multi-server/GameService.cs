@@ -86,8 +86,10 @@ namespace rogue_like_multi_server
                 var playerInput = playerInputs[0];
                 playerInputs.RemoveAt(0);
 
-                if (playerInput.Item2.Direction.X != 0 || playerInput.Item2.Direction.Y != 0)
-                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime * playerInput.Item2.Direction, playerInput.Item2.InputSequenceNumber);
+                if (playerInput.Item2.Vote != null)
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVote(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.Vote, playerInput.Item2.InputSequenceNumber);
+                if (playerInput.Item2.Direction.HasValue && (playerInput.Item2.Direction.Value.X != 0 || playerInput.Item2.Direction.Value.Y != 0))
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime.Value * playerInput.Item2.Direction.Value, playerInput.Item2.InputSequenceNumber);
                 if (playerInput.Item2.Attack)
                     BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
             }

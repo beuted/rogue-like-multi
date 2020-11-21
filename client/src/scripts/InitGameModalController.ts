@@ -1,6 +1,6 @@
 import { GameServerClient } from "./GameServerClient";
 
-export class ModalController {
+export class InitGameModalController {
   private createGameButton: Element;
   private joinGameButton: Element;
 
@@ -41,16 +41,16 @@ export class ModalController {
       }
     });
 
-     // Start game button
-     this.joinGameButton = document.getElementById('start-game-btn');
+    // Start game button
+    this.joinGameButton = document.getElementById('start-game-btn');
 
-     this.joinGameButton.addEventListener('click', () => {
-         this.startGame(this.gameHash);
-     });
+    this.joinGameButton.addEventListener('click', () => {
+      this.startGame(this.gameHash);
+    });
 
-     // Show players in lobby
-     this.interval = setInterval(async () => {
-       if (!this.gameHash)
+    // Show players in lobby
+    this.interval = setInterval(async () => {
+      if (!this.gameHash)
         return;
       var players = await this.gameServerClient.getPlayers(this.gameHash);
       var playerListElt = document.getElementById('player-list');
@@ -60,7 +60,7 @@ export class ModalController {
         elt.innerHTML = player;
         playerListElt.appendChild(elt);
       }
-     }, 2000);
+    }, 2000);
 
   }
 

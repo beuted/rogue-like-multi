@@ -9,7 +9,10 @@ import { RenderService } from "./RenderService";
 import { CharacterController } from "./CharacterController";
 import { ChatController } from "./ChatController";
 import { LightRenderService } from "./LightRenderService";
-import { ModalController } from "./ModalController";
+import { InitGameModalController } from "./InitGameModalController";
+import { ParticleRenderService } from "./ParticleRenderService";
+import { EventHandler } from "./EventHandler";
+import { NightOverlayController } from "./NightOverlayController";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -19,11 +22,14 @@ export class BoardScene {
   private socketClient: SocketClient;
 
   private gameServerClient: GameServerClient;
-  private lightRenderService : LightRenderService;
+  private lightRenderService: LightRenderService;
+  private particleRenderService: ParticleRenderService;
   private renderService: RenderService;
   private characterController: CharacterController;
+  private eventHandler: EventHandler;
 
-  private modalController: ModalController;
+  private initGameModalController: InitGameModalController;
+  private nightOverlayController: NightOverlayController;
 
   private pendingInputs: Input[] = [];
 
@@ -32,12 +38,15 @@ export class BoardScene {
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.socketClient = new SocketClient();
     this.lightRenderService = new LightRenderService(this.spriteManager);
-    this.renderService = new RenderService(this.spriteManager, this.lightRenderService);
+    this.particleRenderService = new ParticleRenderService(this.spriteManager);
+    this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService);
     this.board = new Board();
     this.inputManager = new InputManager();
     this.gameServerClient = new GameServerClient();
     this.characterController = new CharacterController(this.socketClient)
-    this.modalController = new ModalController(this.gameServerClient);
+    this.initGameModalController = new InitGameModalController(this.gameServerClient);
+    this.nightOverlayController = new NightOverlayController(this.inputManager, this.characterController);
+    this.eventHandler = new EventHandler(this.particleRenderService);
   }
 
   public async init() {
@@ -51,7 +60,8 @@ export class BoardScene {
     this.inputManager.init();
 
     // HTML UI controllers
-    this.modalController.init();
+    this.initGameModalController.init();
+    this.nightOverlayController.init();
 
     //this.soundManager.play();
 
@@ -64,11 +74,12 @@ export class BoardScene {
     // Called once for init
     this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
       this.board.init(gameState, user.username);
-      this.modalController.showComponent(false);
+      this.initGameModalController.showComponent(false);
     });
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
+      this.eventHandler.update(boardStateDynamic.events);
 
       // Server Reconciliation. Re-apply all the inputs not yet processed by
       // the server.
@@ -112,8 +123,9 @@ export class BoardScene {
   }
 
   private play(delta: number) {
-    switch(this.board.gameStatus) {
+    switch (this.board.gameStatus) {
       case GameStatus.Prepare:
+        this.initGameModalController.showComponent(true);
         break;
       case GameStatus.Play:
         const speed = 0.04;
@@ -138,9 +150,13 @@ export class BoardScene {
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
         this.renderService.renderEffects(this.board.player.entity, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
+
+        this.nightOverlayController.show(false);
         break;
       case GameStatus.Discuss:
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
+        this.nightOverlayController.show(true);
+        this.nightOverlayController.render(this.board.player.entity.name, this.board.nightState, Object.values(this.board.players).map(x => x.entity));
         break;
       case GameStatus.Pause:
         break;

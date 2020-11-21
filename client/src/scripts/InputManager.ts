@@ -6,6 +6,7 @@ export interface Input {
   direction: Coord,
   attack: boolean,
   pressTime: number,
+  vote: string | null,
   inputSequenceNumber: number,
   time: number;
 }
@@ -20,6 +21,17 @@ export class InputManager {
 
   }
 
+  public getVote(name: string): Input {
+    return {
+      direction: null,
+      attack: false,
+      pressTime: null,
+      inputSequenceNumber: this.inputSequenceNumber,
+      time: Date.now(),
+      vote: name
+    }
+  }
+
   public get(coolDownAttack: number, role: Role, delta: number): Input {
     if (this.vx != 0 || this.vy != 0 || this.attack) {
       this.inputSequenceNumber++;
@@ -27,7 +39,7 @@ export class InputManager {
 
     let canAttack = role == Role.Bad && Date.now() > coolDownAttack;
 
-    var res = {
+    var res: Input = {
       direction: {
         x: this.vx,
         y: this.vy
@@ -35,7 +47,8 @@ export class InputManager {
       attack: canAttack ? this.attack : false,
       pressTime: delta,
       inputSequenceNumber: this.inputSequenceNumber,
-      time: Date.now()
+      time: Date.now(),
+      vote: null
     }
 
     if (res.attack)
@@ -47,10 +60,10 @@ export class InputManager {
   public init() {
     //Capture the keyboard arrow keys
     let left = keyboard("ArrowLeft"),
-    up = keyboard("ArrowUp"),
-    right = keyboard("ArrowRight"),
-    down = keyboard("ArrowDown"),
-    space = keyboard(" ");
+      up = keyboard("ArrowUp"),
+      right = keyboard("ArrowRight"),
+      down = keyboard("ArrowDown"),
+      space = keyboard(" ");
 
 
     space.press = () => {

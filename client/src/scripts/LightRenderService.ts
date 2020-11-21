@@ -7,7 +7,7 @@ export class LightRenderService {
 
   private lightMask: Container;
   private playerLightOverlaySprite: Graphics = null;
-  private staticLightsGraphics: {[id: string]: Graphics} = {};
+  private staticLightsGraphics: { [id: string]: Graphics } = {};
 
   constructor(private spriteManager: SpriteManager) {
 
@@ -19,27 +19,27 @@ export class LightRenderService {
 
     // Player
     this.playerLightOverlaySprite = new Graphics();
-      this.playerLightOverlaySprite.beginFill(0xFF3300);
-      const RPlayer = 9*this.spriteManager.tilesetSize;
-      this.playerLightOverlaySprite.drawCircle(
-        0,
-        0,
-        RPlayer);
+    this.playerLightOverlaySprite.beginFill(0xFF3300);
+    const RPlayer = 9 * this.spriteManager.tilesetSize;
+    this.playerLightOverlaySprite.drawCircle(
+      0,
+      0,
+      RPlayer);
 
-      this.playerLightOverlaySprite.endFill();
+    this.playerLightOverlaySprite.endFill();
 
-      // Fire
-      this.addStaticLight('fire', {x: 5, y: 5}, 4);
+    // Fire
+    this.addStaticLight('fire', { x: 5, y: 5 }, 4);
 
-      this.lightMask.addChild(this.playerLightOverlaySprite);
+    this.lightMask.addChild(this.playerLightOverlaySprite);
 
-      mapContainer.mask = this.lightMask;
-      mapContainer.addChild(this.lightMask);
+    mapContainer.mask = this.lightMask;
+    mapContainer.addChild(this.lightMask);
   }
 
   addStaticLight(id: string, position: Coord, radius: number) {
     var light = new Graphics();
-    const r = radius*this.spriteManager.tilesetSize;
+    const r = radius * this.spriteManager.tilesetSize;
 
     light.beginFill(0xFF3300);
     light.drawCircle(
@@ -62,9 +62,9 @@ export class LightRenderService {
     this.playerLightOverlaySprite.y = ((character.coord.y + 0.5) * this.spriteManager.tilesetSize - 0.5);
 
     // Make all lights flycker
-    var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbSecsPerCycle - Math.PI/2 ) + 1;
-    this.playerLightOverlaySprite.scale.set(0.1 + 0.5 * daylightFactor + 0.005 * Math.sin(Date.now()/100)); // flyckering
+    var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbSecsPerCycle - Math.PI / 2) + 1;
+    this.playerLightOverlaySprite.scale.set(0.1 + 0.5 * daylightFactor + 0.005 * Math.sin(Date.now() / 100)); // flyckering
 
-    this.staticLightsGraphics['fire'].scale.set(0.5 + 0.005 * Math.sin(Date.now()/100)); // flyckering
+    this.staticLightsGraphics['fire'].scale.set(0.5 + 0.005 * Math.sin(Date.now() / 100)); // flyckering
   }
 }

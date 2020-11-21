@@ -37,7 +37,7 @@ namespace rogue_like_multi_server
             }
 
             Random rnd = new Random();
-            var i = rnd.Next(1, boardStateDynamic.Players.Count);
+            var i = rnd.Next(0, boardStateDynamic.Players.Count-1);
             var players = Enumerable.ToList(boardStateDynamic.Players.Values);
             players[i].Role = Role.Bad;
             
@@ -76,18 +76,32 @@ namespace rogue_like_multi_server
                  boardStateDynamic.Players.Remove(keyToRemove);
             }
 
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             // Change GameState if needed
-            if (boardStateDynamic.GameStatus == GameStatus.Play && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle)
+            if (boardStateDynamic.GameStatus == GameStatus.Play && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle)
             {
-                boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                boardStateDynamic.StartTimestamp = nowTimestamp;
                 boardStateDynamic.GameStatus = GameStatus.Discuss;
             }
 
-            if (boardStateDynamic.GameStatus == GameStatus.Discuss && new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds() > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
+            if (boardStateDynamic.GameStatus == GameStatus.Discuss && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
             {
-                boardStateDynamic.StartTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                var winner = ResolveVotes(boardStateDynamic);
+                if (winner != null)
+                {
+                    // Kill the winner of the vote
+                    boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[winner].Inventory, boardStateDynamic.Entities[winner].Coord.ToCoord());
+                    boardStateDynamic.Entities.Remove(winner); //TODO: don't remove just mark as dead !
+                }
+                // Reset Night state
+                boardStateDynamic.NightState = new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>());
+
+                boardStateDynamic.StartTimestamp = nowTimestamp;
                 boardStateDynamic.GameStatus = GameStatus.Play;
             }
+
+            // Clean old events (older than 10 secs)
+            boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5)*1000).ToList();
 
             return boardStateDynamic;
 
@@ -168,6 +182,31 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
+        public BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber)
+        {
+            if (boardStateDynamic.GameStatus != GameStatus.Discuss)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to vote but game status is {boardStateDynamic.GameStatus}");
+                return boardStateDynamic;
+            }
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to vote but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+
+            if (boardStateDynamic.NightState.Votes.FindIndex(x => x.From == playerName) != -1)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} has already voted");
+                return boardStateDynamic;
+            }
+
+            player.InputSequenceNumber = inputSequenceNumber;
+
+            boardStateDynamic.NightState.Votes.Add(new Vote(playerName, vote));
+            return boardStateDynamic;
+        }
+
         public BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
@@ -226,19 +265,22 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
             }
 
-            if (attackingPlayer.CoolDownAttack > new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds())
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+
+            if (attackingPlayer.CoolDownAttack > nowTimestamp)
             {
                 return boardStateDynamic;
             }
 
             attackingPlayer.InputSequenceNumber = inputSequenceNumber;
-            attackingPlayer.CoolDownAttack = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds() + 2000;
+            attackingPlayer.CoolDownAttack = nowTimestamp + 2000;
 
             foreach (var entity in boardStateDynamic.Entities)
             {
                 if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
                 {
                     entity.Value.Pv--;
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, entity.Value.Coord, nowTimestamp));
                 }
             }
 
@@ -247,13 +289,37 @@ namespace rogue_like_multi_server
                 if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
                 {
                     player.Value.Entity.Pv--;
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, player.Value.Entity.Coord, nowTimestamp));
                 }
             }
-
 
             return boardStateDynamic;
         }
 
+        private string ResolveVotes(BoardStateDynamic boardStateDynamic)
+        {
+            if (boardStateDynamic.NightState.Votes.Count == 0)
+                return null;
+
+            var votes = new Dictionary<string, int>();
+            foreach (var vote in boardStateDynamic.NightState.Votes)
+            {
+                if (!votes.ContainsKey(vote.For))
+                    votes.Add(vote.For, 0);
+                votes[vote.For]++;
+            }
+
+            var maxVotes = votes.Values.Max();
+            var keyOfMaxValue = votes.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+
+            if (votes.Values.Count(x => x == maxVotes) > 1)
+                return null;
+            if (keyOfMaxValue == "pass")
+                return null;
+
+            return keyOfMaxValue;
+
+        }
 
         private BoardStateStatic GenerateStatic(GameConfig gameConfig)
         {
@@ -278,7 +344,9 @@ namespace rogue_like_multi_server
                 Role.None,
                 now,
                 now,
-                GameStatus.Prepare
+                GameStatus.Prepare,
+                new List<ActionEvent>(),
+                new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>())
             );
         }
     }
@@ -291,8 +359,10 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig gameConfig);
 
-        BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map name, string playerName,
+        BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
             FloatingCoord velocity, double inputSequenceNumber);
+
+        BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber);
 
         BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
 
