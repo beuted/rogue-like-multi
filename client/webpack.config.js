@@ -5,16 +5,27 @@ const distPath = path.resolve(__dirname, 'dist');
 const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: './src/index.tsx',
     mode: isDev ? 'development' : 'production',
     devtool: 'inline-source-map',
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
+                use: ['ts-loader'],
                 exclude: /node_modules/
-            }
+            },
+            {
+                test: /\.css$/i,
+                use: ['style-loader', 'css-loader'],
+            },
+            /*{
+                test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
+                loader: "url-loader",
+                options: {
+                    limit: 8192,
+                },
+            },*/
         ]
     },
     plugins: [
@@ -28,7 +39,7 @@ module.exports = {
         ]),
     ],
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ]
+        extensions: ['.tsx', '.ts', '.js']
     },
     output: {
         filename: 'bundle.js',
@@ -40,17 +51,17 @@ module.exports = {
         port: 8080,
         hot: true,
         proxy: {
-          '/api': {
-            target: 'http://localhost:19689',
-            cookieDomainRewrite: "localhost:8080",
-            changeOrigin: true
-          },
-          '/hub': {
-            target: 'http://localhost:19689',
-            cookieDomainRewrite: "localhost:8080",
-            ws: true,
-            changeOrigin: true
-          }
+            '/api': {
+                target: 'http://localhost:19689',
+                cookieDomainRewrite: "localhost:8080",
+                changeOrigin: true
+            },
+            '/hub': {
+                target: 'http://localhost:19689',
+                cookieDomainRewrite: "localhost:8080",
+                ws: true,
+                changeOrigin: true
+            }
         }
     },
     optimization: {

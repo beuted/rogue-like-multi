@@ -21,6 +21,18 @@ export class InputManager {
 
   }
 
+  public getGiveFood(): Input {
+    return {
+      direction: null,
+      attack: false,
+      pressTime: null,
+      inputSequenceNumber: this.inputSequenceNumber,
+      time: Date.now(),
+      vote: name,
+      //giveFood: null
+    }
+  }
+
   public getVote(name: string): Input {
     return {
       direction: null,

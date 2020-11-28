@@ -2,7 +2,7 @@ import { Container } from "pixi.js";
 import { Coord } from "./Coord";
 import * as particles from 'pixi-particles'
 import { SpriteManager } from "./SpriteManager";
-import { ActionEvent } from "./Board";
+import { AttackEvent } from "./Board";
 
 export class ParticleRenderService {
   private particleContainer: Container;
@@ -19,7 +19,7 @@ export class ParticleRenderService {
     mapContainer.addChild(this.particleContainer);
   }
 
-  handleEvent(event: ActionEvent) {
+  handleEvent(event: AttackEvent) {
     this.addStaticEmitter(event.coord, 1)
   }
 

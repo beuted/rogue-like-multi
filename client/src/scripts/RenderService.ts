@@ -23,7 +23,7 @@ export class RenderService {
   private inventorySprites: Sprite[] = [];
   private pvSprites: Sprite[] = [];
 
-  private nbBagFoundText: Text;
+  private roleText: Text;
 
   constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService, private particleRenderService: ParticleRenderService) {
   }
@@ -62,8 +62,8 @@ export class RenderService {
   public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isHiding: boolean) {
     if (!previousEntityPosition)
       previousEntityPosition = entity.coord;
-    // Remove if out of bounds
-    if (entity.coord.x < playerPosition.x - 9 || entity.coord.x > playerPosition.x + 9 || entity.coord.y < playerPosition.y - 9 || entity.coord.y > playerPosition.y + 9) {
+    // Remove if out of bounds or dead
+    if (entity.coord.x < playerPosition.x - 9 || entity.coord.x > playerPosition.x + 9 || entity.coord.y < playerPosition.y - 9 || entity.coord.y > playerPosition.y + 9 || entity.pv <= 0) {
       if (this.entitySprites[entity.name]) {
         this.entitySprites[entity.name].parent.removeChild(this.entitySprites[entity.name]);
         delete this.entitySprites[entity.name];
@@ -100,6 +100,7 @@ export class RenderService {
       this.mapContainer.addChild(this.characterSprite);
     }
 
+<<<<<<< HEAD
     if (character.pv <= 0 && !this.deadCharacterSprite) {
       this.characterSprite.destroy();
       this.deadCharacterSprite = new Sprite(this.spriteManager.textures[19]);
@@ -120,6 +121,11 @@ export class RenderService {
       this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
       this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
     }
+=======
+    this.characterSprite.alpha = character.pv == 0 ? 0.3 : 1.0;
+    this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
+    this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+>>>>>>> Add React because why would I do things simply
   }
 
   public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number) {
@@ -167,13 +173,13 @@ export class RenderService {
   }
 
   public renderGameState(role: Role, time: number) {
-    if (!this.nbBagFoundText) {
-      this.nbBagFoundText = new Text('', { fontFamily: 'Arial', fontSize: this.spriteManager.tilesetSize, fill: 0xffffff, align: 'center' });
-      this.nbBagFoundText.x = 20 * this.spriteManager.tilesetSize;
-      this.nbBagFoundText.y = 1 * this.spriteManager.tilesetSize;
-      this.pvContainer.addChild(this.nbBagFoundText);
+    if (!this.roleText) {
+      this.roleText = new Text('', { fontFamily: 'Arial', fontSize: this.spriteManager.tilesetSize, fill: 0xffffff, align: 'center' });
+      this.roleText.x = 20 * this.spriteManager.tilesetSize;
+      this.roleText.y = 1 * this.spriteManager.tilesetSize;
+      this.pvContainer.addChild(this.roleText);
     }
-    this.nbBagFoundText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(time)}`;
+    this.roleText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(time)}`;
   }
 
   public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, isHiding: boolean, interpolFactor: number) {
@@ -200,8 +206,13 @@ export class RenderService {
     }
 
     for (let playerName in players) {
+<<<<<<< HEAD
       if (playerName != currentPlayer.entity.name)
         this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
+=======
+      if (playerName != currentPlayer.entity.name && players[playerName].entity.pv != 0) //Do not show dead players
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor);
+>>>>>>> Add React because why would I do things simply
     }
 
     //If players or entites have been removed from list we need to clean them

@@ -1,20 +1,21 @@
 import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board, BoardStateDynamic, GameStatus, GameState, Role } from "./Board";
+import { Board, BoardStateDynamic, GameStatus, Role } from "./Board";
 import { InputManager, Input } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
 import { CharacterController } from "./CharacterController";
-import { ChatController } from "./ChatController";
 import { LightRenderService } from "./LightRenderService";
-import { InitGameModalController } from "./InitGameModalController";
 import { ParticleRenderService } from "./ParticleRenderService";
 import { EventHandler } from "./EventHandler";
+<<<<<<< HEAD
 import { NightOverlayController } from "./NightOverlayController";
 import { CellHelper } from "./Cell";
 import { CoordHelper } from "./Coord";
+=======
+>>>>>>> Add React because why would I do things simply
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -30,45 +31,40 @@ export class BoardScene {
   private characterController: CharacterController;
   private eventHandler: EventHandler;
 
-  private initGameModalController: InitGameModalController;
-  private nightOverlayController: NightOverlayController;
-
   private pendingInputs: Input[] = [];
+  guiController: GuiController;
 
+  constructor(private app: Application, gameServerClient: GameServerClient, socketClient: SocketClient, inputManager: InputManager, characterController: CharacterController, board: Board, guiController: GuiController) {
+    this.socketClient = socketClient;
+    this.gameServerClient = gameServerClient;
+    this.inputManager = inputManager;
+    this.characterController = characterController;
+    this.board = board;
+    this.guiController = guiController;
+
+<<<<<<< HEAD
   constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 11, 10);
+=======
+    this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 10, 10);
+>>>>>>> Add React because why would I do things simply
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
-    this.socketClient = new SocketClient();
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
     this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService);
-    this.board = new Board();
-    this.inputManager = new InputManager();
-    this.gameServerClient = new GameServerClient();
-    this.characterController = new CharacterController(this.socketClient)
-    this.initGameModalController = new InitGameModalController(this.gameServerClient);
-    this.nightOverlayController = new NightOverlayController(this.inputManager, this.characterController);
     this.eventHandler = new EventHandler(this.particleRenderService);
   }
 
   public async init() {
-    var user = await this.gameServerClient.authenticate();
-    if (user == null)
-      return;
-
-    await this.socketClient.init(user);
     await this.spriteManager.init();
     await this.soundManager.init();
     this.inputManager.init();
-
-    // HTML UI controllers
-    this.initGameModalController.init();
-    this.nightOverlayController.init();
 
     //this.soundManager.play();
 
     console.log("Everything initialized");
 
+<<<<<<< HEAD
     // Called once for init
     this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
       this.board.init(gameState, user.username);
@@ -80,6 +76,11 @@ export class BoardScene {
 
       this.initGameModalController.showComponent(false);
     });
+=======
+    // Display stuff
+    const sceneContainer = this.renderService.init();
+    this.app.stage.addChild(sceneContainer);
+>>>>>>> Add React because why would I do things simply
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
@@ -105,10 +106,6 @@ export class BoardScene {
     // We start after registering listeners !
     this.socketClient.start();
 
-    var chatController = new ChatController(this.socketClient);
-
-    chatController.init(document.getElementById('chat-box'), (message) => this.characterController.talk(message));
-
     // Game loop
 
     this.app.ticker.add((delta: number) => this.gameLoop(delta));
@@ -129,7 +126,7 @@ export class BoardScene {
   private play(delta: number) {
     switch (this.board.gameStatus) {
       case GameStatus.Prepare:
-        this.initGameModalController.showComponent(true);
+        this.guiController.setShowGameModal(true);
         break;
       case GameStatus.Play:
         const speed = 0.04;
@@ -158,15 +155,19 @@ export class BoardScene {
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
         this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle);
 
-        this.nightOverlayController.show(false);
+        this.guiController.setShowNightOverlay(false);
         break;
       case GameStatus.Discuss:
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
-        this.nightOverlayController.show(true);
-        this.nightOverlayController.render(this.board.player.entity.name, this.board.nightState, Object.values(this.board.players).map(x => x.entity));
+        this.guiController.setShowNightOverlay(true);
         break;
       case GameStatus.Pause:
         break;
     }
   }
+}
+
+export type GuiController = {
+  setShowGameModal: React.Dispatch<React.SetStateAction<boolean>>,
+  setShowNightOverlay: React.Dispatch<React.SetStateAction<boolean>>
 }

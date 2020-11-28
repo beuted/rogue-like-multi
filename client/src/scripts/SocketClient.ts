@@ -6,11 +6,12 @@ export class SocketClient {
   constructor() {
   }
 
-  public async init(user: {username: string, password: string}) {
+  public async init(user: { username: string, password: string }) {
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl("/hub", {
         httpClient: new CustomHttpClient(signalR.NullLogger.instance, user),
-        accessTokenFactory: () => btoa(`${user.username}:${user.password}`) })
+        accessTokenFactory: () => btoa(`${user.username}:${user.password}`)
+      })
       .build();
   }
 
@@ -20,12 +21,16 @@ export class SocketClient {
     });
   }
 
-  public SendMessage(messageName: SocketMessageSent, ...args : any[]) {
+  public SendMessage(messageName: SocketMessageSent, ...args: any[]) {
     this.connection.send(messageName, ...args)
   }
 
   public registerListener(messageName: SocketMessageReceived, cb: (...args: any[]) => void) {
     this.connection.on(messageName, cb);
+  }
+
+  public unregisterListener(messageName: SocketMessageReceived) {
+    this.connection.off(messageName);
   }
 }
 
@@ -43,15 +48,15 @@ export enum SocketMessageReceived {
 }
 
 class CustomHttpClient extends signalR.DefaultHttpClient {
-  constructor(logger: signalR.ILogger, private user: {username: string, password: string}) {
+  constructor(logger: signalR.ILogger, private user: { username: string, password: string }) {
     super(logger)
   }
   public send(request: signalR.HttpRequest): Promise<signalR.HttpResponse> {
     request.headers = {
       ...request.headers,
-      'Authorization': `Basic ${btoa (`${this.user.username}:${this.user.password}`)}`
+      'Authorization': `Basic ${btoa(`${this.user.username}:${this.user.password}`)}`
     };
-    request.url = request.url + `&access_token=${btoa (`${this.user.username}:${this.user.password}`)}` //USELESS ??????
+    request.url = request.url + `&access_token=${btoa(`${this.user.username}:${this.user.password}`)}` //USELESS ??????
     return super.send(request);
   }
 }

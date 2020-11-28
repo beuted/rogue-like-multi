@@ -90,7 +90,7 @@ namespace rogue_like_multi_server
                     boardStateDynamic.Players[winner].Entity.Pv = 0;
                 }
 
-                boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.VoteResult, default, winner, nowTimestamp));
+                boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.VoteResult, nowTimestamp, default, winner, default));
 
                 // Reset Night state
                 boardStateDynamic.NightState = new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>());
@@ -99,45 +99,25 @@ namespace rogue_like_multi_server
                 boardStateDynamic.GameStatus = GameStatus.Play;
             }
 
-            // Clean old events (older than 5 secs)
-            boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5*1000)).ToList();
-
-            return boardStateDynamic;
-
-            // IA Stuff
-            /*
-            foreach (var entity in boardStateDynamic.Entities)
-            {
-                // If on the fire estinguish it
-                if (entity.Value.Coord == new FloatingCoord(5, 5))
+            // Find winner Team
+            if (boardStateDynamic.GameStatus != GameStatus.Prepare) {
+                if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
                 {
-                    boardStateDynamic.NbBagsFound = Math.Max(boardStateDynamic.NbBagsFound - 1, 0);
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Bad));
+                    boardStateDynamic.GameStatus = GameStatus.Prepare;
                 }
-
-                // Move
-                entity.Value.JpParam.Reset(entity.Value.Coord.ToGridPos(), new GridPos(5,5));
-                List<GridPos> resultPathList = JumpPointFinder.FindPath(entity.Value.JpParam);
-                if (resultPathList.Count > 1)
+                if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Bad && x.Value.Entity.Pv > 0).Any())
                 {
-                    var random3 = new Random();
-                    if (random3.Next(0, 3) == 0) // 1 chance out of 3 to move
-                        entity.Value.Coord = FloatingCoord.FromGridPos(resultPathList[1]);
-
-                    break;
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Good));
+                    boardStateDynamic.GameStatus = GameStatus.Prepare;
                 }
-
-                Random random = new Random();
-                var x = random.Next(0, 100);
-
-                Random random2 = new Random();
-                var y = random2.Next(0, 100);
-
-                _logger.Log(LogLevel.Information, $"Entity reset to {x}, {y}");
-                entity.Value.Coord = new FloatingCoord(x, y);
             }
 
+            // Clean old events (older than 5 secs)
+            boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5)*1000).ToList();
+
             return boardStateDynamic;
-            */
+
         }
 
         private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, out Coord gridCoord, out FloatingCoord coord)
@@ -313,16 +293,16 @@ namespace rogue_like_multi_server
                 if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
                 {
                     entity.Value.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, entity.Value.Coord, null, nowTimestamp));
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Value.Coord, default, Role.None));
                 }
             }
 
             foreach (var player in boardStateDynamic.Players)
             {
-                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
+                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1 && attackingPlayer.Entity.Pv > 0)
                 {
                     player.Value.Entity.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, player.Value.Entity.Coord, null, nowTimestamp));
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, player.Value.Entity.Coord, null, Role.None));
                 }
             }
 
@@ -378,7 +358,6 @@ namespace rogue_like_multi_server
                     }, 3) }
                 },
                 new Dictionary<string, Player>(),
-                0,
                 Role.None,
                 now,
                 now,

@@ -7,21 +7,25 @@ namespace rogue
         [JsonProperty("type")]
         public ActionEventType Type;
 
+        [JsonProperty("timestamp")]
+        public long Timestamp;
+
         [JsonProperty("coord")]
         public FloatingCoord Coord;
 
         [JsonProperty("playerName")]
         public string PlayerName;
 
-        [JsonProperty("timestamp")]
-        public long Timestamp;
+        [JsonProperty("winnerTeam")]
+        public Role WinnerTeam;
 
-        public ActionEvent(ActionEventType type, FloatingCoord coord, string playerName, long timestamp)
+        public ActionEvent(ActionEventType type, long timestamp, FloatingCoord coord, string playerName, Role winnerTeam)
         {
             Type = type;
+            Timestamp = timestamp;
             Coord = coord;
             PlayerName = playerName;
-            Timestamp = timestamp;
+            WinnerTeam = winnerTeam;
         }
     }
 }

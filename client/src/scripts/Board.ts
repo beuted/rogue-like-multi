@@ -37,14 +37,26 @@ export type GameConfig = {
 export enum ActionEventType {
   Attack = 0,
   VoteResult = 1,
+  EndGame = 2
 }
 
-export type ActionEvent = {
-  type: ActionEventType,
-  coord: Coord,
-  playerName: string,
+export type AttackEvent = {
+  type: ActionEventType.Attack,
   timestamp: number
+  coord: Coord,
 }
+export type VoteResultEvent = {
+  type: ActionEventType.VoteResult,
+  playerName: string,
+}
+
+export type EndGameEvent = {
+  type: ActionEventType.EndGame,
+  timestamp: number,
+  winnerTeam: Role
+}
+
+export type ActionEvent = AttackEvent | EndGameEvent | VoteResultEvent
 
 export type Vote = {
   from: string,
@@ -83,7 +95,6 @@ export class Board {
   public players: { [name: string]: Player } = {};
   public entitiesPreviousCoords: { [name: string]: Coord } = {}; // Could be stored at the renderservice level
   public player: Player;
-  public nbBagsFound: number = 0;
   public winnerTeam: Role = Role.None;
   public lastUpdateTime: number = null;
   public nowTimestamp: number;
@@ -117,7 +128,6 @@ export class Board {
     this.cells = boardStateDynamic.map.cells;
     this.player = boardStateDynamic.players[this.player.entity.name];
     this.winnerTeam = boardStateDynamic.winnerTeam;
-    this.nbBagsFound = boardStateDynamic.nbBagsFound;
     this.nowTimestamp = boardStateDynamic.nowTimestamp;
     this.startTimestamp = boardStateDynamic.startTimestamp;
     this.gameStatus = boardStateDynamic.gameStatus;

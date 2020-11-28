@@ -11,6 +11,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
     "typeRoots": [
       "node_modules/@types",
       "typings"
