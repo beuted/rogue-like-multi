@@ -14,6 +14,12 @@ export class EventHandler {
             if (!this.handledEvents.includes(event.timestamp)) {
                 if (event.type == ActionEventType.Attack)
                     this.particleRenderService.handleEvent(event);
+                if (event.type == ActionEventType.VoteResult) {
+                    if (event.playerName != null)
+                        alert(`The player ${event.playerName} was burned like the traitor he was! (was he ?)`);
+                    else
+                        alert('No one had enough vote to be burned to death.')
+                }
                 this.handledEvents.push(event.timestamp);
             }
         }

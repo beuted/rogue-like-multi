@@ -40,9 +40,10 @@
         <e p="Controllers" t="Include">
           <e p="GameStateController.cs" t="Include" />
           <e p="UserController.cs" t="Include" />
-          <e p="ValuesController.cs" t="Include" />
         </e>
         <e p="Entities" t="Include">
+          <e p="ActionEvent.cs" t="Include" />
+          <e p="ActionEventType.cs" t="Include" />
           <e p="BoardState.cs" t="Include" />
           <e p="BoardStateDynamic.cs" t="Include" />
           <e p="BoardStateStatic.cs" t="Include" />
@@ -51,10 +52,14 @@
           <e p="Entity.cs" t="Include" />
           <e p="FloatingCoord.cs" t="Include" />
           <e p="FloorType.cs" t="Include" />
+          <e p="GameConfig.cs" t="Include" />
+          <e p="GameStatus.cs" t="Include" />
           <e p="Input.cs" t="Include" />
           <e p="ItemType.cs" t="Include" />
+          <e p="MapFile.cs" t="Include" />
+          <e p="NightState.cs" t="Include" />
           <e p="Player.cs" t="Include" />
-          <e p="Team.cs" t="Include" />
+          <e p="Role.cs" t="Include" />
           <e p="User.cs" t="Include" />
         </e>
         <e p="GameHostedService.cs" t="Include" />

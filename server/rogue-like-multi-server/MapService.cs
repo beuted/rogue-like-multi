@@ -1,57 +1,64 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
 using rogue;
 
 namespace rogue_like_multi_server
 {
     public interface IMapService
     {
-        Map Generate(int mapWidth, int mapHeight);
+        Map Generate(int mapWidth, int mapHeight, string file);
         Map DropItems(Map map, IList<ItemType> items, Coord coord);
         Map PickupItem(Map map, Coord coord);
     }
 
     public class MapService: IMapService
     {
-        private const int WallPosition = 20;
-
-        public Map Generate(int mapWidth, int mapHeight)
+        public Map Generate(int mapWidth, int mapHeight, string file)
         {
             var map = new Map(mapWidth, mapHeight);
-            for (int i = 0; i < mapWidth; i++) {
+
+            string mapJson = File.ReadAllText(file);
+
+            MapFile mapFile = JsonConvert.DeserializeObject<MapFile>(mapJson);
+
+            var mapLayer = mapFile.Layers.FirstOrDefault(x => x.Name == "Map");
+            var objectsLayer = mapFile.Layers.FirstOrDefault(x => x.Name == "Objects");
+            if (mapLayer == null || objectsLayer == null || mapLayer.Data.Length < mapWidth*mapHeight || objectsLayer.Data.Length < mapWidth*mapHeight)
+            {
+                throw new ArgumentException($"Given map file {mapJson} is wrongly formatted");
+            }
+
+            for (int i = 0; i < mapWidth; i++)
+            {
                 for (int j = 0; j < mapHeight; j++)
                 {
-                    map.SetCell(i, j, GetRandomSpriteId());
+                    map.SetCell(i, j, (FloorType) mapLayer.Data[i + j * mapWidth] - 1);
                 }
             }
 
-            for (int i = 5; i < mapWidth-5; i++)
+            for (int i = 0; i < mapWidth; i++)
             {
-                map.SetCell(i, WallPosition, FloorType.Wall);
+                for (int j = 0; j < mapHeight; j++)
+                {
+                    map.SetItem(i, j, (ItemType) objectsLayer.Data[i + j * mapWidth] - 1);
+                }
             }
 
-            map.SetCell(GetRandomNumber(3, mapWidth-3), WallPosition, FloorType.ClosedDoor);
-            map.SetCell(5, 5, FloorType.CampFire);
+            // Objects
+            for (var i = 0; i < 5; i++)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
+                    ItemType.Wood);
+            }
 
-            // 1 Key
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
-                ItemType.Key);
-
-            // 4 bags
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
-                ItemType.Bag);
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
-                ItemType.Bag);
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
-                ItemType.Bag);
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(mapWidth - 3, WallPosition - 1),
-                ItemType.Bag);
-
-            // 2 Food
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
-                ItemType.Food);
-            map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
-                ItemType.Food);
+            for (var i = 0; i < 10; i++)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
+                    ItemType.Food);
+            }
 
             return map;
         }
@@ -90,7 +97,7 @@ namespace rogue_like_multi_server
             {
                 var newCoord = baseCoord + new Coord(i, j);
                 if (IsInRange(newCoord, map) &&
-                    map.Cells[newCoord.X][newCoord.Y].ItemType == null)
+                    (map.Cells[newCoord.X][newCoord.Y].ItemType == null || map.Cells[newCoord.X][newCoord.Y].ItemType == ItemType.Empty))
                 {
                     map.SetItem(newCoord.X, newCoord.Y, item);
                     return map;
@@ -114,9 +121,9 @@ namespace rogue_like_multi_server
                 i++;
                 x = GetRandomNumber(minCoord.X, maxCoord.X);
                 y = GetRandomNumber(minCoord.Y, maxCoord.Y);
-            } while (map.Cells[x][y].ItemType != null || i > 100);
+            } while ((map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty && map.Cells[x][y].FloorType.IsWalkable()) || i > 100);
 
-            if (map.Cells[x][y].ItemType != null)
+            if (map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty && map.Cells[x][y].FloorType.IsWalkable())
             {
                 return null;
             }

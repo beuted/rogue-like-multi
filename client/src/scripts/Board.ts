@@ -36,11 +36,13 @@ export type GameConfig = {
 
 export enum ActionEventType {
   Attack = 0,
+  VoteResult = 1,
 }
 
 export type ActionEvent = {
   type: ActionEventType,
   coord: Coord,
+  playerName: string,
   timestamp: number
 }
 
@@ -127,7 +129,15 @@ export class Board {
     let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
 
     if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
-      return;
+      newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
+      newY = this.player.entity.coord.y;
+      if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
+        newX = this.player.entity.coord.x;
+        newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
+        if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
+          return;
+        }
+      }
     }
 
     this.player.entity.coord.x = newX;

@@ -82,6 +82,17 @@ namespace rogue
             return new GridPos(Convert.ToInt32(X), Convert.ToInt32(Y));
         }
 
+        public FloatingCoord ProjectOnX()
+        {
+            return new FloatingCoord(X, 0);
+        }
+
+        public FloatingCoord ProjectOnY()
+        {
+            return new FloatingCoord(0, Y);
+        }
+
+
         public static FloatingCoord FromGridPos(GridPos gridPos)
         {
             return new FloatingCoord(gridPos.x, gridPos.y);

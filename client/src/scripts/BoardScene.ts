@@ -34,7 +34,7 @@ export class BoardScene {
   private pendingInputs: Input[] = [];
 
   constructor(private app: Application) {
-    this.spriteManager = new SpriteManager(this.app.loader, "assets/colored_tilemap.png", 9, 10, 10);
+    this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 11, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.socketClient = new SocketClient();
     this.lightRenderService = new LightRenderService(this.spriteManager);
@@ -67,13 +67,14 @@ export class BoardScene {
 
     console.log("Everything initialized");
 
-    // Display stuff
-    const sceneContainer = this.renderService.init();
-    this.app.stage.addChild(sceneContainer);
-
     // Called once for init
     this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
       this.board.init(gameState, user.username);
+
+      // Display stuff
+      const sceneContainer = this.renderService.init(this.board.cells);
+      this.app.stage.addChild(sceneContainer);
+
       this.initGameModalController.showComponent(false);
     });
 

@@ -10,13 +10,17 @@ namespace rogue
         [JsonProperty("coord")]
         public FloatingCoord Coord;
 
+        [JsonProperty("playerName")]
+        public string PlayerName;
+
         [JsonProperty("timestamp")]
         public long Timestamp;
 
-        public ActionEvent(ActionEventType type, FloatingCoord coord, long timestamp)
+        public ActionEvent(ActionEventType type, FloatingCoord coord, string playerName, long timestamp)
         {
             Type = type;
             Coord = coord;
+            PlayerName = playerName;
             Timestamp = timestamp;
         }
     }

@@ -40,7 +40,7 @@ namespace rogue_like_multi_server
             var i = rnd.Next(0, boardStateDynamic.Players.Count-1);
             var players = Enumerable.ToList(boardStateDynamic.Players.Values);
             players[i].Role = Role.Bad;
-            
+
             return boardStateDynamic;
         }
 
@@ -84,7 +84,9 @@ namespace rogue_like_multi_server
                 boardStateDynamic.GameStatus = GameStatus.Discuss;
             }
 
-            if (boardStateDynamic.GameStatus == GameStatus.Discuss && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
+            if (boardStateDynamic.GameStatus == GameStatus.Discuss
+                && (nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
+                || DidEverybodyVoted(boardStateDynamic))
             {
                 var winner = ResolveVotes(boardStateDynamic);
                 if (winner != null)
@@ -93,6 +95,9 @@ namespace rogue_like_multi_server
                     boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[winner].Inventory, boardStateDynamic.Entities[winner].Coord.ToCoord());
                     boardStateDynamic.Entities.Remove(winner); //TODO: don't remove just mark as dead !
                 }
+
+                boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.VoteResult, default, winner, nowTimestamp));
+
                 // Reset Night state
                 boardStateDynamic.NightState = new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>());
 
@@ -155,23 +160,36 @@ namespace rogue_like_multi_server
             var gridCoord = coord.ToGridPos();
             if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
             {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move on {coord} but it is not walkable");
-                return boardStateDynamic;
+                coord = player.Entity.Coord + velocity.ProjectOnX();
+                gridCoord = coord.ToGridPos();
+
+                if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
+                {
+                    coord = player.Entity.Coord + velocity.ProjectOnY();
+                    gridCoord = coord.ToGridPos();
+
+                    if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
+                    {
+                        _logger.Log(LogLevel.Warning,
+                            $"Player {playerName} tried to move on {coord} but it is not walkable");
+                        return boardStateDynamic;
+                    }
+                }
             }
 
             player.Entity.Coord = coord;
 
             // Pickup objects
-            if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null)
+            if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null && map.Cells[gridCoord.x][gridCoord.y].ItemType != ItemType.Empty)
             {
                 player.Entity.Inventory.Add(map.Cells[gridCoord.x][gridCoord.y].ItemType.Value);
                 _mapService.PickupItem(map, Coord.FromGridPos(gridCoord));
             }
 
             // Drop bags at CampFire
-            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Bag))
+            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Wood))
             {
-                int nbBags = player.Entity.Inventory.RemoveAll(item => item == ItemType.Bag);
+                int nbBags = player.Entity.Inventory.RemoveAll(item => item == ItemType.Wood);
                 boardStateDynamic.NbBagsFound += nbBags;
                 if (boardStateDynamic.NbBagsFound >= 4)
                 {
@@ -235,7 +253,6 @@ namespace rogue_like_multi_server
         public List<string> GetPlayers(BoardStateDynamic boardStateDynamic)
         {
             return boardStateDynamic.Players.Keys.ToList();
-          
         }
 
         public BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName)
@@ -280,7 +297,7 @@ namespace rogue_like_multi_server
                 if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
                 {
                     entity.Value.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, entity.Value.Coord, nowTimestamp));
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, entity.Value.Coord, null, nowTimestamp));
                 }
             }
 
@@ -289,11 +306,16 @@ namespace rogue_like_multi_server
                 if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1)
                 {
                     player.Value.Entity.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, player.Value.Entity.Coord, nowTimestamp));
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, player.Value.Entity.Coord, null, nowTimestamp));
                 }
             }
 
             return boardStateDynamic;
+        }
+
+        private bool DidEverybodyVoted(BoardStateDynamic boardStateDynamic)
+        {
+            return boardStateDynamic.NightState.Votes.Count >= boardStateDynamic.Players.Count;
         }
 
         private string ResolveVotes(BoardStateDynamic boardStateDynamic)
@@ -328,7 +350,7 @@ namespace rogue_like_multi_server
 
         private BoardStateDynamic GenerateDynamic()
         {
-            var map = _mapService.Generate(100, 100);
+            var map = _mapService.Generate(100, 100, "../../client/src/assets/map.json");
             var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             return new BoardStateDynamic(
                 map,
@@ -336,7 +358,7 @@ namespace rogue_like_multi_server
                 {
                     { "pwet", new Entity(new FloatingCoord(10, 10), "pwet", 7, new List<ItemType>()
                     {
-                        ItemType.Bag
+                        ItemType.Wood
                     }, 3, map.SearchGrid) }
                 },
                 new Dictionary<string, Player>(),

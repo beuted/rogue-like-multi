@@ -2,6 +2,7 @@ import { Graphics, Container } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { Entity } from "./Entity";
 import { Coord } from "./Coord";
+import { Cell, FloorType } from "./Cell";
 
 export class LightRenderService {
 
@@ -13,7 +14,7 @@ export class LightRenderService {
 
   }
 
-  init(mapContainer: Container) {
+  init(mapContainer: Container, cells: Cell[][]) {
     this.lightMask = new Container();
     this.playerLightOverlaySprite = new Graphics();
 
@@ -29,7 +30,17 @@ export class LightRenderService {
     this.playerLightOverlaySprite.endFill();
 
     // Fire
-    this.addStaticLight('fire', { x: 5, y: 5 }, 4);
+    for (let i = 0; i < cells.length; i++) {
+      for (let j = 0; j < cells[0].length; j++) {
+        if (cells[i][j].floorType == FloorType.CampFire) {
+          this.addStaticLight(`fire-${i}-${j}`, { x: i, y: j }, 5);
+        }
+
+        if (cells[i][j].floorType == FloorType.StreetLamp) {
+          this.addStaticLight(`fire-${i}-${j}`, { x: i, y: j }, 3);
+        }
+      }
+    }
 
     this.lightMask.addChild(this.playerLightOverlaySprite);
 
@@ -65,6 +76,7 @@ export class LightRenderService {
     var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbSecsPerCycle - Math.PI / 2) + 1;
     this.playerLightOverlaySprite.scale.set(0.1 + 0.5 * daylightFactor + 0.005 * Math.sin(Date.now() / 100)); // flyckering
 
-    this.staticLightsGraphics['fire'].scale.set(0.5 + 0.005 * Math.sin(Date.now() / 100)); // flyckering
+    for (var key of Object.keys(this.staticLightsGraphics))
+      this.staticLightsGraphics[key].scale.set(0.5 + 0.01 * Math.sin(Date.now() / 100)); // flyckering
   }
 }

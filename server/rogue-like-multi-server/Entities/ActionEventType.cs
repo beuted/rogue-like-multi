@@ -8,5 +8,6 @@ namespace rogue
     public enum ActionEventType
     {
         Attack = 0,
+        VoteResult = 1,
     }
 }
