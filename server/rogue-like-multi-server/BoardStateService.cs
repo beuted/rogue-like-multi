@@ -38,7 +38,7 @@ namespace rogue_like_multi_server
 
             Random rnd = new Random();
             var i = rnd.Next(0, boardStateDynamic.Players.Count-1);
-            var players = Enumerable.ToList(boardStateDynamic.Players.Values);
+            var players = boardStateDynamic.Players.Values.ToList();
             players[i].Role = Role.Bad;
 
             return boardStateDynamic;
@@ -61,20 +61,16 @@ namespace rogue_like_multi_server
                 boardStateDynamic.Entities.Remove(keyToRemove);
             }
 
-            // Kill players with 0 pv (remove them from map)
-            var keysToRemovePlayers = new List<string>();
+            // Kill players with 0 pv (drop its items)
             foreach (var player in boardStateDynamic.Players)
             {
-                if (player.Value.Entity.Pv <= 0)
+                if (player.Value.Entity.Pv <= 0 && player.Value.Entity.Inventory.Count > 0)
                 {
-                    keysToRemovePlayers.Add(player.Key);
+                    boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, player.Value.Entity.Inventory, player.Value.Entity.Coord.ToCoord());
+                    player.Value.Entity.Inventory.RemoveAll(x => true);
                 }
             }
-            foreach (var keyToRemove in keysToRemovePlayers)
-            {
-                boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Players[keyToRemove].Entity.Inventory, boardStateDynamic.Players[keyToRemove].Entity.Coord.ToCoord());
-                 boardStateDynamic.Players.Remove(keyToRemove);
-            }
+
 
             var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             // Change GameState if needed
@@ -92,8 +88,7 @@ namespace rogue_like_multi_server
                 if (winner != null)
                 {
                     // Kill the winner of the vote
-                    boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, boardStateDynamic.Entities[winner].Inventory, boardStateDynamic.Entities[winner].Coord.ToCoord());
-                    boardStateDynamic.Entities.Remove(winner); //TODO: don't remove just mark as dead !
+                    boardStateDynamic.Players[winner].Entity.Pv = 0;
                 }
 
                 boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.VoteResult, default, winner, nowTimestamp));
@@ -105,8 +100,8 @@ namespace rogue_like_multi_server
                 boardStateDynamic.GameStatus = GameStatus.Play;
             }
 
-            // Clean old events (older than 10 secs)
-            boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5)*1000).ToList();
+            // Clean old events (older than 5 secs)
+            boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5*1000)).ToList();
 
             return boardStateDynamic;
 
@@ -144,6 +139,23 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
+        private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, out GridPos gridCoord, out FloatingCoord coord)
+        {
+            coord = playerCoord + velocity;
+            gridCoord = coord.ToGridPos();
+            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+
+            coord = playerCoord + velocity.ProjectOnX();
+            gridCoord = coord.ToGridPos();
+            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+
+            coord = playerCoord + velocity.ProjectOnY();
+            gridCoord = coord.ToGridPos();
+            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+
+            return false;
+        }
+
         public BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
             FloatingCoord velocity, double inputSequenceNumber)
         {
@@ -155,29 +167,18 @@ namespace rogue_like_multi_server
 
             player.InputSequenceNumber = inputSequenceNumber;
 
-            var coord = player.Entity.Coord + velocity;
-
-            var gridCoord = coord.ToGridPos();
-            if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
-            {
-                coord = player.Entity.Coord + velocity.ProjectOnX();
-                gridCoord = coord.ToGridPos();
-
-                if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
-                {
-                    coord = player.Entity.Coord + velocity.ProjectOnY();
-                    gridCoord = coord.ToGridPos();
-
-                    if (!map.Cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable())
-                    {
-                        _logger.Log(LogLevel.Warning,
-                            $"Player {playerName} tried to move on {coord} but it is not walkable");
-                        return boardStateDynamic;
-                    }
-                }
+            var hasKey = player.Entity.Inventory.IndexOf(ItemType.Key) != -1;
+            if (!FindValidCellMove(map.Cells, player.Entity.Coord, velocity, hasKey, out var gridCoord, out var coord)) {
+                _logger.Log(LogLevel.Warning,
+                    $"Player {playerName} tried to move on {coord} but it is not walkable");
+                return boardStateDynamic;
             }
 
             player.Entity.Coord = coord;
+
+            // The rest of the method is not for dead players
+            if (player.Entity.Pv <= 0)
+                return boardStateDynamic;
 
             // Pickup objects
             if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null && map.Cells[gridCoord.x][gridCoord.y].ItemType != ItemType.Empty)
@@ -186,15 +187,19 @@ namespace rogue_like_multi_server
                 _mapService.PickupItem(map, Coord.FromGridPos(gridCoord));
             }
 
-            // Drop bags at CampFire
-            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.CampFire && player.Entity.Inventory.Contains(ItemType.Wood))
+            // Remove key if on closed door
+            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.ClosedDoor && player.Entity.Inventory.Contains(ItemType.Key))
             {
-                int nbBags = player.Entity.Inventory.RemoveAll(item => item == ItemType.Wood);
-                boardStateDynamic.NbBagsFound += nbBags;
-                if (boardStateDynamic.NbBagsFound >= 4)
-                {
-                    boardStateDynamic.WinnerTeam = Role.Good;
-                }
+                player.Entity.Inventory.Remove(ItemType.Key);
+                map.Cells[gridCoord.x][gridCoord.y].FloorType = FloorType.OpenDoor;
+            }
+
+            // Remove key if on closed chest
+            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.ClosedChest && player.Entity.Inventory.Contains(ItemType.Key))
+            {
+                player.Entity.Inventory.Remove(ItemType.Key);
+                map.Cells[gridCoord.x][gridCoord.y].FloorType = FloorType.Plain;
+                _mapService.DropItems(boardStateDynamic.Map, new [] {ItemType.Food, ItemType.Wood}, Coord.FromGridPos(gridCoord));
             }
 
             return boardStateDynamic;
@@ -210,6 +215,11 @@ namespace rogue_like_multi_server
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to vote but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (player.Entity.Pv <= 0)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to vote but he is dead");
                 return boardStateDynamic;
             }
 
@@ -279,6 +289,11 @@ namespace rogue_like_multi_server
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var attackingPlayer))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (attackingPlayer.Entity.Pv <= 0)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he is dead");
                 return boardStateDynamic;
             }
 

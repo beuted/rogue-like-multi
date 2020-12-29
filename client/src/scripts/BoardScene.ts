@@ -13,6 +13,8 @@ import { InitGameModalController } from "./InitGameModalController";
 import { ParticleRenderService } from "./ParticleRenderService";
 import { EventHandler } from "./EventHandler";
 import { NightOverlayController } from "./NightOverlayController";
+import { CellHelper } from "./Cell";
+import { CoordHelper } from "./Coord";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -70,6 +72,7 @@ export class BoardScene {
     // Called once for init
     this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
       this.board.init(gameState, user.username);
+      //this.eventHandler.reset(); Put when the game is created not only loaded
 
       // Display stuff
       const sceneContainer = this.renderService.init(this.board.cells);
@@ -130,7 +133,7 @@ export class BoardScene {
         break;
       case GameStatus.Play:
         const speed = 0.04;
-        let input = this.inputManager.get(this.board.player.coolDownAttack, this.board.player.role, parseFloat((delta * speed).toFixed(3)));
+        let input = this.inputManager.get(this.board.player.coolDownAttack, this.board.player.role, this.board.player.entity.pv, parseFloat((delta * speed).toFixed(3)));
 
         // TODO: Cooldown coté client pour l'attack ? ou coté server ?
         if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
@@ -145,12 +148,15 @@ export class BoardScene {
 
         // Render
         var interpolFactor = (Date.now() - this.board.lastUpdateTime) / 300; // 300 is the time between server update
-        this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, interpolFactor)
-        this.renderService.renderCharacter(this.board.player.entity);
+        const coord = CoordHelper.getClosestCoord(this.board.player.entity.coord);
+        const isHiding = CellHelper.isHiding(this.board.cells[coord.x][coord.y]);
+
+        this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, isHiding, interpolFactor);
+        this.renderService.renderCharacter(this.board.player.entity, isHiding);
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
-        this.renderService.renderEffects(this.board.player.entity, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
+        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle);
 
         this.nightOverlayController.show(false);
         break;

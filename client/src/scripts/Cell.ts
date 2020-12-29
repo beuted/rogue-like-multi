@@ -10,6 +10,7 @@ export enum FloorType {
   OpenDoor = 25,
   BorderWallRight = 30,
   BorderWallLeft = 31,
+  ClosedChest = 39,
   Flowers = 44,
   Sprout = 45,
   Evergreen = 54,
@@ -32,14 +33,15 @@ export class CellHelper {
     FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor, FloorType.CampFire, FloorType.BorderWallLeft,
     FloorType.BorderWallRight];
 
-    private static hidingFloorTypes: FloorType[] = [FloorType.Evergreen, FloorType.Tree, FloorType.Trees];
+  private static hidingFloorTypes: FloorType[] = [FloorType.Evergreen, FloorType.Tree, FloorType.Trees];
+  private static closedFloorTypes: FloorType[] = [FloorType.ClosedDoor, FloorType.ClosedChest];
 
-  public static isWalkable(cell: Cell) {
-    return CellHelper.walkableFloorTypes.findIndex(x => x == cell.floorType) != -1;
+  public static isWalkable(cell: Cell, hasKey: boolean) {
+    return (hasKey && CellHelper.closedFloorTypes.indexOf(cell.floorType) != -1) || CellHelper.walkableFloorTypes.indexOf(cell.floorType) != -1;
   }
 
   public static isHiding(cell: Cell) {
-    return CellHelper.hidingFloorTypes.findIndex(x => x == cell.floorType) != -1;
+    return CellHelper.hidingFloorTypes.indexOf(cell.floorType) != -1;
   }
 
   public static getCellSpriteId(cell: Cell) : number {

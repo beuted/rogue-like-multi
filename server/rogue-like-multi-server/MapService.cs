@@ -60,6 +60,12 @@ namespace rogue_like_multi_server
                     ItemType.Food);
             }
 
+            for (var i = 0; i < 10; i++)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
+                    ItemType.Key);
+            }
+
             return map;
         }
 
@@ -96,8 +102,9 @@ namespace rogue_like_multi_server
             for (var j = -distance; j <= distance; j++)
             {
                 var newCoord = baseCoord + new Coord(i, j);
-                if (IsInRange(newCoord, map) &&
-                    (map.Cells[newCoord.X][newCoord.Y].ItemType == null || map.Cells[newCoord.X][newCoord.Y].ItemType == ItemType.Empty))
+                if (IsInRange(newCoord, map)
+                    && (map.Cells[newCoord.X][newCoord.Y].ItemType == null || map.Cells[newCoord.X][newCoord.Y].ItemType == ItemType.Empty)
+                    && map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
                 {
                     map.SetItem(newCoord.X, newCoord.Y, item);
                     return map;
@@ -121,9 +128,9 @@ namespace rogue_like_multi_server
                 i++;
                 x = GetRandomNumber(minCoord.X, maxCoord.X);
                 y = GetRandomNumber(minCoord.Y, maxCoord.Y);
-            } while ((map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty && map.Cells[x][y].FloorType.IsWalkable()) || i > 100);
+            } while ((map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty || !map.Cells[x][y].FloorType.IsWalkable()) || i > 100);
 
-            if (map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty && map.Cells[x][y].FloorType.IsWalkable())
+            if (map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty || !map.Cells[x][y].FloorType.IsWalkable())
             {
                 return null;
             }
@@ -131,13 +138,6 @@ namespace rogue_like_multi_server
             map.SetItem(x, y, item);
 
             return map;
-        }
-
-        private static FloorType GetRandomSpriteId() {
-            Random random = new Random();
-            FloorType[] okSpriteId = {FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Flowers,
-                FloorType.Flowers, FloorType.Sprout, FloorType.Evergreen, FloorType.Tree, FloorType.Trees};
-            return okSpriteId[random.Next(0, okSpriteId.Length)];
         }
 
         private static int GetRandomNumber(int min, int max)

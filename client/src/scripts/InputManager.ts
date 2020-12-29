@@ -32,12 +32,12 @@ export class InputManager {
     }
   }
 
-  public get(coolDownAttack: number, role: Role, delta: number): Input {
+  public get(coolDownAttack: number, role: Role, pv: number, delta: number): Input {
     if (this.vx != 0 || this.vy != 0 || this.attack) {
       this.inputSequenceNumber++;
     }
 
-    let canAttack = role == Role.Bad && Date.now() > coolDownAttack;
+    let canAttack = role == Role.Bad && Date.now() > coolDownAttack && pv > 0;
 
     var res: Input = {
       direction: {

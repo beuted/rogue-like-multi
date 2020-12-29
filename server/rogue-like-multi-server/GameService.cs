@@ -99,10 +99,14 @@ namespace rogue_like_multi_server
         {
             if (!BoardState.BoardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move but he doesn't exist on the server");
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to send a message but he doesn't exist on the server");
             }
-            var playersInRange = BoardState.BoardStateDynamic.Players.Values.Where(p => FloatingCoord.Distance2d(p.Entity.Coord, player.Entity.Coord) <= 8 && p.Entity.Name != playerName);
-            await _chatHubContext.Clients.Users(playersInRange.Select(x => x.Entity.Name).ToArray()).SendAsync("newMessage", playerName, message);
+            if (player.Entity.Pv <= 0)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to send a message but he is dead");
+            }
+            var playersAliveInRange = BoardState.BoardStateDynamic.Players.Values.Where(p => FloatingCoord.Distance2d(p.Entity.Coord, player.Entity.Coord) <= 8 && p.Entity.Name != playerName);
+            await _chatHubContext.Clients.Users(playersAliveInRange.Select(x => x.Entity.Name).ToArray()).SendAsync("newMessage", playerName, message);
         }
 
         public void ConnectPlayer(string playerName)
@@ -152,7 +156,7 @@ namespace rogue_like_multi_server
         Task SendPlayerInit(string playerName);
 
         Task SendPlayerMessage(string playerName, string message);
-        
+
         void ConnectPlayer(string playerName);
 
         void AddPlayer(string username);

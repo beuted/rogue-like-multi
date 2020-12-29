@@ -9,3 +9,7 @@
 # Lib used
 
 Project using [PixiJS](https://github.com/pixijs/pixi.js), [PixiJS Sound](https://github.com/pixijs/pixi-sound) and [Webpack](http://webpack.js.org).
+
+# TODO
+
+* Vote only if pv > 0 (in UI)

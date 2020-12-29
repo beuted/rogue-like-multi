@@ -10,6 +10,7 @@ namespace rogue
         OpenDoor = 25,
         BorderWallRight = 30,
         BorderWallLeft = 31,
+        ClosedChest = 39,
         Flowers = 44,
         Sprout = 45,
         Evergreen = 54,
@@ -24,9 +25,11 @@ namespace rogue
                                                           FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor,
                                                           FloorType.CampFire, FloorType.BorderWallLeft, FloorType.BorderWallRight };
 
-        public static bool IsWalkable(this FloorType floorType)
+        private static readonly FloorType[] ClosedFloorTypes = {FloorType.ClosedDoor, FloorType.ClosedChest};
+
+        public static bool IsWalkable(this FloorType floorType, bool hasKey = false)
         {
-            return WalkableFloorTypes.Contains(floorType);
+            return (hasKey && ClosedFloorTypes.Contains(floorType)) || WalkableFloorTypes.Contains(floorType);
         }
     }
 }

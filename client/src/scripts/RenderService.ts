@@ -19,6 +19,7 @@ export class RenderService {
 
   private entitySprites: { [name: string]: Sprite } = {};
   private characterSprite: Sprite;
+  private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
   private pvSprites: Sprite[] = [];
 
@@ -58,7 +59,7 @@ export class RenderService {
     return sceneContainer;
   }
 
-  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][]) {
+  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isHiding: boolean) {
     if (!previousEntityPosition)
       previousEntityPosition = entity.coord;
     // Remove if out of bounds
@@ -76,7 +77,7 @@ export class RenderService {
     }
 
     const coord = CoordHelper.getClosestCoord(entity.coord);
-    if (CellHelper.isHiding(cells[coord.x][coord.y])) {
+    if (!isHiding && CellHelper.isHiding(cells[coord.x][coord.y])) {
       this.entitySprites[entity.name].alpha = 0.1; //TODO: maybe just remove it
     } else {
       this.entitySprites[entity.name].alpha = 1.0;
@@ -92,22 +93,39 @@ export class RenderService {
       interpolFactor);
   }
 
-  public renderCharacter(character: Entity) {
+  public renderCharacter(character: Entity, isHiding: boolean) {
     if (!this.characterSprite) {
       this.characterSprite = new Sprite(this.spriteManager.textures[character.spriteId]);
       this.characterSprite.zIndex = 1;
       this.mapContainer.addChild(this.characterSprite);
     }
 
-    this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
-    this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+    if (character.pv <= 0 && !this.deadCharacterSprite) {
+      this.characterSprite.destroy();
+      this.deadCharacterSprite = new Sprite(this.spriteManager.textures[19]);
+      this.mapContainer.addChild(this.deadCharacterSprite);
+    }
+
+    // If dead
+    if (character.pv <= 0) {
+      this.deadCharacterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
+      this.deadCharacterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+    } else {
+      if (isHiding) {
+        this.characterSprite.alpha = 0.5;
+      } else {
+        this.characterSprite.alpha = 1.0;
+      }
+
+      this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
+      this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+    }
   }
 
-  public renderEffects(character: Entity, timestampDiff: number, nbSecsPerCycle: number) {
-    this.lightRenderService.render(character, timestampDiff, nbSecsPerCycle);
+  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number) {
+    this.lightRenderService.render(character, timestampDiff, isHiding, nbSecsPerCycle);
     this.particleRenderService.render(timestampDiff);
   }
-
 
   public renderInventory(character: Entity) {
     let i = 0;
@@ -158,7 +176,7 @@ export class RenderService {
     this.nbBagFoundText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(time)}`;
   }
 
-  public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, interpolFactor: number) {
+  public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, isHiding: boolean, interpolFactor: number) {
     const roundedPlayerPosition = CoordHelper.getClosestCoord(currentPlayer.entity.coord);
     const playerPosition = currentPlayer.entity.coord;
     this.cellsContainer.removeChildren();
@@ -178,12 +196,12 @@ export class RenderService {
       (9 - playerPosition.y) * this.spriteManager.tilesetSize;
 
     for (let entityName in entities) {
-      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells);
+      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells, isHiding);
     }
 
     for (let playerName in players) {
       if (playerName != currentPlayer.entity.name)
-        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells);
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
     }
 
     //If players or entites have been removed from list we need to clean them

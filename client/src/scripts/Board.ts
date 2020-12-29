@@ -1,4 +1,4 @@
-import { Cell, CellHelper } from "./Cell";
+import { Cell, CellHelper, ItemType } from "./Cell";
 import { Entity } from "./Entity";
 import { Coord } from "./Coord";
 import { Input } from "./InputManager";
@@ -124,30 +124,37 @@ export class Board {
     this.nightState = boardStateDynamic.nightState;
   }
 
-  public applyInput(input: Input) {
+  private findValidCellMove(input: Input, hasKey: boolean): Coord {
     let newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
     let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
 
-    if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
+    if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
       newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
       newY = this.player.entity.coord.y;
-      if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
+      if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
         newX = this.player.entity.coord.x;
         newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
-        if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5))) {
-          return;
+        if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
+          return null;
         }
       }
     }
+    return { x: newX, y: newY };
+  }
 
-    this.player.entity.coord.x = newX;
-    this.player.entity.coord.y = newY;
+  public applyInput(input: Input) {
+    let hasKey = this.player.entity.inventory.indexOf(ItemType.Key) != -1;
+    let newCoord = this.findValidCellMove(input, hasKey);
+    if (newCoord == null)
+      return;
+
+    this.player.entity.coord = newCoord;
     if (input.attack)
       this.player.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
   }
 
-  isWalkable(x: number, y: number) {
-    return x >= 0 && y >= 0 && x <= this.mapLength - 1 && y <= this.mapLength - 1 && CellHelper.isWalkable(this.cells[x][y]);
+  isWalkable(x: number, y: number, hasKey: boolean) {
+    return x >= 0 && y >= 0 && x <= this.mapLength - 1 && y <= this.mapLength - 1 && CellHelper.isWalkable(this.cells[x][y], hasKey);
   }
 
   private computeEntitiesPreviousCoord() {
