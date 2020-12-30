@@ -65,6 +65,11 @@ namespace rogue_like_multi_server
             return true;
         }
 
+        public void HardReset()
+        {
+            BoardState = null;
+        }
+
         public void Update()
         {
             if (BoardState != null)
@@ -146,6 +151,8 @@ namespace rogue_like_multi_server
         Task StartGame();
 
         bool TryReset(GameConfig gameConfig);
+
+        void HardReset();
 
         void Update();
 
