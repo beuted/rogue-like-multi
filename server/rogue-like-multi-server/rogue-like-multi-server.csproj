@@ -5,17 +5,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot\" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.0.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EpPathFinding.cs\EpPathFinding.cs.csproj" />
+        <ClientDistFolder Include="../../client/dist/**/*" />
     </ItemGroup>
 
+    <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+        <Copy SourceFiles="@(ClientDistFolder)" DestinationFiles="@(ClientDistFolder->'$(OutDir)\dist\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
+    <Target Name="CopyCustomContentOnPublish" AfterTargets="Publish">
+        <Copy SourceFiles="@(ClientDistFolder)" DestinationFiles="@(ClientDistFolder->'$(PublishDir)\dist\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </Target>
 </Project>

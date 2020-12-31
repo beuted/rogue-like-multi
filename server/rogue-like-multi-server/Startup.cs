@@ -69,10 +69,11 @@ namespace rogue_like_multi_server
             options.DefaultFileNames.Clear();
             options.DefaultFileNames.Add("index.html");
             app.UseDefaultFiles(options);
+            var path = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
-                    Path.GetFullPath(Path.Combine(env.ContentRootPath, "../../client/dist"))),
+                    Path.Combine(path, "dist")),
             });
 
             // global cors policy TODO REMOVE ?

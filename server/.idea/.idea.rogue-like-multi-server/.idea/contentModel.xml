@@ -1,6 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
+    <e p="C:\src\dkj\rogue-like-multi\client\dist" t="Include">
+      <e p="assets" t="Include">
+        <e p="map.json" t="Include" />
+        <e p="particle.png" t="Include" />
+        <e p="tileset.tsx" t="Include" />
+        <e p="v2.png" t="Include" />
+      </e>
+      <e p="bundle.js" t="Include" />
+      <e p="css" t="Include">
+        <e p="style.css" t="Include" />
+      </e>
+      <e p="index.html" t="Include" />
+      <e p="scripts" t="Include">
+        <e p="Board.ts" t="Include" />
+        <e p="BoardScene.ts" t="Include" />
+        <e p="Cell.ts" t="Include" />
+        <e p="CharacterController.ts" t="Include" />
+        <e p="ChatController.ts" t="Include" />
+        <e p="Coord.ts" t="Include" />
+        <e p="Entity.ts" t="Include" />
+        <e p="EventHandler.ts" t="Include" />
+        <e p="GameServerClient.ts" t="Include" />
+        <e p="InitGameModalController.ts" t="Include" />
+        <e p="InputManager.ts" t="Include" />
+        <e p="Keyboard.ts" t="Include" />
+        <e p="LightRenderService.ts" t="Include" />
+        <e p="NightOverlayController.ts" t="Include" />
+        <e p="ParticleRenderService.ts" t="Include" />
+        <e p="RenderService.ts" t="Include" />
+        <e p="SocketClient.ts" t="Include" />
+        <e p="SoundManager.ts" t="Include" />
+        <e p="SpriteManager.ts" t="Include" />
+      </e>
+      <e p="sounds" t="Include">
+        <e p="musical.mp3" t="Include" />
+      </e>
+    </e>
     <e p="C:\src\dkj\rogue-like-multi\server" t="IncludeFlat">
       <e p="packages" t="ExcludeRecursive" />
       <e p="rogue-like-multi-server" t="IncludeRecursive">
@@ -59,7 +96,6 @@
         <e p="UserIdProvider.cs" t="Include" />
         <e p="UserService.cs" t="Include" />
         <e p="WebSocketMiddleware.cs" t="Include" />
-        <e p="wwwroot" t="Include" />
       </e>
       <e p="rogue-like-multi-server.sln" t="IncludeFlat" />
     </e>
