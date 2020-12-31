@@ -71,9 +71,8 @@
         <e p="MapService.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.1" t="Include">
+            <e p="netcoreapp3.1" t="Include">
               <e p="rogue-like-multi-server.AssemblyInfo.cs" t="Include" />
-              <e p="rogue-like-multi-server.RazorAssemblyInfo.cs" t="Include" />
             </e>
           </e>
         </e>

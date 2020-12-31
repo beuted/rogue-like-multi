@@ -1,14 +1,13 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using rogue_like_multi_server.Hubs;
 
 namespace rogue_like_multi_server
@@ -25,24 +24,24 @@ namespace rogue_like_multi_server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+            services.AddCors(options =>
             {
-                builder
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowAnyOrigin();
-            }));
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+            });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddControllers();
 
             // configure basic authentication
             services.AddAuthentication("BasicAuthentication")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
 
             services.AddSignalR();
-            services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
             // Dependencies Injection
+            services.AddSingleton<IUserIdProvider, UserIdProvider>();
             services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<IBoardStateService, BoardStateService>();
             services.AddScoped<IUserService, UserService>();
@@ -53,7 +52,7 @@ namespace rogue_like_multi_server
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -75,17 +74,14 @@ namespace rogue_like_multi_server
                     Path.GetFullPath(Path.Combine(env.ContentRootPath, "../../client/dist"))),
             });
 
-            // global cors policy TODO REMOVE ?
-            app.UseCors(x => x
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
-
+            app.UseCors("CorsPolicy");
+            app.UseRouting();
 
             app.UseMiddleware<WebSocketsMiddleware>();
             app.UseAuthentication();
-            app.UseMvc();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             app.UseSignalR(endpoints =>
             {
