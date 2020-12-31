@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using EpPathFinding.cs;
 using Newtonsoft.Json;
-using rogue_like_multi_server;
 
 namespace rogue
 {
@@ -25,10 +23,7 @@ namespace rogue
         [JsonProperty("maxPv")]
         public int MaxPv;
 
-        [JsonIgnore]
-        public JumpPointParam JpParam;
-
-        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, BaseGrid searchGrid)
+        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv)
         {
             Coord = coord;
             Name = name;
@@ -36,8 +31,6 @@ namespace rogue
             Inventory = inventory;
             Pv = maxPv;
             MaxPv = maxPv;
-            JpParam = new JumpPointParam(searchGrid, EndNodeUnWalkableTreatment.ALLOW, DiagonalMovement.Never);
         }
-
     }
 }

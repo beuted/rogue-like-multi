@@ -2,33 +2,6 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="C:\src\dkj\rogue-like-multi\server" t="IncludeFlat">
-      <e p="EpPathFinding.cs" t="IncludeRecursive">
-        <e p="bin" t="ExcludeRecursive" />
-        <e p="EpPathFinding.cs.csproj" t="IncludeRecursive" />
-        <e p="obj" t="ExcludeRecursive" />
-        <e p="packages.config" t="Include" />
-        <e p="PathFinder" t="Include">
-          <e p="AStarFinder.cs" t="Include" />
-          <e p="DiagonalMovement.cs" t="Include" />
-          <e p="Grid" t="Include">
-            <e p="BaseGrid.cs" t="Include" />
-            <e p="DynamicGrid.cs" t="Include" />
-            <e p="DynamicGridWPool.cs" t="Include" />
-            <e p="PartialGridWPool.cs" t="Include" />
-            <e p="StaticGrid.cs" t="Include" />
-          </e>
-          <e p="GridPos.cs" t="Include" />
-          <e p="GridRect.cs" t="Include" />
-          <e p="Heuristic.cs" t="Include" />
-          <e p="JumpPointFinder.cs" t="Include" />
-          <e p="NodePool.cs" t="Include" />
-          <e p="ParamBase.cs" t="Include" />
-          <e p="Util.cs" t="Include" />
-        </e>
-        <e p="Properties" t="Include">
-          <e p="AssemblyInfo.cs" t="Include" />
-        </e>
-      </e>
       <e p="packages" t="ExcludeRecursive" />
       <e p="rogue-like-multi-server" t="IncludeRecursive">
         <e p=".gitignore" t="Include" />

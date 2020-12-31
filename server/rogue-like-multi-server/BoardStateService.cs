@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EpPathFinding.cs;
 using Microsoft.Extensions.Logging;
 using rogue;
 
@@ -106,6 +105,7 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
 
             // IA Stuff
+            /*
             foreach (var entity in boardStateDynamic.Entities)
             {
                 // If on the fire estinguish it
@@ -137,21 +137,22 @@ namespace rogue_like_multi_server
             }
 
             return boardStateDynamic;
+            */
         }
 
-        private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, out GridPos gridCoord, out FloatingCoord coord)
+        private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, out Coord gridCoord, out FloatingCoord coord)
         {
             coord = playerCoord + velocity;
-            gridCoord = coord.ToGridPos();
-            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+            gridCoord = coord.ToCoord();
+            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey)) return true;
 
             coord = playerCoord + velocity.ProjectOnX();
-            gridCoord = coord.ToGridPos();
-            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+            gridCoord = coord.ToCoord();
+            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey)) return true;
 
             coord = playerCoord + velocity.ProjectOnY();
-            gridCoord = coord.ToGridPos();
-            if (cells[gridCoord.x][gridCoord.y].FloorType.IsWalkable(hasKey)) return true;
+            gridCoord = coord.ToCoord();
+            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey)) return true;
 
             return false;
         }
@@ -181,25 +182,25 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
 
             // Pickup objects
-            if (map.Cells[gridCoord.x][gridCoord.y].ItemType != null && map.Cells[gridCoord.x][gridCoord.y].ItemType != ItemType.Empty)
+            if (map.Cells[gridCoord.X][gridCoord.Y].ItemType != null && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Empty)
             {
-                player.Entity.Inventory.Add(map.Cells[gridCoord.x][gridCoord.y].ItemType.Value);
-                _mapService.PickupItem(map, Coord.FromGridPos(gridCoord));
+                player.Entity.Inventory.Add(map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value);
+                _mapService.PickupItem(map, gridCoord);
             }
 
             // Remove key if on closed door
-            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.ClosedDoor && player.Entity.Inventory.Contains(ItemType.Key))
+            if (map.Cells[gridCoord.X][gridCoord.Y].FloorType == FloorType.ClosedDoor && player.Entity.Inventory.Contains(ItemType.Key))
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
-                map.Cells[gridCoord.x][gridCoord.y].FloorType = FloorType.OpenDoor;
+                map.Cells[gridCoord.X][gridCoord.Y].FloorType = FloorType.OpenDoor;
             }
 
             // Remove key if on closed chest
-            if (map.Cells[gridCoord.x][gridCoord.y].FloorType == FloorType.ClosedChest && player.Entity.Inventory.Contains(ItemType.Key))
+            if (map.Cells[gridCoord.X][gridCoord.Y].FloorType == FloorType.ClosedChest && player.Entity.Inventory.Contains(ItemType.Key))
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
-                map.Cells[gridCoord.x][gridCoord.y].FloorType = FloorType.Plain;
-                _mapService.DropItems(boardStateDynamic.Map, new [] {ItemType.Food, ItemType.Wood}, Coord.FromGridPos(gridCoord));
+                map.Cells[gridCoord.X][gridCoord.Y].FloorType = FloorType.Plain;
+                _mapService.DropItems(boardStateDynamic.Map, new [] {ItemType.Food, ItemType.Wood}, gridCoord);
             }
 
             return boardStateDynamic;
@@ -255,7 +256,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3, boardStateDynamic.Map.SearchGrid), -1, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3), -1, true));
 
             return boardStateDynamic;
         }
@@ -374,7 +375,7 @@ namespace rogue_like_multi_server
                     { "pwet", new Entity(new FloatingCoord(10, 10), "pwet", 7, new List<ItemType>()
                     {
                         ItemType.Wood
-                    }, 3, map.SearchGrid) }
+                    }, 3) }
                 },
                 new Dictionary<string, Player>(),
                 0,

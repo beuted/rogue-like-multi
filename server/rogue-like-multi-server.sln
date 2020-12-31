@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rogue-like-multi-server", "rogue-like-multi-server\rogue-like-multi-server.csproj", "{7827C7FB-D8DB-432B-97BC-5C45F5F658A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpPathFinding.cs", "EpPathFinding.cs\EpPathFinding.cs.csproj", "{4BC2B4B0-2A38-4274-98A2-37CEF5F03B42}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,9 +12,5 @@ Global
 		{7827C7FB-D8DB-432B-97BC-5C45F5F658A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7827C7FB-D8DB-432B-97BC-5C45F5F658A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7827C7FB-D8DB-432B-97BC-5C45F5F658A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4BC2B4B0-2A38-4274-98A2-37CEF5F03B42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BC2B4B0-2A38-4274-98A2-37CEF5F03B42}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4BC2B4B0-2A38-4274-98A2-37CEF5F03B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4BC2B4B0-2A38-4274-98A2-37CEF5F03B42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

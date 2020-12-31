@@ -1,5 +1,4 @@
 using System;
-using EpPathFinding.cs;
 using Newtonsoft.Json;
 
 namespace rogue
@@ -70,16 +69,6 @@ namespace rogue
         public static int Distance2d(Coord a, Coord b)
         {
             return Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
-        }
-
-        public GridPos ToGridPos()
-        {
-            return new GridPos(X, Y);
-        }
-
-        public static Coord FromGridPos(GridPos gridPos)
-        {
-            return new Coord(gridPos.x, gridPos.y);
         }
 
         public override string ToString()

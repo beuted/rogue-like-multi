@@ -1,0 +1,70 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETStandard,Version=v2.0": {
+      "Microsoft.NETFramework.ReferenceAssemblies/1.0.0-preview.2": {
+        "type": "package"
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.NETFramework.ReferenceAssemblies/1.0.0-preview.2": {
+      "sha512": "m+pJPEO7HyXvrOna5Sr3s77ewXonjYWJTNL6drh8xACnMNxnlqUDKx9HfGeSE9wmfY0lQwppaeZpFTPGaH7kZg==",
+      "type": "package",
+      "path": "microsoft.netframework.referenceassemblies/1.0.0-preview.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "microsoft.netframework.referenceassemblies.1.0.0-preview.2.nupkg.sha512",
+        "microsoft.netframework.referenceassemblies.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETStandard,Version=v2.0": [
+      "Microsoft.NETFramework.ReferenceAssemblies >= 1.0.0-preview.2"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\b.jehanno\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\src\\dkj\\rogue-like-multi\\server\\EpPathFinding.cs\\EpPathFinding.cs.csproj",
+      "projectName": "EpPathFinding.cs",
+      "projectPath": "C:\\src\\dkj\\rogue-like-multi\\server\\EpPathFinding.cs\\EpPathFinding.cs.csproj",
+      "packagesPath": "C:\\Users\\b.jehanno\\.nuget\\packages\\",
+      "outputPath": "C:\\src\\dkj\\rogue-like-multi\\server\\EpPathFinding.cs\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\b.jehanno\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "netstandard2.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "projectReferences": {}
+        }
+      }
+    },
+    "frameworks": {
+      "netstandard2.0": {
+        "dependencies": {
+          "Microsoft.NETFramework.ReferenceAssemblies": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[1.0.0-preview.2, )"
+          }
+        }
+      }
+    }
+  }
+}
