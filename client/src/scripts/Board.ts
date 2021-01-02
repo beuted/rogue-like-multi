@@ -1,7 +1,7 @@
 import { Cell, CellHelper, ItemType } from "./Cell";
 import { Entity } from "./Entity";
 import { Coord } from "./Coord";
-import { Input } from "./InputManager";
+import { Input, InputType } from "./InputManager";
 
 
 export class Player {
@@ -47,6 +47,7 @@ export type AttackEvent = {
 }
 export type VoteResultEvent = {
   type: ActionEventType.VoteResult,
+  timestamp: number,
   playerName: string,
 }
 
@@ -159,7 +160,7 @@ export class Board {
       return;
 
     this.player.entity.coord = newCoord;
-    if (input.attack)
+    if (input.type == InputType.Attack)
       this.player.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
   }
 

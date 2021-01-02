@@ -100,7 +100,6 @@ export class RenderService {
       this.mapContainer.addChild(this.characterSprite);
     }
 
-<<<<<<< HEAD
     if (character.pv <= 0 && !this.deadCharacterSprite) {
       this.characterSprite.destroy();
       this.deadCharacterSprite = new Sprite(this.spriteManager.textures[19]);
@@ -121,11 +120,6 @@ export class RenderService {
       this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
       this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
     }
-=======
-    this.characterSprite.alpha = character.pv == 0 ? 0.3 : 1.0;
-    this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
-    this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
->>>>>>> Add React because why would I do things simply
   }
 
   public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number) {
@@ -206,13 +200,8 @@ export class RenderService {
     }
 
     for (let playerName in players) {
-<<<<<<< HEAD
-      if (playerName != currentPlayer.entity.name)
-        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
-=======
       if (playerName != currentPlayer.entity.name && players[playerName].entity.pv != 0) //Do not show dead players
-        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor);
->>>>>>> Add React because why would I do things simply
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
     }
 
     //If players or entites have been removed from list we need to clean them

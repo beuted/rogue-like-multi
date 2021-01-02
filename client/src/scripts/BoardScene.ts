@@ -2,7 +2,7 @@ import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
 import { Board, BoardStateDynamic, GameStatus, Role } from "./Board";
-import { InputManager, Input } from "./InputManager";
+import { InputManager, Input, InputType } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
 import { RenderService } from "./RenderService";
@@ -10,12 +10,8 @@ import { CharacterController } from "./CharacterController";
 import { LightRenderService } from "./LightRenderService";
 import { ParticleRenderService } from "./ParticleRenderService";
 import { EventHandler } from "./EventHandler";
-<<<<<<< HEAD
-import { NightOverlayController } from "./NightOverlayController";
 import { CellHelper } from "./Cell";
 import { CoordHelper } from "./Coord";
-=======
->>>>>>> Add React because why would I do things simply
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -42,12 +38,7 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-<<<<<<< HEAD
-  constructor(private app: Application) {
     this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 11, 10);
-=======
-    this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 10, 10);
->>>>>>> Add React because why would I do things simply
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
@@ -64,23 +55,9 @@ export class BoardScene {
 
     console.log("Everything initialized");
 
-<<<<<<< HEAD
-    // Called once for init
-    this.socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
-      this.board.init(gameState, user.username);
-      //this.eventHandler.reset(); Put when the game is created not only loaded
-
-      // Display stuff
-      const sceneContainer = this.renderService.init(this.board.cells);
-      this.app.stage.addChild(sceneContainer);
-
-      this.initGameModalController.showComponent(false);
-    });
-=======
     // Display stuff
-    const sceneContainer = this.renderService.init();
+    const sceneContainer = this.renderService.init(this.board.cells);
     this.app.stage.addChild(sceneContainer);
->>>>>>> Add React because why would I do things simply
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
@@ -133,7 +110,7 @@ export class BoardScene {
         let input = this.inputManager.get(this.board.player.coolDownAttack, this.board.player.role, this.board.player.entity.pv, parseFloat((delta * speed).toFixed(3)));
 
         // TODO: Cooldown coté client pour l'attack ? ou coté server ?
-        if ((input.direction.x != 0 || input.direction.y != 0 || input.attack)) {
+        if ((input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack)) {
           this.characterController.sendInput(input);
 
           // Apply the inputs will be overriden by the server when we receive a notif from it

@@ -16,6 +16,13 @@ namespace rogue_like_multi_server
 
     public class MapService: IMapService
     {
+        private IRandomGeneratorService _randomGeneratorService;
+
+        public MapService(IRandomGeneratorService randomGeneratorService)
+        {
+            _randomGeneratorService = randomGeneratorService;
+        }
+
         public Map Generate(int mapWidth, int mapHeight, string file)
         {
             var map = new Map(mapWidth, mapHeight);
@@ -118,7 +125,7 @@ namespace rogue_like_multi_server
             return 0 <= coord.X && coord.X < map.MapWidth && 0 <= coord.Y && coord.Y < map.MapHeight;
         }
 
-        private static Map SetRandomPositionObject(Map map, Coord minCoord, Coord maxCoord, ItemType item)
+        private Map SetRandomPositionObject(Map map, Coord minCoord, Coord maxCoord, ItemType item)
         {
             int x;
             int y;
@@ -139,11 +146,15 @@ namespace rogue_like_multi_server
 
             return map;
         }
+        private FloorType GetRandomSpriteId() {
+            FloorType[] okSpriteId = {FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Flowers,
+                FloorType.Flowers, FloorType.Sprout, FloorType.Evergreen, FloorType.Tree, FloorType.Trees};
+            return okSpriteId[_randomGeneratorService.Generate(0, okSpriteId.Length)];
+        }
 
-        private static int GetRandomNumber(int min, int max)
+        private int GetRandomNumber(int min, int max)
         {
-            Random random = new Random();
-            return random.Next(min, max+1);
+            return _randomGeneratorService.Generate(min, max+1);
         }
     }
 }

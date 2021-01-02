@@ -4,6 +4,7 @@ import { InputManager } from './InputManager';
 import { CharacterController } from './CharacterController';
 import { useState } from 'react';
 import { Gift, Board } from './Board';
+import { ItemType } from "./Cell";
 
 const NightOverlay = ({ inputManager, characterController, board }: NightOverlayProps) => {
 
@@ -11,7 +12,10 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
   const [nbPass, setNbPass] = useState<number>(0);
   const [playerVote, setPlayerVote] = useState<string>("");
   const [foodGiven, setFoodGiven] = useState<Gift[]>([]);
+  const [materialGiven, setMaterialGiven] = useState<Gift[]>([]);
   const [hash, setHash] = useState<string>(null);
+  const [hasMaterial, setHasMaterial] = useState<boolean>(false);
+  const [hasFood, setHasFood] = useState<boolean>(false);
 
   React.useEffect(() => {
     const inter = setInterval(() => {
@@ -23,6 +27,8 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
       const playerName = board.player.entity.name;
       const nightState = board.nightState;
       const players = Object.values(board.players).map(x => x.entity);
+      const hasMaterial = board.player.entity.inventory.includes(ItemType.Bag);
+      const hasFood = board.player.entity.inventory.includes(ItemType.Food);
 
       const playerDisplays: PlayerDisplay[] = [];
       let playerVote = nightState.votes.find(x => x.from == playerName)?.for;
@@ -44,7 +50,10 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
       setPlayerDisplays(playerDisplays);
       setNbPass(nbPass);
       setPlayerVote(playerVote);
-      setFoodGiven(foodGiven)
+      setFoodGiven(Array.from(nightState.foodGiven));
+      setMaterialGiven(Array.from(nightState.materialGiven));
+      setHasMaterial(hasMaterial);
+      setHasFood(hasFood);
     }, 300)
 
     return () => {
@@ -59,6 +68,15 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
     return false;
   }
 
+  const giveFood = () => {
+    let inputVote = inputManager.getGiveFood();
+    characterController.sendInput(inputVote);
+  }
+
+  const giveMaterial = () => {
+    let inputVote = inputManager.getGiveMaterial();
+    characterController.sendInput(inputVote);
+  }
 
   return (
     <div className="night-overlay">
@@ -79,12 +97,23 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
           </div>
         </div>
         <div className="modal-block">
-          <b>Available food</b>
-          <div className="available-food">
-            {foodGiven.map(f => {
-              <div>{f.from} : 1 Food given</div>
-            })}
+          <b>Available food: {foodGiven.length}</b>
+          <div>
+            {foodGiven.map((f, i) => (
+              <div key={i}>{f.from} : 1 food given</div>
+            ))}
           </div>
+          <button disabled={!hasFood} onClick={() => giveFood()}>Give 1 food</button>
+        </div>
+
+        <div className="modal-block">
+          <b>Collected bags: {materialGiven.length}</b>
+          <div>
+            {materialGiven.map((m, i) => (
+              <div key={i}>{m.from} : 1 material given</div>
+            ))}
+          </div>
+          <button disabled={!hasMaterial} onClick={() => giveMaterial()}>Give 1 material</button>
         </div>
       </div>
     </div>

@@ -2,9 +2,17 @@ import { keyboard } from "./Keyboard";
 import { Coord } from "./Coord";
 import { Role } from "./Board";
 
+export enum InputType {
+  Move = 0,
+  Attack = 1,
+  Vote = 2,
+  GiveFood = 3,
+  GiveMaterial = 4
+}
+
 export interface Input {
+  type: InputType,
   direction: Coord,
-  attack: boolean,
   pressTime: number,
   vote: string | null,
   inputSequenceNumber: number,
@@ -23,24 +31,37 @@ export class InputManager {
 
   public getGiveFood(): Input {
     return {
-      direction: null,
-      attack: false,
-      pressTime: null,
+      type: InputType.GiveFood,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
-      vote: name,
-      //giveFood: null
+
+      direction: null,
+      pressTime: null,
+      vote: null,
+    }
+  }
+
+  public getGiveMaterial(): Input {
+    return {
+      type: InputType.GiveMaterial,
+      inputSequenceNumber: this.inputSequenceNumber,
+      time: Date.now(),
+
+      direction: null,
+      pressTime: null,
+      vote: null,
     }
   }
 
   public getVote(name: string): Input {
     return {
-      direction: null,
-      attack: false,
-      pressTime: null,
+      type: InputType.Vote,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
-      vote: name
+      vote: name,
+
+      direction: null,
+      pressTime: null
     }
   }
 
@@ -50,21 +71,22 @@ export class InputManager {
     }
 
     let canAttack = role == Role.Bad && Date.now() > coolDownAttack && pv > 0;
+    const attacking = canAttack ? this.attack : false;
 
     var res: Input = {
+      type: attacking ? InputType.Attack : InputType.Move,
       direction: {
         x: this.vx,
         y: this.vy
       },
-      attack: canAttack ? this.attack : false,
       pressTime: delta,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
       vote: null
     }
 
-    if (res.attack)
-      console.log("attack")
+    if (attacking)
+      console.log("attack");
 
     return res;
   }

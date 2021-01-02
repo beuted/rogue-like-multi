@@ -10,11 +10,13 @@ namespace rogue_like_multi_server
     {
         private readonly ILogger<BoardStateService> _logger;
         private readonly IMapService _mapService;
+        private readonly IRandomGeneratorService _randomGeneratorService;
 
-        public BoardStateService(ILogger<BoardStateService> logger, IMapService mapService)
+        public BoardStateService(ILogger<BoardStateService> logger, IMapService mapService, IRandomGeneratorService randomGeneratorService)
         {
             _logger = logger;
             _mapService = mapService;
+            _randomGeneratorService = randomGeneratorService;
         }
 
         public BoardState Generate(GameConfig gameConfig)
@@ -35,8 +37,7 @@ namespace rogue_like_multi_server
                 kvp.Value.Role = Role.Good;
             }
 
-            Random rnd = new Random();
-            var i = rnd.Next(0, boardStateDynamic.Players.Count-1);
+            var i = _randomGeneratorService.Generate(0, boardStateDynamic.Players.Count-1);
             var players = boardStateDynamic.Players.Values.ToList();
             players[i].Role = Role.Bad;
 
@@ -92,8 +93,21 @@ namespace rogue_like_multi_server
 
                 boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.VoteResult, nowTimestamp, default, winner, default));
 
-                // Reset Night state
-                boardStateDynamic.NightState = new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>());
+                // Check if there is missing food and act accordingly
+                var missingFood = Math.Max(0, boardStateDynamic.Players.Values.Count(x => x.Entity.Pv > 0) - boardStateDynamic.NightState.FoodGiven.Count);
+                if (missingFood > 0)
+                {
+                    // Damage a player for each food missing
+                    for (var i = 0; i < missingFood; i++)
+                    {
+                        var playersAlive = boardStateDynamic.Players.Values.Where(x => x.Entity.Pv > 0).ToList();
+                        var rndIndex = _randomGeneratorService.Generate(0, playersAlive.Count() - 1);
+                        playersAlive[rndIndex].Entity.Pv--;
+                    }
+                }
+
+                // Reset Night state votes and food
+                boardStateDynamic.NightState = new NightState(new List<Vote>(), new List<Gift>(), boardStateDynamic.NightState.MaterialGiven);
 
                 boardStateDynamic.StartTimestamp = nowTimestamp;
                 boardStateDynamic.GameStatus = GameStatus.Play;
@@ -117,7 +131,6 @@ namespace rogue_like_multi_server
             boardStateDynamic.Events = boardStateDynamic.Events.Where(x => x.Timestamp > (nowTimestamp -5)*1000).ToList();
 
             return boardStateDynamic;
-
         }
 
         private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, out Coord gridCoord, out FloatingCoord coord)
@@ -213,6 +226,57 @@ namespace rogue_like_multi_server
             player.InputSequenceNumber = inputSequenceNumber;
 
             boardStateDynamic.NightState.Votes.Add(new Vote(playerName, vote));
+            return boardStateDynamic;
+        }
+
+
+        public BoardStateDynamic ApplyGiveFood(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber)
+        {
+            if (boardStateDynamic.GameStatus != GameStatus.Discuss)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give food but game status is {boardStateDynamic.GameStatus}");
+                return boardStateDynamic;
+            }
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give food but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (!player.Entity.Inventory.Any(x => x == ItemType.Food))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give food but he doesn't have any");
+                return boardStateDynamic;
+            }
+
+            player.InputSequenceNumber = inputSequenceNumber;
+
+            player.Entity.Inventory.Remove(ItemType.Food);
+            boardStateDynamic.NightState.FoodGiven.Add(new Gift(playerName));
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic ApplyGiveMaterial(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber)
+        {
+            if (boardStateDynamic.GameStatus != GameStatus.Discuss)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but game status is {boardStateDynamic.GameStatus}");
+                return boardStateDynamic;
+            }
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (!player.Entity.Inventory.Any(x => x == ItemType.Bag))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't have any");
+                return boardStateDynamic;
+            }
+
+            player.InputSequenceNumber = inputSequenceNumber;
+
+            player.Entity.Inventory.Remove(ItemType.Bag);
+            boardStateDynamic.NightState.MaterialGiven.Add(new Gift(playerName));
             return boardStateDynamic;
         }
 
@@ -380,6 +444,10 @@ namespace rogue_like_multi_server
             FloatingCoord velocity, double inputSequenceNumber);
 
         BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber);
+
+        BoardStateDynamic ApplyGiveFood(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
+
+        BoardStateDynamic ApplyGiveMaterial(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
 
         BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
 

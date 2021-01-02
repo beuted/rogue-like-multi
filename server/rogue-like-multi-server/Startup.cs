@@ -44,6 +44,7 @@ namespace rogue_like_multi_server
             services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
             // Dependencies Injection
+            services.AddSingleton<IRandomGeneratorService, RandomGeneratorService>();
             services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<IBoardStateService, BoardStateService>();
             services.AddScoped<IUserService, UserService>();
@@ -70,7 +71,7 @@ namespace rogue_like_multi_server
             options.DefaultFileNames.Clear();
             options.DefaultFileNames.Add("index.html");
             app.UseDefaultFiles(options);
-            var path = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
+            var path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(

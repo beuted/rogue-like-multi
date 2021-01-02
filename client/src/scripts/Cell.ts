@@ -30,8 +30,8 @@ export enum ItemType {
 
 export class CellHelper {
   private static walkableFloorTypes: FloorType[] = [FloorType.Plain, FloorType.Flowers, FloorType.Sprout,
-    FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor, FloorType.CampFire, FloorType.BorderWallLeft,
-    FloorType.BorderWallRight];
+  FloorType.Evergreen, FloorType.Tree, FloorType.Trees, FloorType.OpenDoor, FloorType.CampFire, FloorType.BorderWallLeft,
+  FloorType.BorderWallRight];
 
   private static hidingFloorTypes: FloorType[] = [FloorType.Evergreen, FloorType.Tree, FloorType.Trees];
   private static closedFloorTypes: FloorType[] = [FloorType.ClosedDoor, FloorType.ClosedChest];
@@ -44,7 +44,7 @@ export class CellHelper {
     return CellHelper.hidingFloorTypes.indexOf(cell.floorType) != -1;
   }
 
-  public static getCellSpriteId(cell: Cell) : number {
+  public static getCellSpriteId(cell: Cell): number {
     if (cell.itemType == null || cell.itemType == ItemType.Empty)
       return cell.floorType;
     return cell.itemType;

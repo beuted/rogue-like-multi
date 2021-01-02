@@ -23,6 +23,11 @@ namespace rogue
     {
         [JsonProperty("from")]
         public string From;
+
+        public Gift(string from)
+        {
+            From = from;
+        }
     }
 
     public class NightState
