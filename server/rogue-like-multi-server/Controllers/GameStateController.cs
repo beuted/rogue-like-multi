@@ -32,14 +32,6 @@ namespace rogue_like_multi_server.Controllers
             return BadRequest();
         }
 
-        [AllowAnonymous]
-        [HttpGet("hard-reset")]
-        public IActionResult HardResetGame()
-        {
-            _gameService.HardReset();
-            return Ok();
-        }
-
         [HttpPost("create")]
         public IActionResult CreateGame([FromBody] GameConfig gameConfig)
         {
