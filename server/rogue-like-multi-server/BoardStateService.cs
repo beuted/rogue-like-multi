@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using rogue;
@@ -410,7 +411,8 @@ namespace rogue_like_multi_server
 
         private BoardStateDynamic GenerateDynamic()
         {
-            var map = _mapService.Generate(100, 100, "dist/assets/map.json");
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
+            var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"));
             var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             return new BoardStateDynamic(
                 map,
