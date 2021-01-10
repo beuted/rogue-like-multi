@@ -1,7 +1,7 @@
 import { Entity } from "./Entity";
 import { SpriteManager } from "./SpriteManager";
 import { Sprite, Container, Graphics, Text } from "pixi.js";
-import { Cell, CellHelper } from "./Cell";
+import { Cell, CellHelper, ItemType } from "./Cell";
 import { Coord, MathHelper, CoordHelper } from "./Coord";
 import { Player, Role } from "./Board";
 import { LightRenderService } from "./LightRenderService";
@@ -182,11 +182,17 @@ export class RenderService {
     this.cellsContainer.removeChildren();
     for (let i = Math.max(0, roundedPlayerPosition.x - 9 - 1); i <= Math.min(cells.length - 1, roundedPlayerPosition.x + 9 + 1); i++) {
       for (let j = Math.max(0, roundedPlayerPosition.y - 9 - 1); j <= Math.min(cells[0].length - 1, roundedPlayerPosition.y + 9 + 1); j++) {
-        const spriteId = CellHelper.getCellSpriteId(cells[i][j]);
+        const spriteId = cells[i][j].floorType;
         let cell = new Sprite(this.spriteManager.textures[spriteId]);
         cell.x = i * this.spriteManager.tilesetSize;
         cell.y = j * this.spriteManager.tilesetSize;
         this.cellsContainer.addChild(cell);
+        if (cells[i][j].itemType != null && cells[i][j].itemType != ItemType.Empty) {
+          let itemCell = new Sprite(this.spriteManager.textures[cells[i][j].itemType]);
+          itemCell.x = i * this.spriteManager.tilesetSize;
+          itemCell.y = j * this.spriteManager.tilesetSize;
+          this.cellsContainer.addChild(itemCell);
+        }
       }
     }
 
