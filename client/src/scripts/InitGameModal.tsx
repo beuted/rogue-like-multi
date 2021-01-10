@@ -6,7 +6,7 @@ import { GameServerClient } from './GameServerClient';
 const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClient }) => {
   const [gameHash, setGameHash] = useState<string>("");
   const [playerList, setPlayerList] = useState<string[]>([]);
-  const [timePerCycle, setTimePerCycle] = useState<number>(12);
+  const [timePerCycle, setTimePerCycle] = useState<number>(120);
   const [timeToDiscuss, setTimeToDiscuss] = useState<number>(12);
   const [showLobbyModal, setShowLobbyModal] = useState<boolean>(true);
 
@@ -16,6 +16,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     if (!showLobbyModal) {
       if (interval) clearInterval(interval);
     } else {
+      if (interval) clearInterval(interval);
       interval = setInterval(async () => {
         if (!gameHash)
           return;
@@ -23,15 +24,13 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
         setPlayerList(players);
       }, 2000);
     }
-
+    return () => {
+      if (interval) clearInterval(interval);
+    }
   }, [showLobbyModal])
 
   useEffect(() => {
     setShowLobbyModal(false);
-
-    return () => {
-      if (interval) clearInterval(interval);
-    }
   }, [])
 
   // Create game button

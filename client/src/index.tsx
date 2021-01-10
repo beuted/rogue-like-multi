@@ -19,8 +19,9 @@ let app = new Application({
   height: 256,        // default: 600
   antialias: true,    // default: false
   transparent: false, // default: false
-  resolution: 1,       // default: 1
-  resizeTo: window
+  resolution: 1,      // default: 1
+  resizeTo: window,
+  backgroundColor: 0x000
 });
 
 ReactDOM.render(

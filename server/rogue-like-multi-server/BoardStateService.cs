@@ -116,16 +116,13 @@ namespace rogue_like_multi_server
 
             // Find winner Team
             if (boardStateDynamic.GameStatus != GameStatus.Prepare) {
+                // If all goods are dead the bads win the game
                 if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
                 {
                     boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Bad));
                     boardStateDynamic.GameStatus = GameStatus.Prepare;
                 }
-                if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Bad && x.Value.Entity.Pv > 0).Any())
-                {
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Good));
-                    boardStateDynamic.GameStatus = GameStatus.Prepare;
-                }
+                // Not the other other way around
             }
 
             // Clean old events (older than 5 secs)

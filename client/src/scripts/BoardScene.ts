@@ -38,7 +38,7 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-    this.spriteManager = new SpriteManager(this.app.loader, "assets/v2.png", 9, 11, 10);
+    this.spriteManager = new SpriteManager(this.app.loader, "assets/v3.png", 8, 11, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
