@@ -19,6 +19,8 @@ namespace rogue_like_multi_server
         {
             new User { Username = "dekajoo", Password = "toto" },
             new User { Username = "oojaked", Password = "toto" },
+            new User { Username = "toto", Password = "toto" },
+            new User { Username = "tutu", Password = "toto" },
         };
 
         public async Task<User> Authenticate(string username, string password)

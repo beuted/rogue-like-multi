@@ -128,7 +128,7 @@ namespace rogue_like_multi_server
         {
             if (BoardState.BoardStateDynamic == null || BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare)
                 return; // You cannot join a game that is not tsarted OR already running 
-            BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(10, 10));
+            BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(49, 49));
         }
 
         public List<string> GetPlayers()

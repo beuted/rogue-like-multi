@@ -117,11 +117,11 @@ namespace rogue_like_multi_server
             // Find winner Team
             if (boardStateDynamic.GameStatus != GameStatus.Prepare) {
                 // If all goods are dead the bads win the game
-                if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
+                /*if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
                 {
                     boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Bad));
                     boardStateDynamic.GameStatus = GameStatus.Prepare;
-                }
+                }*/
                 // Not the other other way around
             }
 
@@ -339,6 +339,11 @@ namespace rogue_like_multi_server
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he is dead");
                 return boardStateDynamic;
             }
+            if (!attackingPlayer.Entity.Inventory.Contains(ItemType.Sword))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he doesn't have a sword");
+                return boardStateDynamic;
+            }
 
             var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
@@ -350,22 +355,36 @@ namespace rogue_like_multi_server
             attackingPlayer.InputSequenceNumber = inputSequenceNumber;
             attackingPlayer.CoolDownAttack = nowTimestamp + 2000;
 
+            decimal range = 1;
+            var victimFound = false;
             foreach (var entity in boardStateDynamic.Entities)
             {
-                if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= 1)
+                if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= range)
                 {
                     entity.Value.Pv--;
                     boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Value.Coord, default, Role.None));
+                    victimFound = true;
+                    break;
                 }
             }
 
-            foreach (var player in boardStateDynamic.Players)
+            if (!victimFound)
             {
-                if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= 1 && attackingPlayer.Entity.Pv > 0)
+                foreach (var player in boardStateDynamic.Players)
                 {
-                    player.Value.Entity.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, player.Value.Entity.Coord, null, Role.None));
+                    if (attackingPlayer.Entity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, player.Value.Entity.Coord) <= range && player.Value.Entity.Pv > 0)
+                    {
+                        player.Value.Entity.Pv--;
+                        boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, player.Value.Entity.Coord, null, Role.None));
+                        victimFound = true;
+                        break;
+                    }
                 }
+            }
+
+            if (victimFound)
+            {
+                attackingPlayer.Entity.Inventory.Remove(ItemType.Sword);
             }
 
             return boardStateDynamic;
@@ -415,10 +434,10 @@ namespace rogue_like_multi_server
                 map,
                 new Dictionary<string, Entity>()
                 {
-                    { "pwet", new Entity(new FloatingCoord(10, 10), "pwet", 7, new List<ItemType>()
+                    { "pwet", new Entity(new FloatingCoord(48, 48), "pwet", 7, new List<ItemType>()
                     {
                         ItemType.Wood
-                    }, 3) }
+                    }, 130) }
                 },
                 new Dictionary<string, Player>(),
                 Role.None,

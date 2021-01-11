@@ -107,7 +107,7 @@ export class BoardScene {
         break;
       case GameStatus.Play:
         const speed = 0.04;
-        let input = this.inputManager.get(this.board.player.coolDownAttack, this.board.player.role, this.board.player.entity.pv, parseFloat((delta * speed).toFixed(3)));
+        let input = this.inputManager.get(this.board.player, parseFloat((delta * speed).toFixed(3)));
 
         // TODO: Cooldown coté client pour l'attack ? ou coté server ?
         if ((input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack)) {
@@ -130,7 +130,7 @@ export class BoardScene {
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
-        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle);
+        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle, delta);
 
         this.guiController.setShowNightOverlay(false);
         break;

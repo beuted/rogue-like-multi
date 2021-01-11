@@ -1,6 +1,7 @@
 import { keyboard } from "./Keyboard";
 import { Coord } from "./Coord";
-import { Role } from "./Board";
+import { Player } from "./Board";
+import { ItemType } from "./Cell";
 
 export enum InputType {
   Move = 0,
@@ -65,12 +66,12 @@ export class InputManager {
     }
   }
 
-  public get(coolDownAttack: number, role: Role, pv: number, delta: number): Input {
+  public get(player: Player, delta: number): Input {
     if (this.vx != 0 || this.vy != 0 || this.attack) {
       this.inputSequenceNumber++;
     }
 
-    let canAttack = role == Role.Bad && Date.now() > coolDownAttack && pv > 0;
+    let canAttack = player.entity.inventory.includes(ItemType.Sword) && Date.now() > player.coolDownAttack && player.entity.pv > 0;
     const attacking = canAttack ? this.attack : false;
 
     var res: Input = {

@@ -78,8 +78,14 @@ export class RenderService {
 
     const coord = CoordHelper.getClosestCoord(entity.coord);
     if (!isHiding && CellHelper.isHiding(cells[coord.x][coord.y])) {
+      if (this.entitySprites[entity.name].alpha == 1.0) {
+        this.particleRenderService.addLeafStaticEmitter(entity.coord);
+      }
       this.entitySprites[entity.name].alpha = 0.1; //TODO: maybe just remove it
     } else {
+      if (this.entitySprites[entity.name].alpha == 0.1) {
+        this.particleRenderService.addLeafStaticEmitter(entity.coord);
+      }
       this.entitySprites[entity.name].alpha = 1.0;
     }
 
@@ -112,8 +118,14 @@ export class RenderService {
       this.deadCharacterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
     } else {
       if (isHiding) {
+        if (this.characterSprite.alpha == 1.0) {
+          this.particleRenderService.addLeafStaticEmitter(character.coord);
+        }
         this.characterSprite.alpha = 0.5;
       } else {
+        if (this.characterSprite.alpha == 0.5) {
+          this.particleRenderService.addLeafStaticEmitter(character.coord);
+        }
         this.characterSprite.alpha = 1.0;
       }
 
@@ -122,9 +134,9 @@ export class RenderService {
     }
   }
 
-  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number) {
+  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number, delta: number) {
     this.lightRenderService.render(character, timestampDiff, isHiding, nbSecsPerCycle);
-    this.particleRenderService.render(timestampDiff);
+    this.particleRenderService.render(delta);
   }
 
   public renderInventory(character: Entity) {

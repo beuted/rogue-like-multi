@@ -67,10 +67,16 @@ namespace rogue_like_multi_server
                     ItemType.Food);
             }
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 5; i++)
             {
                 map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
                     ItemType.Key);
+            }
+
+            for (var i = 0; i < 135; i++)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
+                    ItemType.Sword);
             }
 
             return map;
