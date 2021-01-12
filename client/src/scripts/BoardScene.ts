@@ -10,7 +10,7 @@ import { CharacterController } from "./CharacterController";
 import { LightRenderService } from "./LightRenderService";
 import { ParticleRenderService } from "./ParticleRenderService";
 import { EventHandler } from "./EventHandler";
-import { CellHelper } from "./Cell";
+import { CellHelper, Cell } from "./Cell";
 import { CoordHelper } from "./Coord";
 
 export class BoardScene {
@@ -56,7 +56,7 @@ export class BoardScene {
     console.log("Everything initialized");
 
     // Display stuff
-    const sceneContainer = this.renderService.init(this.board.cells);
+    const sceneContainer = this.renderService.init();
     this.app.stage.addChild(sceneContainer);
 
     this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
@@ -86,6 +86,10 @@ export class BoardScene {
     // Game loop
 
     this.app.ticker.add((delta: number) => this.gameLoop(delta));
+  }
+
+  public postMapInit(cells: Cell[][]) {
+    this.renderService.postMapInit(cells);
   }
 
   private gameLoop(delta: number) {

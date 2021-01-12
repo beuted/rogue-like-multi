@@ -3,6 +3,7 @@ import { Coord } from "./Coord";
 import * as particles from 'pixi-particles'
 import { SpriteManager } from "./SpriteManager";
 import { AttackEvent } from "./Board";
+import { Cell, FloorType } from "./Cell";
 
 export class ParticleRenderService {
   private particleContainer: Container;
@@ -12,12 +13,20 @@ export class ParticleRenderService {
 
   }
 
-  init(mapContainer: Container) {
+  init(mapContainer: Container, cells: Cell[][]) {
     this.particleContainer = new Container();
     this.particleContainer.zIndex = 1000;
     mapContainer.addChild(this.particleContainer);
 
-    this.addSmokeStaticEmitter({ x: 50, y: 50 })
+    // Add fire smokes
+    for (let i = 0; i < cells.length; i++) {
+      for (let j = 0; j < cells[0].length; j++) {
+        if (cells[i][j].floorType == FloorType.CampFire) {
+          this.addSmokeStaticEmitter({ x: i, y: j });
+        }
+      }
+    }
+
   }
 
   handleEvent(event: AttackEvent) {
@@ -35,8 +44,8 @@ export class ParticleRenderService {
           "end": 0
         },
         "scale": {
-          "start": 1,
-          "end": 1,
+          "start": 0.8,
+          "end": 0.8,
           "minimumScaleMultiplier": 1
         },
         "speed": {
@@ -100,7 +109,7 @@ export class ParticleRenderService {
           "minimumScaleMultiplier": 1
         },
         "color": {
-          "start": "#000000",
+          "start": "#2e2e2e",
           "end": "#ffffff"
         },
         "speed": {

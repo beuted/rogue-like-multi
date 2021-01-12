@@ -46,6 +46,7 @@ const App = ({ app }: { app: PIXI.Application }) => {
     // Called once for init
     socketClient.registerListener(SocketMessageReceived.InitBoardState, (gameState: GameState) => {
       board.init(gameState, user.username);
+      boardScene.postMapInit(board.cells);
       setShowGameModal(false);
     });
 

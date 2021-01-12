@@ -28,23 +28,23 @@ export class RenderService {
   constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService, private particleRenderService: ParticleRenderService) {
   }
 
-  public init(cells: Cell[][]) {
+  public init() {
     let sceneContainer = new Container();
     sceneContainer.scale.set(4);
     this.mapSceneContainer = new Container();
     this.mapContainer = new Container();
     this.mapContainer.sortableChildren = true;
-    this.mapSceneContainer.addChild(this.mapContainer)
+    this.mapSceneContainer.addChild(this.mapContainer);
     sceneContainer.addChild(this.mapSceneContainer);
     this.cellsContainer = new Container();
     this.mapContainer.addChild(this.cellsContainer);
     this.entityContainer = new Container();
     this.mapContainer.addChild(this.entityContainer);
     let graphic = new Graphics();
-    this.mapContainer.mask = graphic;
     graphic.beginFill(0xFFFFFF);
     // 19 = tiles displayed on screen, 4 = scale factor
     graphic.drawRect(0, 0, this.spriteManager.tilesetSize * 19 * 4, this.spriteManager.tilesetSize * 19 * 4);
+    this.mapSceneContainer.mask = graphic;
 
     this.effectContainer = new Container();
     sceneContainer.addChild(this.effectContainer);
@@ -53,10 +53,12 @@ export class RenderService {
     this.pvContainer = new Container();
     sceneContainer.addChild(this.pvContainer);
 
-    this.lightRenderService.init(this.mapContainer, cells);
-    this.particleRenderService.init(this.mapContainer);
-
     return sceneContainer;
+  }
+
+  public postMapInit(cells: Cell[][]) {
+    this.lightRenderService.init(this.mapContainer, cells);
+    this.particleRenderService.init(this.mapContainer, cells);
   }
 
   public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isHiding: boolean) {
