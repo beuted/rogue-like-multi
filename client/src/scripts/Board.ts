@@ -37,11 +37,17 @@ export type GameConfig = {
 export enum ActionEventType {
   Attack = 0,
   VoteResult = 1,
-  EndGame = 2
+  EndGame = 2,
+  ShieldBreak = 3
 }
 
 export type AttackEvent = {
   type: ActionEventType.Attack,
+  timestamp: number
+  coord: Coord,
+}
+export type ShieldBreakEvent = {
+  type: ActionEventType.ShieldBreak,
   timestamp: number
   coord: Coord,
 }
@@ -57,7 +63,7 @@ export type EndGameEvent = {
   winnerTeam: Role
 }
 
-export type ActionEvent = AttackEvent | EndGameEvent | VoteResultEvent
+export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent
 
 export type Vote = {
   from: string,

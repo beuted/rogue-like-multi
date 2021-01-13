@@ -2,7 +2,7 @@ import { Container } from "pixi.js";
 import { Coord } from "./Coord";
 import * as particles from 'pixi-particles'
 import { SpriteManager } from "./SpriteManager";
-import { AttackEvent } from "./Board";
+import { AttackEvent, ActionEventType, ShieldBreakEvent } from "./Board";
 import { Cell, FloorType } from "./Cell";
 
 export class ParticleRenderService {
@@ -29,8 +29,11 @@ export class ParticleRenderService {
 
   }
 
-  handleEvent(event: AttackEvent) {
-    this.addBloodStaticEmitter(event.coord);
+  handleEvent(event: AttackEvent | ShieldBreakEvent) {
+    switch (event.type) {
+      case ActionEventType.Attack: this.addBloodStaticEmitter(event.coord); break;
+      case ActionEventType.ShieldBreak: this.addSparkleStaticEmitter(event.coord); break;
+    }
   }
 
   addLeafStaticEmitter(position: Coord) {
@@ -149,6 +152,70 @@ export class ParticleRenderService {
           "x": 0,
           "y": -1,
           "r": 4
+        }
+      }
+    )
+
+    this.staticParticleEmitters.push(emitter);
+    emitter.emit = true;
+  }
+
+  addSparkleStaticEmitter(position: Coord) {
+    //TODO: clean dictionnary sometimes
+    var emitter = new particles.Emitter(
+      this.particleContainer,
+      ["assets/pixel.png"],
+      {
+        "alpha": {
+          "start": 1.5,
+          "end": 0.25
+        },
+        "scale": {
+          "start": 1,
+          "end": 0.25,
+          "minimumScaleMultiplier": 1
+        },
+        "color": {
+          "start": "#fffcd6",
+          "end": "#ff0000"
+        },
+        "speed": {
+          "start": 300,
+          "end": 2,
+          "minimumSpeedMultiplier": 1
+        },
+        "acceleration": {
+          "x": 0,
+          "y": 0
+        },
+        "maxSpeed": 1000,
+        "startRotation": {
+          "min": 0,
+          "max": 360
+        },
+        "noRotation": true,
+        "rotationSpeed": {
+          "min": 0,
+          "max": 0
+        },
+        "lifetime": {
+          "min": 0.05,
+          "max": 0.2
+        },
+        "blendMode": "normal",
+        "frequency": 0.001,
+        "emitterLifetime": 0.1,
+        "maxParticles": 15,
+        "pos": {
+          "x": ((position.x + 0.5) * this.spriteManager.tilesetSize - 0.5),
+          "y": ((position.y + 0.5) * this.spriteManager.tilesetSize - 0.5)
+        },
+        "addAtBack": false,
+        "spawnType": "circle",
+        "spawnCircle": {
+          "x": 0,
+          "y": 0,
+          "r": 2
         }
       }
     )

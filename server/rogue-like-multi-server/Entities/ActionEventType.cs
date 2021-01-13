@@ -10,5 +10,6 @@ namespace rogue
         Attack = 0,
         VoteResult = 1,
         EndGame = 2,
+        ShieldBreak = 3
     }
 }

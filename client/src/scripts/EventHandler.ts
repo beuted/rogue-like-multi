@@ -19,6 +19,9 @@ export class EventHandler {
           case ActionEventType.Attack:
             this.particleRenderService.handleEvent(event);
             break;
+          case ActionEventType.ShieldBreak:
+            this.particleRenderService.handleEvent(event);
+            break;
           case ActionEventType.EndGame:
             window.alert(`${event.winnerTeam == Role.Good ? 'The goods' : 'The bads'} won the game !`);
             location.reload();

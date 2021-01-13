@@ -173,7 +173,7 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
 
             // Pickup objects
-            if (map.Cells[gridCoord.X][gridCoord.Y].ItemType != null && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Empty)
+            if (map.Cells[gridCoord.X][gridCoord.Y].ItemType != null && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Empty && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Blood)
             {
                 player.Entity.Inventory.Add(map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value);
                 _mapService.PickupItem(map, gridCoord);
@@ -361,9 +361,19 @@ namespace rogue_like_multi_server
             {
                 if (FloatingCoord.Distance2d(attackingPlayer.Entity.Coord, entity.Value.Coord) <= range)
                 {
-                    entity.Value.Pv--;
-                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Value.Coord, default, Role.None));
+                    if (entity.Value.Inventory.Contains(ItemType.Armor))
+                    {
+                        entity.Value.Inventory.Remove(ItemType.Armor);
+                        boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.ShieldBreak, nowTimestamp, entity.Value.Coord, default, Role.None));
+                    }
+                    else
+                    {
+                        entity.Value.Pv--;
+                        _mapService.DropItems(boardStateDynamic.Map, new[] { ItemType.Blood }, entity.Value.Coord.ToCoord());
+                        boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Value.Coord, default, Role.None));
+                    }
                     victimFound = true;
+
                     break;
                 }
             }
@@ -436,7 +446,7 @@ namespace rogue_like_multi_server
                 {
                     { "pwet", new Entity(new FloatingCoord(48, 48), "pwet", 7, new List<ItemType>()
                     {
-                        ItemType.Wood
+                        ItemType.Wood, ItemType.Armor, ItemType.Armor, ItemType.Armor, ItemType.Armor, ItemType.Armor, ItemType.Armor, ItemType.Armor
                     }, 130) }
                 },
                 new Dictionary<string, Player>(),
