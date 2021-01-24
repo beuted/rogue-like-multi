@@ -8,4 +8,5 @@ export class Entity {
   public pv: number;
   public maxPv: number;
   public inventory: ItemType[];
+  public coolDownAttack: number;
 }

@@ -70,10 +70,10 @@ namespace rogue_like_multi_server
             BoardState = null;
         }
 
-        public void Update()
+        public void Update(long turnElapsedMs)
         {
-            if (BoardState != null)
-                BoardState.BoardStateDynamic = _boardStateService.Update(BoardState.BoardStateDynamic, BoardState.BoardStateStatic.GameConfig);
+            if (BoardState != null && BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare && BoardState.BoardStateDynamic.GameStatus != GameStatus.Pause)
+                BoardState.BoardStateDynamic = _boardStateService.Update(BoardState.BoardStateDynamic, BoardState.BoardStateStatic.GameConfig, turnElapsedMs);
         }
 
         public void ReceivePlayerInput(long time, string playerName, Input input)
@@ -101,6 +101,8 @@ namespace rogue_like_multi_server
                     BoardState.BoardStateDynamic = _boardStateService.ApplyGiveFood(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
                 else if (playerInput.Item2.Type == InputType.GiveMaterial)
                     BoardState.BoardStateDynamic = _boardStateService.ApplyGiveMaterial(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
+                else if (playerInput.Item2.Type == InputType.UseItem && playerInput.Item2.Item.HasValue)
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyUseItem(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.Item.Value, playerInput.Item2.InputSequenceNumber);
             }
         }
 
@@ -158,7 +160,7 @@ namespace rogue_like_multi_server
 
         void HardReset();
 
-        void Update();
+        void Update(long turnElapsedMs);
 
         void ReceivePlayerInput(long time, string playerName, Input input);
 

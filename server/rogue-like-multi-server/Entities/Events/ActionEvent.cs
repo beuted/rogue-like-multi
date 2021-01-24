@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace rogue
 {
@@ -9,6 +10,9 @@ namespace rogue
 
         [JsonProperty("timestamp")]
         public long Timestamp;
+
+        [JsonProperty("guid")]
+        public Guid Guid;
 
         [JsonProperty("coord")]
         public FloatingCoord Coord;
@@ -26,6 +30,7 @@ namespace rogue
             Coord = coord;
             PlayerName = playerName;
             WinnerTeam = winnerTeam;
+            Guid = Guid.NewGuid();
         }
     }
 }

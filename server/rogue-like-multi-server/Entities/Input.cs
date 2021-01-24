@@ -9,7 +9,8 @@ namespace rogue_like_multi_server.Hubs
         Attack = 1,
         Vote = 2,
         GiveFood = 3,
-        GiveMaterial = 4
+        GiveMaterial = 4,
+        UseItem = 5
     }
 
     public class Input
@@ -19,6 +20,9 @@ namespace rogue_like_multi_server.Hubs
 
         [JsonProperty("direction")]
         public Coord? Direction;
+
+        [JsonProperty("item")]
+        public ItemType? Item;
 
         [JsonProperty("pressTime")]
         public decimal? PressTime;

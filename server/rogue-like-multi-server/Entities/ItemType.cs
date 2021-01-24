@@ -11,5 +11,6 @@ namespace rogue
         Wood = 100,
         Blood = 102,
         HealthPotion = 103,
+        Backpack = 105
     }
 }

@@ -8,7 +8,8 @@ export enum InputType {
   Attack = 1,
   Vote = 2,
   GiveFood = 3,
-  GiveMaterial = 4
+  GiveMaterial = 4,
+  UseItem = 5
 }
 
 export interface Input {
@@ -16,6 +17,7 @@ export interface Input {
   direction: Coord,
   pressTime: number,
   vote: string | null,
+  item: ItemType | null,
   inputSequenceNumber: number,
   time: number;
 }
@@ -36,6 +38,7 @@ export class InputManager {
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
 
+      item: null,
       direction: null,
       pressTime: null,
       vote: null,
@@ -47,6 +50,20 @@ export class InputManager {
       type: InputType.GiveMaterial,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
+
+      item: null,
+      direction: null,
+      pressTime: null,
+      vote: null,
+    }
+  }
+
+  public getUseItem(item: ItemType): Input {
+    return {
+      type: InputType.UseItem,
+      inputSequenceNumber: this.inputSequenceNumber,
+      time: Date.now(),
+      item: item,
 
       direction: null,
       pressTime: null,
@@ -61,6 +78,7 @@ export class InputManager {
       time: Date.now(),
       vote: name,
 
+      item: null,
       direction: null,
       pressTime: null
     }
@@ -71,7 +89,7 @@ export class InputManager {
       this.inputSequenceNumber++;
     }
 
-    let canAttack = player.entity.inventory.includes(ItemType.Sword) && Date.now() > player.coolDownAttack && player.entity.pv > 0;
+    let canAttack = player.entity.inventory.includes(ItemType.Sword) && Date.now() > player.entity.coolDownAttack && player.entity.pv > 0;
     const attacking = canAttack ? this.attack : false;
 
     var res: Input = {
@@ -83,6 +101,7 @@ export class InputManager {
       pressTime: delta,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
+      item: null,
       vote: null
     }
 

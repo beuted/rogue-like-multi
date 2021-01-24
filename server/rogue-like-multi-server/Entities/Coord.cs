@@ -71,6 +71,11 @@ namespace rogue
             return Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
         }
 
+        public FloatingCoord ToFloatingCoord()
+        {
+            return new FloatingCoord(X, Y);
+        }
+
         public override string ToString()
         {
             return $"({X}, {Y})";

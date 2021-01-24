@@ -3,6 +3,14 @@ using Newtonsoft.Json;
 
 namespace rogue
 {
+
+    public enum Aggressivity
+    {
+        Pacific = 0,
+        Neutral = 1,
+        Aggressive = 2
+    }
+
     public class Entity
     {
         [JsonProperty("coord")]
@@ -23,7 +31,17 @@ namespace rogue
         [JsonProperty("maxPv")]
         public int MaxPv;
 
-        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv)
+        [JsonProperty("timeSinceInRange")]
+        public long TimeSinceInRange;
+
+        [JsonProperty("aggressivity")]
+        public Aggressivity Aggressivity;
+
+        [JsonProperty("coolDownAttack")]
+        public double CoolDownAttack;
+
+
+        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, long timeSinceInRange, Aggressivity aggressivity)
         {
             Coord = coord;
             Name = name;
@@ -31,6 +49,9 @@ namespace rogue
             Inventory = inventory;
             Pv = maxPv;
             MaxPv = maxPv;
+            TimeSinceInRange = timeSinceInRange;
+            Aggressivity = aggressivity;
+            CoolDownAttack = 0;
         }
     }
 }

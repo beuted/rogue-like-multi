@@ -2,7 +2,7 @@ import { ParticleRenderService } from "./ParticleRenderService";
 import { ActionEvent, ActionEventType, Role } from "./Board";
 
 export class EventHandler {
-  private handledEvents: number[] = [];
+  private handledEvents: string[] = [];
   constructor(private particleRenderService: ParticleRenderService) {
     let handledEventsJson = localStorage.getItem('handledEvents');
     if (handledEventsJson != null)
@@ -14,12 +14,15 @@ export class EventHandler {
   update(events: ActionEvent[]) {
     // TODO clean la liste de temps en temps
     for (const event of events) {
-      if (!this.handledEvents.includes(event.timestamp)) {
+      if (!this.handledEvents.includes(event.guid)) {
         switch (event.type) {
           case ActionEventType.Attack:
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.ShieldBreak:
+            this.particleRenderService.handleEvent(event);
+            break;
+          case ActionEventType.Heal:
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.EndGame:
@@ -33,7 +36,7 @@ export class EventHandler {
               alert('No one had enough vote to be burned to death.');
             break;
         }
-        this.handledEvents.push(event.timestamp);
+        this.handledEvents.push(event.guid);
         localStorage.setItem('handledEvents', JSON.stringify(this.handledEvents));
       }
     }

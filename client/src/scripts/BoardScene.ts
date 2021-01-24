@@ -42,7 +42,7 @@ export class BoardScene {
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
-    this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService);
+    this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService, this.inputManager, this.characterController);
     this.eventHandler = new EventHandler(this.particleRenderService);
   }
 

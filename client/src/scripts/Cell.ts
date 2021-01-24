@@ -28,7 +28,8 @@ export enum ItemType {
   Food = 58,
   Wood = 100,
   Blood = 102,
-  HealthPotion = 103
+  HealthPotion = 103,
+  Backpack = 105,
 }
 
 export class CellHelper {

@@ -8,7 +8,6 @@ export class Player {
   inputSequenceNumber: number;
   entity: Entity;
   role: Role;
-  coolDownAttack: number;
 }
 
 export enum Role {
@@ -38,32 +37,43 @@ export enum ActionEventType {
   Attack = 0,
   VoteResult = 1,
   EndGame = 2,
-  ShieldBreak = 3
+  ShieldBreak = 3,
+  Heal = 4
 }
 
 export type AttackEvent = {
   type: ActionEventType.Attack,
-  timestamp: number
+  timestamp: number,
+  guid: string,
+  coord: Coord,
+}
+export type HealEvent = {
+  type: ActionEventType.Heal,
+  timestamp: number,
+  guid: string,
   coord: Coord,
 }
 export type ShieldBreakEvent = {
   type: ActionEventType.ShieldBreak,
-  timestamp: number
+  timestamp: number,
+  guid: string,
   coord: Coord,
 }
 export type VoteResultEvent = {
   type: ActionEventType.VoteResult,
   timestamp: number,
+  guid: string,
   playerName: string,
 }
 
 export type EndGameEvent = {
   type: ActionEventType.EndGame,
   timestamp: number,
+  guid: string,
   winnerTeam: Role
 }
 
-export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent
+export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent | HealEvent
 
 export type Vote = {
   from: string,
@@ -167,7 +177,7 @@ export class Board {
 
     this.player.entity.coord = newCoord;
     if (input.type == InputType.Attack)
-      this.player.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
+      this.player.entity.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
   }
 
   isWalkable(x: number, y: number, hasKey: boolean) {

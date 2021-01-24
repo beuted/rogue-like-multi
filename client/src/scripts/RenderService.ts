@@ -6,6 +6,8 @@ import { Coord, MathHelper, CoordHelper } from "./Coord";
 import { Player, Role } from "./Board";
 import { LightRenderService } from "./LightRenderService";
 import { ParticleRenderService } from "./ParticleRenderService";
+import { InputManager } from "./InputManager";
+import { CharacterController } from "./CharacterController";
 
 export class RenderService {
 
@@ -25,7 +27,8 @@ export class RenderService {
 
   private roleText: Text;
 
-  constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService, private particleRenderService: ParticleRenderService) {
+  constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService,
+    private particleRenderService: ParticleRenderService, private inputManager: InputManager, private characterController: CharacterController) {
   }
 
   public init() {
@@ -150,8 +153,31 @@ export class RenderService {
         this.inventorySprites[i].x = (i + 20) * this.spriteManager.tilesetSize;
         this.inventorySprites[i].y = 3 * this.spriteManager.tilesetSize;
         this.inventoryContainer.addChild(this.inventorySprites[i]);
+        this.inventorySprites[i].interactive = true;
       }
-      this.inventorySprites[i].texture = this.spriteManager.textures[item]
+      this.inventorySprites[i].texture = this.spriteManager.textures[item];
+
+      // Could be optimized we only need to do this when items changes
+      this.inventorySprites[i].off('mousedown');
+      this.inventorySprites[i].on('mousedown',
+        ((i: number) => ((_: any) => {
+          const input = this.inputManager.getUseItem(character.inventory[i]);
+          this.characterController.sendInput(input);
+          console.log('Use item:', character.inventory[i]);
+        }))(i)
+      );
+      this.inventorySprites[i].off('mouseover');
+      this.inventorySprites[i].on('mouseover',
+        ((sprite: Sprite) => ((_: any) => {
+          sprite.alpha = 0.6;
+        }))(this.inventorySprites[i])
+      );
+      this.inventorySprites[i].off('mouseout');
+      this.inventorySprites[i].on('mouseout',
+        ((sprite: Sprite) => ((_: any) => {
+          sprite.alpha = 1.0;
+        }))(this.inventorySprites[i])
+      );
     }
     // Clean the rest of the inventory
     for (let j = this.inventorySprites.length - 1; j >= i; j--) {
@@ -220,7 +246,7 @@ export class RenderService {
     }
 
     for (let playerName in players) {
-      if (playerName != currentPlayer.entity.name && players[playerName].entity.pv != 0) //Do not show dead players
+      if (playerName != currentPlayer.entity.name)
         this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
     }
 

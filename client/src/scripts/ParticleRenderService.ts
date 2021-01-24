@@ -1,13 +1,14 @@
-import { Container } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 import { Coord } from "./Coord";
 import * as particles from 'pixi-particles'
 import { SpriteManager } from "./SpriteManager";
-import { AttackEvent, ActionEventType, ShieldBreakEvent } from "./Board";
+import { AttackEvent, ActionEventType, ShieldBreakEvent, HealEvent } from "./Board";
 import { Cell, FloorType } from "./Cell";
 
 export class ParticleRenderService {
   private particleContainer: Container;
   private staticParticleEmitters: particles.Emitter[] = [];
+  private effectSprites: Sprite[] = [];
 
   constructor(private spriteManager: SpriteManager) {
 
@@ -29,10 +30,11 @@ export class ParticleRenderService {
 
   }
 
-  handleEvent(event: AttackEvent | ShieldBreakEvent) {
+  handleEvent(event: AttackEvent | ShieldBreakEvent | HealEvent) {
     switch (event.type) {
       case ActionEventType.Attack: this.addBloodStaticEmitter(event.coord); break;
       case ActionEventType.ShieldBreak: this.addSparkleStaticEmitter(event.coord); break;
+      case ActionEventType.Heal: this.addHealStaticEmitter(event.coord); break;
     }
   }
 
@@ -160,8 +162,78 @@ export class ParticleRenderService {
     emitter.emit = true;
   }
 
-  addSparkleStaticEmitter(position: Coord) {
+  addHealStaticEmitter(position: Coord) {
     //TODO: clean dictionnary sometimes
+    var emitter = new particles.Emitter(
+      this.particleContainer,
+      ["assets/cross.png"],
+      {
+        "alpha": {
+          "start": 1,
+          "end": 0
+        },
+        "scale": {
+          "start": 1,
+          "end": 1,
+          "minimumScaleMultiplier": 1
+        },
+        "color": {
+          "start": "#34a853",
+          "end": "#34a853"
+        },
+        "speed": {
+          "start": 30,
+          "end": 30,
+          "minimumSpeedMultiplier": 1
+        },
+        "acceleration": {
+          "x": 0,
+          "y": 0
+        },
+        "maxSpeed": 0,
+        "startRotation": {
+          "min": 270,
+          "max": 270
+        },
+        "noRotation": false,
+        "rotationSpeed": {
+          "min": 0,
+          "max": 0
+        },
+        "lifetime": {
+          "min": 0.1,
+          "max": 0.6
+        },
+        "blendMode": "normal",
+        "frequency": 0.07,
+        "emitterLifetime": 0.5,
+        "maxParticles": 1000,
+        "pos": {
+          "x": ((position.x + 0.5) * this.spriteManager.tilesetSize - 0.5),
+          "y": ((position.y + 0.5) * this.spriteManager.tilesetSize - 0.5)
+        },
+        "addAtBack": false,
+        "spawnType": "circle",
+        "spawnCircle": {
+          "x": 0,
+          "y": -1,
+          "r": 4
+        }
+      }
+    )
+
+    this.staticParticleEmitters.push(emitter);
+    emitter.emit = true;
+  }
+
+  addSparkleStaticEmitter(position: Coord) {
+    // TODO: clean dictionnary sometimes
+    var sprite = new Sprite(this.spriteManager.textures[104]);
+    this.particleContainer.addChild(sprite);
+    sprite.x = ((position.x) * this.spriteManager.tilesetSize);
+    sprite.y = ((position.y - 1) * this.spriteManager.tilesetSize);
+    this.effectSprites.push(sprite);
+
     var emitter = new particles.Emitter(
       this.particleContainer,
       ["assets/pixel.png"],
@@ -171,8 +243,8 @@ export class ParticleRenderService {
           "end": 0.25
         },
         "scale": {
-          "start": 1,
-          "end": 0.25,
+          "start": 1.25,
+          "end": 0.5,
           "minimumScaleMultiplier": 1
         },
         "color": {
@@ -291,6 +363,18 @@ export class ParticleRenderService {
   render(delta: number) {
     for (const staticParticleEmitter of this.staticParticleEmitters) {
       staticParticleEmitter.update(delta * 0.01);
+    }
+
+    let indexesToRemove = [];
+    for (let i = 0; i <= this.effectSprites.length - 1; i++) {
+      this.effectSprites[i].alpha = this.effectSprites[i].alpha - 0.01 * delta;
+      if (this.effectSprites[i].alpha <= 0) {
+        indexesToRemove.push(i);
+      }
+    }
+
+    for (let i = indexesToRemove.length - 1; i >= 0; i--) {
+      this.effectSprites.splice(indexesToRemove[i]);
     }
   }
 }

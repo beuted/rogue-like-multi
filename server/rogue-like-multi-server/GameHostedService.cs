@@ -15,6 +15,7 @@ namespace rogue_like_multi_server
         private IHubContext<ChatHub> _chatHubContext;
         private IGameService _gameService;
         private const long TicksPerServerTick = 300*TimeSpan.TicksPerMillisecond;
+        private long _lastTrunTicks = TicksPerServerTick;
 
         public GameHostedService(ILogger<GameHostedService> logger, IHubContext<ChatHub> context, IGameService gameService)
         {
@@ -35,12 +36,15 @@ namespace rogue_like_multi_server
                 _gameService.ApplyPlayerInputs();
 
                 // Simulate world, do AI work ...
-                _gameService.Update();
+                _gameService.Update(_lastTrunTicks / TimeSpan.TicksPerMillisecond);
 
                 // Send the updated world to clients
                 await SendUpdatesClients();
 
                 var elapsed = DateTime.UtcNow.Ticks - begin;
+
+                // How long this turn took (taking to account delay to come)
+                _lastTrunTicks = Math.Max(TicksPerServerTick, elapsed);
                 if (elapsed < TicksPerServerTick)
                 {
                     await Task.Delay(Convert.ToInt32((TicksPerServerTick - elapsed) / TimeSpan.TicksPerMillisecond));

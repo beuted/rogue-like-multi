@@ -10,7 +10,8 @@ namespace rogue_like_multi_server
     public interface IMapService
     {
         Map Generate(int mapWidth, int mapHeight, string file);
-        Map DropItems(Map map, IList<ItemType> items, Coord coord);
+        FloatingCoord FindValidMovment(Map map, Coord startCoord);
+        Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
         Map PickupItem(Map map, Coord coord);
     }
 
@@ -85,20 +86,44 @@ namespace rogue_like_multi_server
                     ItemType.Armor);
             }
 
-            for (var i = 0; i < 135; i++)
+            for (var i = 0; i < 30; i++)
             {
                 map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
                     ItemType.HealthPotion);
             }
 
+            for (var i = 0; i < 135; i++)
+            {
+                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
+                    ItemType.Backpack);
+            }
+
             return map;
         }
+        public FloatingCoord FindValidMovment(Map map, Coord startCoord)
+        {
+            var possibleMovements = new List<Coord>();
+            for (var i = Math.Max(0, startCoord.X - 1); i <= Math.Min(map.MapWidth, startCoord.X) + 1; i++)
+            {
+                for (var j = Math.Max(0, startCoord.X - 1); j <= Math.Min(map.MapHeight, startCoord.X) + 1; j++)
+                {
+                    // Dirty way to avoid diagonals
+                    if (map.Cells[i][j].FloorType.IsWalkable() && !((i==-1 && j==-1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)))
+                        possibleMovements.Add(new Coord(i, j));
+                }
+            }
+            if (possibleMovements.Count == 0)
+                return new FloatingCoord(0, 0);
 
-        public Map DropItems(Map map, IList<ItemType> items, Coord coord)
+            var index = GetRandomNumber(0, possibleMovements.Count - 1);
+            return (possibleMovements[index] - startCoord).ToFloatingCoord(); // No need to normalize since no diagonals vector has a 1 length
+        }
+
+        public Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false)
         {
             foreach (var item in items)
             {
-                map = DropItem(map, item, coord);
+                map = DropItem(map, item, coord, notOnCell);
             }
 
             return map;
@@ -119,10 +144,10 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        private Map DropItem(Map map, ItemType item, Coord baseCoord)
+        private Map DropItem(Map map, ItemType item, Coord baseCoord, bool notOnCell = false)
         {
             // 10 is just a hard limit
-            for (var distance = 0; distance < 10; distance++)
+            for (var distance = notOnCell ? 1 : 0; distance < 10; distance++)
             for (var i = -distance; i <= distance; i++)
             for (var j = -distance; j <= distance; j++)
             {
