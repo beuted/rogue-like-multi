@@ -9,6 +9,10 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   const [timePerCycle, setTimePerCycle] = useState<number>(120);
   const [timeToDiscuss, setTimeToDiscuss] = useState<number>(12);
   const [showLobbyModal, setShowLobbyModal] = useState<boolean>(true);
+  const [charId, setCharId] = useState<number>(0);
+
+  // Skin Id matched to the spriteId of the char
+  const SkinMap: { [key: number]: number } = { 0: 4, 1: 5, 2: 6, 3: 7 };
 
   let interval: NodeJS.Timeout = null;
 
@@ -59,6 +63,18 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     startGame(gameHash);
   };
 
+  const prevChar = async () => {
+    let newCharId: number = charId == 0 ? 3 : charId - 1;
+    setCharId(newCharId);
+    await gameServerClient.setPlayerSkinId(gameHash, gameServerClient.username, SkinMap[newCharId]);
+  };
+
+  const nextChar = async () => {
+    let newCharId: number = charId == 3 ? 0 : charId + 1
+    setCharId(newCharId);
+    await gameServerClient.setPlayerSkinId(gameHash, gameServerClient.username, SkinMap[newCharId]);
+  };
+
   async function createGame(timePerCycle: number, timeToDiscuss: number): Promise<string> {
     return await gameServerClient.createGame(timePerCycle, timeToDiscuss);
   }
@@ -103,6 +119,11 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
           <ul className="player-list">
             {playerList.map(p => (<li key={p}>{p}</li>))}
           </ul>
+        </div>
+        <div className="modal-block choose-char">
+          <button onClick={prevChar}>◀</button>
+          <img className="character-img" src={`./assets/char${charId}.png`}></img>
+          <button onClick={nextChar}>▶</button>
         </div>
         <div className="modal-block">
           <div><button onClick={clickStartGame}>Start Game</button></div>

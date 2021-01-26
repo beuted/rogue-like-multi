@@ -1,6 +1,6 @@
 import { Entity } from "./Entity";
 import { SpriteManager } from "./SpriteManager";
-import { Sprite, Container, Graphics, Text } from "pixi.js";
+import { Sprite, Container, Graphics, Text, AnimatedSprite } from "pixi.js";
 import { Cell, CellHelper, ItemType } from "./Cell";
 import { Coord, MathHelper, CoordHelper } from "./Coord";
 import { Player, Role } from "./Board";
@@ -20,7 +20,7 @@ export class RenderService {
   private cellsContainer: Container;
 
   private entitySprites: { [name: string]: Sprite } = {};
-  private characterSprite: Sprite;
+  private characterSprite: AnimatedSprite;
   private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
   private pvSprites: Sprite[] = [];
@@ -104,24 +104,58 @@ export class RenderService {
       interpolFactor);
   }
 
-  public renderCharacter(character: Entity, isHiding: boolean) {
+  public renderCharacter(character: Entity, isHiding: boolean, direction: Coord) {
     if (!this.characterSprite) {
-      this.characterSprite = new Sprite(this.spriteManager.textures[character.spriteId]);
+      this.characterSprite = new AnimatedSprite([
+        this.spriteManager.textures[110],
+        this.spriteManager.textures[111],
+        this.spriteManager.textures[112],
+        this.spriteManager.textures[113],
+        this.spriteManager.textures[114],
+        this.spriteManager.textures[115],
+        this.spriteManager.textures[116],
+        this.spriteManager.textures[117]
+      ]);
+      this.characterSprite.anchor.set(0.5);
       this.characterSprite.zIndex = 1;
+      this.characterSprite.animationSpeed = 0.2;
+      this.characterSprite.play();
       this.mapContainer.addChild(this.characterSprite);
     }
 
     if (character.pv <= 0 && !this.deadCharacterSprite) {
       this.characterSprite.destroy();
       this.deadCharacterSprite = new Sprite(this.spriteManager.textures[19]);
+      this.deadCharacterSprite.anchor.set(0.5);
       this.mapContainer.addChild(this.deadCharacterSprite);
     }
 
     // If dead
     if (character.pv <= 0) {
-      this.deadCharacterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
-      this.deadCharacterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+      // Direction
+      if (direction.x > 0) {
+        this.deadCharacterSprite.scale.x = -1;
+      } else if (direction.x < 0) {
+        this.deadCharacterSprite.scale.x = 1;
+      }
+
+      this.deadCharacterSprite.x = (character.coord.x + 0.5) * this.spriteManager.tilesetSize;
+      this.deadCharacterSprite.y = (character.coord.y + 0.5) * this.spriteManager.tilesetSize;
     } else {
+      // Animation
+      if (direction.x == 0 && direction.y == 0) {
+        this.characterSprite.gotoAndStop(0);
+      } else {
+        this.characterSprite.play();
+      }
+
+      // Direction
+      if (direction.x > 0) {
+        this.characterSprite.scale.x = 1;
+      } else if (direction.x < 0) {
+        this.characterSprite.scale.x = -1;
+      }
+
       if (isHiding) {
         if (this.characterSprite.alpha == 1.0) {
           this.particleRenderService.addLeafStaticEmitter(character.coord);
@@ -134,13 +168,13 @@ export class RenderService {
         this.characterSprite.alpha = 1.0;
       }
 
-      this.characterSprite.x = character.coord.x * this.spriteManager.tilesetSize;
-      this.characterSprite.y = character.coord.y * this.spriteManager.tilesetSize;
+      this.characterSprite.x = (character.coord.x + 0.5) * this.spriteManager.tilesetSize;
+      this.characterSprite.y = (character.coord.y + 0.5) * this.spriteManager.tilesetSize;
     }
   }
 
-  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbSecsPerCycle: number, delta: number) {
-    this.lightRenderService.render(character, timestampDiff, isHiding, nbSecsPerCycle);
+  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbMsPerCycle: number, delta: number) {
+    this.lightRenderService.render(character, timestampDiff, isHiding, nbMsPerCycle);
     this.particleRenderService.render(delta);
   }
 
@@ -206,14 +240,14 @@ export class RenderService {
     }
   }
 
-  public renderGameState(role: Role, time: number) {
+  public renderGameState(role: Role, timestampDiff: number) {
     if (!this.roleText) {
       this.roleText = new Text('', { fontFamily: 'Arial', fontSize: this.spriteManager.tilesetSize, fill: 0xffffff, align: 'center' });
       this.roleText.x = 20 * this.spriteManager.tilesetSize;
       this.roleText.y = 1 * this.spriteManager.tilesetSize;
       this.pvContainer.addChild(this.roleText);
     }
-    this.roleText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(time)}`;
+    this.roleText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(Math.floor(timestampDiff / 1000))}`;
   }
 
   public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, isHiding: boolean, interpolFactor: number) {

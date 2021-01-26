@@ -10,7 +10,7 @@ namespace rogue_like_multi_server
     public interface IMapService
     {
         Map Generate(int mapWidth, int mapHeight, string file);
-        FloatingCoord FindValidMovment(Map map, Coord startCoord);
+        FloatingCoord FindValidMovment(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs);
         Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
         Map PickupItem(Map map, Coord coord);
     }
@@ -100,23 +100,35 @@ namespace rogue_like_multi_server
 
             return map;
         }
-        public FloatingCoord FindValidMovment(Map map, Coord startCoord)
+        public FloatingCoord FindValidMovment(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs)
         {
-            var possibleMovements = new List<Coord>();
+            var multiplicator = velocity * Convert.ToDecimal(elapsedMs);
+
+            // If twe have a target player close enough
+            if (targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < 5m)
+            {
+                var direction = targetPosition.Value - startFloatingCoord; // We should normalize or transform into one of 9 directions but la flemme
+                var greaterDimension = Math.Max(Math.Abs(direction.X), Math.Abs(direction.Y));
+                return (multiplicator / greaterDimension) * direction;
+            }
+
+            // Random movements
+            var possibleMovements = new List<FloatingCoord>();
+            var startCoord = startFloatingCoord.ToCoord();
             for (var i = Math.Max(0, startCoord.X - 1); i <= Math.Min(map.MapWidth, startCoord.X) + 1; i++)
             {
                 for (var j = Math.Max(0, startCoord.X - 1); j <= Math.Min(map.MapHeight, startCoord.X) + 1; j++)
                 {
                     // Dirty way to avoid diagonals
                     if (map.Cells[i][j].FloorType.IsWalkable() && !((i==-1 && j==-1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)))
-                        possibleMovements.Add(new Coord(i, j));
+                        possibleMovements.Add(new FloatingCoord(i, j));
                 }
             }
             if (possibleMovements.Count == 0)
                 return new FloatingCoord(0, 0);
 
             var index = GetRandomNumber(0, possibleMovements.Count - 1);
-            return (possibleMovements[index] - startCoord).ToFloatingCoord(); // No need to normalize since no diagonals vector has a 1 length
+            return multiplicator * (possibleMovements[index] - startFloatingCoord); // No need to normalize since no diagonals vector has a 1 length
         }
 
         public Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false)

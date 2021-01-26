@@ -2,7 +2,7 @@ import { SocketClient, SocketMessageSent } from "./SocketClient";
 import { Input } from "./InputManager";
 
 export class CharacterController {
-  constructor(private socketClient: SocketClient) {}
+  constructor(private socketClient: SocketClient) { }
 
   public sendInput(input: Input) {
     this.socketClient.SendMessage(SocketMessageSent.SendInput, Date.now(), input);

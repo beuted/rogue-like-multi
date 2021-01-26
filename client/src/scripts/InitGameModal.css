@@ -38,3 +38,22 @@
   flex-direction: column;
   justify-content: center;
 }
+
+.choose-char {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.character-img {
+  margin: 20px;
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+button:hover {
+  cursor: pointer;
+}

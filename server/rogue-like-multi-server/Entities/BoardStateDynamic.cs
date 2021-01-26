@@ -53,7 +53,7 @@ namespace rogue
             var playersFiltered = Players
                 .Where(kvp => kvp.Value.IsConnected)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            return new BoardStateDynamic(Map, Entities, playersFiltered, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(), GameStatus, Events, NightState);
+            return new BoardStateDynamic(Map, Entities, playersFiltered, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(), GameStatus, Events, NightState);
         }
     }
 }

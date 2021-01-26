@@ -53,6 +53,13 @@ namespace rogue_like_multi_server.Controllers
             return Ok();
         }
 
+        [HttpPost("{gameHash}/user/{userName}/skin/{skinId}")]
+        public IActionResult SetPlayerSkinId(string gameHash, string userName, int skinId)
+        {
+            _gameService.SetPlayerSkinId(userName, skinId);
+            return Ok();
+        }
+
         [HttpGet("{gameHash}/players")]
         public IActionResult GetPlayers(string gameHash)
         {

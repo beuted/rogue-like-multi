@@ -44,6 +44,15 @@ namespace rogue_like_multi_server
             await _chatHubContext.Clients.Users(players).SendAsync("initBoardState", BoardState.GetClientView());
         }
 
+        public void SetPlayerSkinId(string playerName, int skinId)
+        {
+            if (!BoardState.BoardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to send a message but he doesn't exist on the server");
+            }
+            player.Entity.SpriteId = skinId;
+        }
+
         public async Task SendPlayerInit(string user)
         {
             var client = _chatHubContext.Clients.Users(user);
@@ -90,6 +99,11 @@ namespace rogue_like_multi_server
             {
                 var playerInput = playerInputs[0];
                 playerInputs.RemoveAt(0);
+                if (playerInput == null)
+                {
+                    //TODO: This should not be needed to investigate
+                    continue; 
+                }
 
                 if (playerInput.Item2.Type == InputType.Move && (playerInput.Item2.Direction.Value.X != 0 || playerInput.Item2.Direction.Value.Y != 0))
                     BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime.Value * playerInput.Item2.Direction.Value, playerInput.Item2.InputSequenceNumber);
@@ -128,7 +142,7 @@ namespace rogue_like_multi_server
 
         public void AddPlayer(string playerName)
         {
-            if (BoardState.BoardStateDynamic == null || BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare)
+            if (BoardState == null || BoardState.BoardStateDynamic == null || BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare)
                 return; // You cannot join a game that is not tsarted OR already running 
             BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(49, 49));
         }
@@ -155,6 +169,8 @@ namespace rogue_like_multi_server
         string Init(GameConfig gameConfig, string playerName);
 
         Task StartGame();
+
+        void SetPlayerSkinId(string userName, int skinId);
 
         bool TryReset(GameConfig gameConfig);
 

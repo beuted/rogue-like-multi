@@ -47,7 +47,7 @@ namespace rogue_like_multi_server
 
         public BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig config, long turnElapsedMs)
         {
-            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
             // Kill entities with 0 pv (remove them from map)
             var keysToRemove = new List<string>();
@@ -77,9 +77,12 @@ namespace rogue_like_multi_server
             //IA stuff
             foreach (var entity in boardStateDynamic.Entities)
             {
-                var velocity = 0.0005m;
-                var direction = _mapService.FindValidMovment(boardStateDynamic.Map, entity.Value.Coord.ToCoord());
-                entity.Value.Coord = entity.Value.Coord + velocity * Convert.ToDecimal(turnElapsedMs) * direction;
+                var velocity = 0.001m;
+                var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
+                FloatingCoord? targetPlayerPosition = targetPlayer != null ? (FloatingCoord ?) targetPlayer.Entity.Coord : null;
+
+                var direction = _mapService.FindValidMovment(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
+                entity.Value.Coord = entity.Value.Coord + direction;
 
                 if (entity.Value.Aggressivity == Aggressivity.Aggressive)
                 {
@@ -105,14 +108,14 @@ namespace rogue_like_multi_server
 
             
             // Change GameState if needed
-            if (boardStateDynamic.GameStatus == GameStatus.Play && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle)
+            if (boardStateDynamic.GameStatus == GameStatus.Play && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle * 1000)
             {
                 boardStateDynamic.StartTimestamp = nowTimestamp;
                 boardStateDynamic.GameStatus = GameStatus.Discuss;
             }
 
             if (boardStateDynamic.GameStatus == GameStatus.Discuss
-                && (nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss)
+                && (nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsDiscuss * 1000)
                 || DidEverybodyVoted(boardStateDynamic))
             {
                 var winner = ResolveVotes(boardStateDynamic);
@@ -366,7 +369,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 6, new List<ItemType>(), 3, 0, Aggressivity.Neutral), -1, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 4, new List<ItemType>(), 3, 0, Aggressivity.Neutral), -1, true));
 
             return boardStateDynamic;
         }
@@ -432,7 +435,7 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        private ActionEvent HandleAttackOnEntity(Entity entity, Map map, long nowTimestamp)
+        private ActionEvent HandleAttackOnEntity(Entity entity, Map map, long nowTimestamp, string attackerName)
         {
             ActionEvent evt;
             if (entity.Inventory.Contains(ItemType.Armor))
@@ -447,8 +450,11 @@ namespace rogue_like_multi_server
                 evt = new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Coord, null, Role.None);
             }
 
-            if (entity.Aggressivity == Aggressivity.Neutral)
+            if (entity.Aggressivity == Aggressivity.Neutral || entity.Aggressivity == Aggressivity.Aggressive)
+            {
                 entity.Aggressivity = Aggressivity.Aggressive;
+                entity.TargetPlayer = attackerName;
+            }
 
             return evt;
         }
@@ -461,7 +467,7 @@ namespace rogue_like_multi_server
             {
                 if (attackingEntity.Name != entity.Value.Name && FloatingCoord.Distance2d(attackingEntity.Coord, entity.Value.Coord) <= range)
                 {
-                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp);
+                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name);
                     boardStateDynamic.Events.Add(evt);
                     attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
@@ -482,12 +488,12 @@ namespace rogue_like_multi_server
                 {
                     if (attackingEntity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingEntity.Coord, player.Value.Entity.Coord) <= range && player.Value.Entity.Pv > 0)
                     {
-                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp);
+                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name);
                         boardStateDynamic.Events.Add(evt);
                         attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
-                        // Victim retiliate if not pacific
-                        if (nowTimestamp > player.Value.Entity.CoolDownAttack && player.Value.Entity.Aggressivity != Aggressivity.Pacific)
+                        // Victim retiliate. Since it's a player he can only do if he has a sword
+                        if (nowTimestamp > player.Value.Entity.CoolDownAttack && player.Value.Entity.Inventory.Contains(ItemType.Sword))
                         {
                             TryAttackCloseEntityOrPlayer(boardStateDynamic, player.Value.Entity, nowTimestamp);
                         }
@@ -539,7 +545,7 @@ namespace rogue_like_multi_server
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
             var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"));
-            var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+            var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             return new BoardStateDynamic(
                 map,
                 new Dictionary<string, Entity>()

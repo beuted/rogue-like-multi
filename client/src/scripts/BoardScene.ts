@@ -38,7 +38,7 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-    this.spriteManager = new SpriteManager(this.app.loader, "assets/v3.png", 8, 11, 10);
+    this.spriteManager = new SpriteManager(this.app.loader, "assets/v3.png", 8, 12, 10);
     this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
@@ -110,10 +110,9 @@ export class BoardScene {
         this.guiController.setShowGameModal(true);
         break;
       case GameStatus.Play:
-        const speed = 0.04;
+        const speed = 0.08;
         let input = this.inputManager.get(this.board.player, parseFloat((delta * speed).toFixed(3)));
 
-        // TODO: Cooldown coté client pour l'attack ? ou coté server ?
         if ((input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack)) {
           this.characterController.sendInput(input);
 
@@ -130,11 +129,11 @@ export class BoardScene {
         const isHiding = CellHelper.isHiding(this.board.cells[coord.x][coord.y]);
 
         this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, isHiding, interpolFactor);
-        this.renderService.renderCharacter(this.board.player.entity, isHiding);
+        this.renderService.renderCharacter(this.board.player.entity, isHiding, input.direction);
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
-        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle, delta);
+        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle * 1000, delta);
 
         this.guiController.setShowNightOverlay(false);
         break;

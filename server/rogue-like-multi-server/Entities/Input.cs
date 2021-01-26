@@ -19,7 +19,7 @@ namespace rogue_like_multi_server.Hubs
         public InputType? Type;
 
         [JsonProperty("direction")]
-        public Coord? Direction;
+        public FloatingCoord? Direction;
 
         [JsonProperty("item")]
         public ItemType? Item;

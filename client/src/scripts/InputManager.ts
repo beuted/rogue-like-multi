@@ -92,11 +92,13 @@ export class InputManager {
     let canAttack = player.entity.inventory.includes(ItemType.Sword) && Date.now() > player.entity.coolDownAttack && player.entity.pv > 0;
     const attacking = canAttack ? this.attack : false;
 
+    // Diagonal factor to avoid going faster on diagonal
+    let diagonalFactor = this.vx != 0 && this.vy != 0 ? 1 / Math.SQRT2 : 1;
     var res: Input = {
       type: attacking ? InputType.Attack : InputType.Move,
       direction: {
-        x: this.vx,
-        y: this.vy
+        x: this.vx * diagonalFactor,
+        y: this.vy * diagonalFactor
       },
       pressTime: delta,
       inputSequenceNumber: this.inputSequenceNumber,
