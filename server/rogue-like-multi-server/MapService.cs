@@ -11,7 +11,10 @@ namespace rogue_like_multi_server
     {
         Map Generate(int mapWidth, int mapHeight, string file);
         FloatingCoord FindValidMovment(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs);
+        Map CleanMap(Map map);
+        Map FillMapWithRandomObjects(Map map, Dictionary<ItemType, int> itemSpawns);
         Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
+        List<ItemType> GetRandomLoot(int modificator = 0);
         Map PickupItem(Map map, Coord coord);
     }
 
@@ -43,7 +46,7 @@ namespace rogue_like_multi_server
             {
                 for (int j = 0; j < mapHeight; j++)
                 {
-                    map.SetCell(i, j, (FloorType) mapLayer.Data[i + j * mapWidth] - 1);
+                    map.SetCell(new Coord(i, j), (FloorType) mapLayer.Data[i + j * mapWidth] - 1);
                 }
             }
 
@@ -51,63 +54,54 @@ namespace rogue_like_multi_server
             {
                 for (int j = 0; j < mapHeight; j++)
                 {
-                    map.SetItem(i, j, (ItemType) objectsLayer.Data[i + j * mapWidth] - 1);
+                    map.SetItem(new Coord(i, j), (ItemType) objectsLayer.Data[i + j * mapWidth] - 1);
                 }
             }
 
-            // Objects
-            for (var i = 0; i < 5; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Wood);
-            }
+            map = FillMapWithRandomObjects(map, new Dictionary<ItemType, int>() {
+                { ItemType.Wood, 5 },
+                { ItemType.Food, 10 },
+                { ItemType.Key, 5 },
+                { ItemType.Sword, 5 },
+                { ItemType.Backpack, 5 },
+                { ItemType.HealthPotion, 5 },
+            });
 
-            for (var i = 0; i < 10; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Food);
-            }
+            return map;
+        }
 
-            for (var i = 0; i < 5; i++)
+        public Map CleanMap(Map map)
+        {
+            foreach (var itemKey in map.Items.Keys.ToList())
             {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Key);
-            }
-
-            for (var i = 0; i < 135; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Sword);
-            }
-
-            for (var i = 0; i < 50; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Armor);
-            }
-
-            for (var i = 0; i < 30; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.HealthPotion);
-            }
-
-            for (var i = 0; i < 135; i++)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3),
-                    ItemType.Backpack);
+                map.SetItem(itemKey, null);
             }
 
             return map;
         }
+
+        public Map FillMapWithRandomObjects(Map map, Dictionary<ItemType, int> itemSpawns)
+        {
+            foreach (var itemSpawn in itemSpawns)
+            {
+                for (var i = 0; i < itemSpawn.Value; i++)
+                {
+                    map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3), itemSpawn.Key);
+                }
+            }         
+
+            return map;
+        }
+
         public FloatingCoord FindValidMovment(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs)
         {
             var multiplicator = velocity * Convert.ToDecimal(elapsedMs);
 
-            // If twe have a target player close enough
+            // If we have a target player close enough
             if (targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < 5m)
             {
-                var direction = targetPosition.Value - startFloatingCoord; // We should normalize or transform into one of 9 directions but la flemme
+                var direction = targetPosition.Value - startFloatingCoord;
+                // We should normalize or transform into one of 9 directions but la flemme
                 var greaterDimension = Math.Max(Math.Abs(direction.X), Math.Abs(direction.Y));
                 return (multiplicator / greaterDimension) * direction;
             }
@@ -122,6 +116,8 @@ namespace rogue_like_multi_server
                     // Dirty way to avoid diagonals
                     if (map.Cells[i][j].FloorType.IsWalkable() && !((i==-1 && j==-1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)))
                         possibleMovements.Add(new FloatingCoord(i, j));
+                    else
+                        possibleMovements.Add(startFloatingCoord);
                 }
             }
             if (possibleMovements.Count == 0)
@@ -141,17 +137,25 @@ namespace rogue_like_multi_server
             return map;
         }
 
+        public List<ItemType> GetRandomLoot(int modificator = 0)
+        {
+            var items = new List<ItemType>();
+
+            foreach (var itemType in Enum.GetValues(typeof(ItemType)) as ItemType[])
+            {
+                var rarity = itemType.GetDropRate(modificator);
+                if (rarity > 0 && GetRandomNumber(0, 100) <= rarity)
+                {
+                    items.Add(itemType);
+                }
+            }
+
+            return items;
+        }
+
         public Map PickupItem(Map map, Coord coord)
         {
-            var itemType = map.Cells[coord.X][coord.Y].ItemType;
-            map.SetItem(coord.X, coord.Y, null);
-
-            // If it was food make it respawn
-            if (itemType == ItemType.Food)
-            {
-                map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(9, 9),
-                ItemType.Food);
-            }
+            map.SetItem(coord, null);
 
             return map;
         }
@@ -168,7 +172,7 @@ namespace rogue_like_multi_server
                     && (map.Cells[newCoord.X][newCoord.Y].ItemType == null || map.Cells[newCoord.X][newCoord.Y].ItemType == ItemType.Empty)
                     && map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
                 {
-                    map.SetItem(newCoord.X, newCoord.Y, item);
+                    map.SetItem(newCoord, item);
                     return map;
                 }
             }
@@ -197,7 +201,7 @@ namespace rogue_like_multi_server
                 return null;
             }
 
-            map.SetItem(x, y, item);
+            map.SetItem(new Coord(x, y), item);
 
             return map;
         }

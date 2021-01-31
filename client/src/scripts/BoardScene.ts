@@ -1,7 +1,7 @@
 import { Application } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { SoundManager } from "./SoundManager";
-import { Board, BoardStateDynamic, GameStatus, Role } from "./Board";
+import { Board, BoardStateDynamic, GameStatus, Role, Player } from "./Board";
 import { InputManager, Input, InputType } from "./InputManager";
 import { SocketClient, SocketMessageReceived } from "./SocketClient";
 import { GameServerClient } from "./GameServerClient";
@@ -12,6 +12,7 @@ import { ParticleRenderService } from "./ParticleRenderService";
 import { EventHandler } from "./EventHandler";
 import { CellHelper, Cell } from "./Cell";
 import { CoordHelper } from "./Coord";
+import { Entity } from "./Entity";
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -38,12 +39,12 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-    this.spriteManager = new SpriteManager(this.app.loader, "assets/v3.png", 8, 12, 10);
-    this.soundManager = new SoundManager(this.app.loader, 'sounds/musical.mp3');
+    this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 8, 25, 10);
+    this.soundManager = new SoundManager(this.app.loader, 'assets/sounds/');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
-    this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService, this.inputManager, this.characterController);
-    this.eventHandler = new EventHandler(this.particleRenderService);
+    this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService, this.inputManager, this.characterController, this.soundManager);
+    this.eventHandler = new EventHandler(this.particleRenderService, this.soundManager);
   }
 
   public async init() {
@@ -51,7 +52,7 @@ export class BoardScene {
     await this.soundManager.init();
     this.inputManager.init();
 
-    //this.soundManager.play();
+    //this.soundManager.playMusic();
 
     console.log("Everything initialized");
 
@@ -111,7 +112,8 @@ export class BoardScene {
         break;
       case GameStatus.Play:
         const speed = 0.08;
-        let input = this.inputManager.get(this.board.player, parseFloat((delta * speed).toFixed(3)));
+        var entityInRange = this.findEntityInRange(this.board.player, this.board.entities, this.board.players);
+        let input = this.inputManager.get(this.board.player, entityInRange?.name, parseFloat((delta * speed).toFixed(3)));
 
         if ((input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack)) {
           this.characterController.sendInput(input);
@@ -128,7 +130,7 @@ export class BoardScene {
         const coord = CoordHelper.getClosestCoord(this.board.player.entity.coord);
         const isHiding = CellHelper.isHiding(this.board.cells[coord.x][coord.y]);
 
-        this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, isHiding, interpolFactor);
+        this.renderService.renderMap(this.board.cells, this.board.player, this.board.players, this.board.entities, this.board.entitiesPreviousCoords, entityInRange?.name, isHiding, interpolFactor);
         this.renderService.renderCharacter(this.board.player.entity, isHiding, input.direction);
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
@@ -144,6 +146,31 @@ export class BoardScene {
       case GameStatus.Pause:
         break;
     }
+  }
+
+  private findEntityInRange(currentPlayer: Player, entities: { [name: string]: Entity; }, players: { [name: string]: Player; }) {
+    let coord = currentPlayer.entity.coord;
+    let minDist: number | null = Number.MAX_SAFE_INTEGER;
+    let closestEntity: Entity | null = null;
+
+    for (let entity of Object.values(entities)) {
+      const dist = CoordHelper.distance(coord, entity.coord);
+      if (dist < minDist && dist < 1) {
+        minDist = dist;
+        closestEntity = entity;
+      }
+    }
+    for (let player of Object.values(players)) {
+      if (player.entity.name = currentPlayer.entity.name)
+        continue;
+      const dist = CoordHelper.distance(coord, player.entity.coord);
+      if (dist < minDist && dist < 1) {
+        minDist = dist;
+        closestEntity = player.entity;
+      }
+    }
+
+    return closestEntity;
   }
 }
 

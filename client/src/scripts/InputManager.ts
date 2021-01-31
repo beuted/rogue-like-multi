@@ -16,7 +16,7 @@ export interface Input {
   type: InputType,
   direction: Coord,
   pressTime: number,
-  vote: string | null,
+  entityName: string | null,
   item: ItemType | null,
   inputSequenceNumber: number,
   time: number;
@@ -41,7 +41,7 @@ export class InputManager {
       item: null,
       direction: null,
       pressTime: null,
-      vote: null,
+      entityName: null,
     }
   }
 
@@ -54,7 +54,7 @@ export class InputManager {
       item: null,
       direction: null,
       pressTime: null,
-      vote: null,
+      entityName: null,
     }
   }
 
@@ -67,7 +67,7 @@ export class InputManager {
 
       direction: null,
       pressTime: null,
-      vote: null,
+      entityName: null,
     }
   }
 
@@ -76,7 +76,7 @@ export class InputManager {
       type: InputType.Vote,
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
-      vote: name,
+      entityName: name,
 
       item: null,
       direction: null,
@@ -84,12 +84,12 @@ export class InputManager {
     }
   }
 
-  public get(player: Player, delta: number): Input {
+  public get(player: Player, entityInRangeName: string, delta: number): Input {
     if (this.vx != 0 || this.vy != 0 || this.attack) {
       this.inputSequenceNumber++;
     }
 
-    let canAttack = player.entity.inventory.includes(ItemType.Sword) && Date.now() > player.entity.coolDownAttack && player.entity.pv > 0;
+    let canAttack = Date.now() > player.entity.coolDownAttack && player.entity.pv > 0;
     const attacking = canAttack ? this.attack : false;
 
     // Diagonal factor to avoid going faster on diagonal
@@ -104,7 +104,7 @@ export class InputManager {
       inputSequenceNumber: this.inputSequenceNumber,
       time: Date.now(),
       item: null,
-      vote: null
+      entityName: entityInRangeName
     }
 
     if (attacking)

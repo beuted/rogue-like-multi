@@ -14,14 +14,17 @@
         <ClientDistFolder Include="../../client/dist/**/*" />
     </ItemGroup>
 
-    <Target Name="RunGulp" BeforeTargets="Build">
+    <Target Name="RunNpm" BeforeTargets="Build">
+        <Message Text="Building node package" Importance="High" />
         <Exec Command="npm run build" WorkingDirectory="../../client"/>
     </Target>
 
-    <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Target Name="CopyCustomContent" AfterTargets="RunNpm">
+        <Message Text="Copying dist after build" Importance="High" />
         <Copy SourceFiles="@(ClientDistFolder)" DestinationFiles="@(ClientDistFolder->'$(OutDir)\dist\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
     <Target Name="CopyCustomContentOnPublish" AfterTargets="Publish">
+        <Message Text="Copying dist after publish" Importance="High" />
         <Copy SourceFiles="@(ClientDistFolder)" DestinationFiles="@(ClientDistFolder->'$(PublishDir)\dist\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
 </Project>

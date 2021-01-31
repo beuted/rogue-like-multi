@@ -1,9 +1,10 @@
 import { ParticleRenderService } from "./ParticleRenderService";
 import { ActionEvent, ActionEventType, Role } from "./Board";
+import { SoundManager, Sound } from "./SoundManager";
 
 export class EventHandler {
   private handledEvents: string[] = [];
-  constructor(private particleRenderService: ParticleRenderService) {
+  constructor(private particleRenderService: ParticleRenderService, private soundManager: SoundManager) {
     let handledEventsJson = localStorage.getItem('handledEvents');
     if (handledEventsJson != null)
       this.handledEvents = JSON.parse(handledEventsJson);
@@ -18,11 +19,14 @@ export class EventHandler {
         switch (event.type) {
           case ActionEventType.Attack:
             this.particleRenderService.handleEvent(event);
+            this.soundManager.play(Sound.Stab);
             break;
           case ActionEventType.ShieldBreak:
+            this.soundManager.play(Sound.Parry);
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.Heal:
+            this.soundManager.play(Sound.Heal);
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.EndGame:

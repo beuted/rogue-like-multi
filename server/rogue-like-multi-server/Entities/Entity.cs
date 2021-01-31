@@ -31,6 +31,9 @@ namespace rogue
         [JsonProperty("maxPv")]
         public int MaxPv;
 
+        [JsonProperty("damage")]
+        public int Damage;
+
         [JsonProperty("timeSinceInRange")]
         public long TimeSinceInRange; // ms
 
@@ -44,7 +47,7 @@ namespace rogue
         public string TargetPlayer;
 
 
-        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, long timeSinceInRange, Aggressivity aggressivity)
+        public Entity(FloatingCoord coord, string name, int spriteId, List<ItemType> inventory, int maxPv, int damage, Aggressivity aggressivity)
         {
             Coord = coord;
             Name = name;
@@ -52,8 +55,9 @@ namespace rogue
             Inventory = inventory;
             Pv = maxPv;
             MaxPv = maxPv;
-            TimeSinceInRange = timeSinceInRange;
+            Damage = damage;
             Aggressivity = aggressivity;
+            TimeSinceInRange = 0;
             CoolDownAttack = 0;
             TargetPlayer = null;
         }

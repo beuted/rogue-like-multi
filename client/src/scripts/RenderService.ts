@@ -8,9 +8,9 @@ import { LightRenderService } from "./LightRenderService";
 import { ParticleRenderService } from "./ParticleRenderService";
 import { InputManager } from "./InputManager";
 import { CharacterController } from "./CharacterController";
+import { SoundManager, Sound } from "./SoundManager";
 
 export class RenderService {
-
   private entityContainer: Container;
   private mapContainer: Container;
   private mapSceneContainer: Container;
@@ -19,7 +19,7 @@ export class RenderService {
   private pvContainer: Container;
   private cellsContainer: Container;
 
-  private entitySprites: { [name: string]: Sprite } = {};
+  private entitySprites: { [name: string]: AnimatedSprite } = {};
   private characterSprite: AnimatedSprite;
   private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
@@ -28,7 +28,8 @@ export class RenderService {
   private roleText: Text;
 
   constructor(private spriteManager: SpriteManager, private lightRenderService: LightRenderService,
-    private particleRenderService: ParticleRenderService, private inputManager: InputManager, private characterController: CharacterController) {
+    private particleRenderService: ParticleRenderService, private inputManager: InputManager, private characterController: CharacterController,
+    private soundManager: SoundManager) {
   }
 
   public init() {
@@ -64,7 +65,7 @@ export class RenderService {
     this.particleRenderService.init(this.mapContainer, cells);
   }
 
-  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isHiding: boolean) {
+  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isTargetted: boolean, isHiding: boolean) {
     if (!previousEntityPosition)
       previousEntityPosition = entity.coord;
     // Remove if out of bounds or dead
@@ -77,45 +78,53 @@ export class RenderService {
     }
 
     if (!this.entitySprites[entity.name]) {
-      this.entitySprites[entity.name] = new Sprite(this.spriteManager.textures[entity.spriteId]);
+      this.entitySprites[entity.name] = new AnimatedSprite(this.spriteManager.animations[entity.spriteId]);
+      this.entitySprites[entity.name].anchor.set(0.5);
+      this.entitySprites[entity.name].animationSpeed = 0.2;
       this.entityContainer.addChild(this.entitySprites[entity.name]);
     }
 
     const coord = CoordHelper.getClosestCoord(entity.coord);
     if (!isHiding && CellHelper.isHiding(cells[coord.x][coord.y])) {
       if (this.entitySprites[entity.name].alpha == 1.0) {
+        this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
       this.entitySprites[entity.name].alpha = 0.1; //TODO: maybe just remove it
     } else {
       if (this.entitySprites[entity.name].alpha == 0.1) {
+        this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
       this.entitySprites[entity.name].alpha = 1.0;
     }
 
-    this.entitySprites[entity.name].x = MathHelper.lerp(
-      previousEntityPosition.x * this.spriteManager.tilesetSize,
-      entity.coord.x * this.spriteManager.tilesetSize,
-      interpolFactor);
-    this.entitySprites[entity.name].y = MathHelper.lerp(
-      previousEntityPosition.y * this.spriteManager.tilesetSize,
-      entity.coord.y * this.spriteManager.tilesetSize,
-      interpolFactor);
+    if (isTargetted) {
+      this.entitySprites[entity.name].tint = 0xff0000;
+    } else {
+      this.entitySprites[entity.name].tint = 0xffffff;
+    }
+
+    const direction = { x: entity.coord.x - previousEntityPosition.x, y: entity.coord.y - previousEntityPosition.y };
+    if (direction.x > 0) {
+      this.entitySprites[entity.name].scale.x = 1;
+    } else if (direction.x < 0) {
+      this.entitySprites[entity.name].scale.x = -1;
+    }
+
+    if (direction.x == 0 && direction.y == 0) {
+      this.entitySprites[entity.name].gotoAndStop(0);
+    } else {
+      this.entitySprites[entity.name].play();
+    }
+
+    this.entitySprites[entity.name].x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
   }
 
   public renderCharacter(character: Entity, isHiding: boolean, direction: Coord) {
     if (!this.characterSprite) {
-      this.characterSprite = new AnimatedSprite([
-        this.spriteManager.textures[110],
-        this.spriteManager.textures[111],
-        this.spriteManager.textures[112],
-        this.spriteManager.textures[113],
-        this.spriteManager.textures[114],
-        this.spriteManager.textures[115],
-        this.spriteManager.textures[116],
-        this.spriteManager.textures[117]
-      ]);
+      this.characterSprite = new AnimatedSprite(this.spriteManager.animations[character.spriteId]);
       this.characterSprite.anchor.set(0.5);
       this.characterSprite.zIndex = 1;
       this.characterSprite.animationSpeed = 0.2;
@@ -158,11 +167,13 @@ export class RenderService {
 
       if (isHiding) {
         if (this.characterSprite.alpha == 1.0) {
+          this.soundManager.play(Sound.Bush);
           this.particleRenderService.addLeafStaticEmitter(character.coord);
         }
         this.characterSprite.alpha = 0.5;
       } else {
         if (this.characterSprite.alpha == 0.5) {
+          this.soundManager.play(Sound.Bush);
           this.particleRenderService.addLeafStaticEmitter(character.coord);
         }
         this.characterSprite.alpha = 1.0;
@@ -250,7 +261,7 @@ export class RenderService {
     this.roleText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(Math.floor(timestampDiff / 1000))}`;
   }
 
-  public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, isHiding: boolean, interpolFactor: number) {
+  public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, entityInRangeName: string, isHiding: boolean, interpolFactor: number) {
     const roundedPlayerPosition = CoordHelper.getClosestCoord(currentPlayer.entity.coord);
     const playerPosition = currentPlayer.entity.coord;
     this.cellsContainer.removeChildren();
@@ -266,6 +277,12 @@ export class RenderService {
           itemCell.x = i * this.spriteManager.tilesetSize;
           itemCell.y = j * this.spriteManager.tilesetSize;
           this.cellsContainer.addChild(itemCell);
+
+          if (!isHiding && CellHelper.isHiding(cells[i][j])) {
+            itemCell.alpha = 0.7;
+          } else {
+            itemCell.alpha = 1.0;
+          }
         }
       }
     }
@@ -276,12 +293,12 @@ export class RenderService {
       (9 - playerPosition.y) * this.spriteManager.tilesetSize;
 
     for (let entityName in entities) {
-      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells, isHiding);
+      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells, entityInRangeName == entityName, isHiding);
     }
 
     for (let playerName in players) {
       if (playerName != currentPlayer.entity.name)
-        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, isHiding);
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, entityInRangeName == playerName, isHiding);
     }
 
     //If players or entites have been removed from list we need to clean them

@@ -30,7 +30,7 @@ namespace rogue_like_multi_server.Hubs
         [JsonProperty("inputSequenceNumber")]
         public long InputSequenceNumber;
 
-        [JsonProperty("vote")]
-        public string Vote;
+        [JsonProperty("entityName")]
+        public string EntityName;
     }
 }

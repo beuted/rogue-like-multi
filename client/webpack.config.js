@@ -34,7 +34,6 @@ module.exports = {
             { from: 'src/index.html' },
             { from: 'src/css/style.css', to: 'css/' },
             { from: 'src/assets/', to: 'assets/' },
-            { from: 'src/sounds/', to: 'sounds/' },
             { from: 'src/scripts/', to: 'scripts/' },
         ]),
     ],

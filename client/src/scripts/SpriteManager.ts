@@ -2,6 +2,7 @@ import { Texture, Rectangle, Loader, LoaderResource } from 'pixi.js';
 
 export class SpriteManager {
   public textures: Texture[] = [];
+  public animations: { [key: number]: Texture[] };
 
   constructor(private appLoader: Loader, private tilesetPath: string, public tilesetSize: number, private tilesetHeight: number, private tilesetWidth: number) { }
 
@@ -20,6 +21,50 @@ export class SpriteManager {
               texture.frame = rectangle;
               this.textures.push(texture);
             }
+          }
+          this.animations = {
+            4: // char1
+              [this.textures[220],
+              this.textures[221],
+              this.textures[222],
+              this.textures[223],
+              this.textures[224],
+              this.textures[225],
+              this.textures[226],
+              this.textures[227]],
+            5: // char2
+              [this.textures[210],
+              this.textures[211],
+              this.textures[212],
+              this.textures[213],
+              this.textures[214],
+              this.textures[215],
+              this.textures[216],
+              this.textures[217]],
+            6: // char3
+              [this.textures[110],
+              this.textures[111],
+              this.textures[112],
+              this.textures[113],
+              this.textures[114],
+              this.textures[115],
+              this.textures[116],
+              this.textures[117]],
+            7: // char4
+              [this.textures[7]],
+            14: // Snake
+              [this.textures[235],
+              this.textures[236],
+              this.textures[237]],
+            15: // dog
+              [this.textures[230],
+              this.textures[231],
+              this.textures[232],
+              ],
+            16: //Rat
+              [this.textures[240],
+              this.textures[241],
+              this.textures[242]],
           }
           resolve();
         });

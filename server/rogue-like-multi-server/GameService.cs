@@ -108,9 +108,9 @@ namespace rogue_like_multi_server
                 if (playerInput.Item2.Type == InputType.Move && (playerInput.Item2.Direction.Value.X != 0 || playerInput.Item2.Direction.Value.Y != 0))
                     BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime.Value * playerInput.Item2.Direction.Value, playerInput.Item2.InputSequenceNumber);
                 else if(playerInput.Item2.Type == InputType.Attack)
-                    BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
+                    BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber, playerInput.Item2.EntityName);
                 else if (playerInput.Item2.Type == InputType.Vote)
-                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVote(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.Vote, playerInput.Item2.InputSequenceNumber);
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVote(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.EntityName, playerInput.Item2.InputSequenceNumber);
                 else if (playerInput.Item2.Type == InputType.GiveFood)
                     BoardState.BoardStateDynamic = _boardStateService.ApplyGiveFood(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
                 else if (playerInput.Item2.Type == InputType.GiveMaterial)

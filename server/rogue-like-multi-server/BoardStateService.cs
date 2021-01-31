@@ -93,9 +93,9 @@ namespace rogue_like_multi_server
                         {
                             noPlayersInRange = false;
                             entity.Value.TimeSinceInRange += turnElapsedMs;
-                            if (entity.Value.TimeSinceInRange > 2000 && nowTimestamp > entity.Value.CoolDownAttack)
+                            if (entity.Value.TimeSinceInRange > 1000 && nowTimestamp > entity.Value.CoolDownAttack)
                             {
-                                var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp);
+                                var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false);
                                 entity.Value.TimeSinceInRange = 0;
                             }
                             break;
@@ -106,7 +106,6 @@ namespace rogue_like_multi_server
                 }
             }
 
-            
             // Change GameState if needed
             if (boardStateDynamic.GameStatus == GameStatus.Play && nowTimestamp > boardStateDynamic.StartTimestamp + config.NbSecsPerCycle * 1000)
             {
@@ -145,6 +144,33 @@ namespace rogue_like_multi_server
 
                 boardStateDynamic.StartTimestamp = nowTimestamp;
                 boardStateDynamic.GameStatus = GameStatus.Play;
+
+                // Drop items on the map
+                boardStateDynamic.Map = _mapService.CleanMap(boardStateDynamic.Map);
+                boardStateDynamic.Map = _mapService.FillMapWithRandomObjects(boardStateDynamic.Map, new Dictionary<ItemType, int>() {
+                    { ItemType.Wood, 5 },
+                    { ItemType.Food, 10 },
+                    { ItemType.Key, 5 },
+                    { ItemType.Sword, 5 },
+                    { ItemType.Backpack, 5 },
+                    { ItemType.HealthPotion, 5 },
+                });
+
+                // Reset players positions
+                int posOffset = 0;
+                foreach (var player in boardStateDynamic.Players)
+                {
+                    player.Value.Entity.Coord = new FloatingCoord(46 + posOffset, 48);
+                    posOffset++;
+                }
+
+                // Give sword to the bad guy if he doesn't have one
+                foreach (var player in boardStateDynamic.Players.Where(x => x.Value.Role == Role.Bad).Select(x => x.Value))
+                {
+                    if (player.Entity.Inventory.Any(x => x == ItemType.Sword)) {
+                        player.Entity.Inventory.Add(ItemType.Sword);
+                    }
+                }
             }
 
             // Find winner Team
@@ -228,7 +254,7 @@ namespace rogue_like_multi_server
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
                 map.Cells[gridCoord.X][gridCoord.Y].FloorType = FloorType.Plain;
-                _mapService.DropItems(boardStateDynamic.Map, new [] {ItemType.Food, ItemType.Wood}, gridCoord);
+                _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomLoot(15), gridCoord);
             }
 
             return boardStateDynamic;
@@ -302,7 +328,7 @@ namespace rogue_like_multi_server
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't exist on the server");
                 return boardStateDynamic;
             }
-            if (!player.Entity.Inventory.Any(x => x == ItemType.Bag))
+            if (!player.Entity.Inventory.Any(x => x == ItemType.Wood))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't have any");
                 return boardStateDynamic;
@@ -310,7 +336,7 @@ namespace rogue_like_multi_server
 
             player.InputSequenceNumber = inputSequenceNumber;
 
-            player.Entity.Inventory.Remove(ItemType.Bag);
+            player.Entity.Inventory.Remove(ItemType.Wood);
             boardStateDynamic.NightState.MaterialGiven.Add(new Gift(playerName));
             return boardStateDynamic;
         }
@@ -369,7 +395,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 4, new List<ItemType>(), 3, 0, Aggressivity.Neutral), -1, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 4, new List<ItemType>(), 3, 4, Aggressivity.Neutral), -1, true));
 
             return boardStateDynamic;
         }
@@ -397,7 +423,7 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        public BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber)
+        public BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber, string entityName)
         {
             _logger.Log(LogLevel.Information, $"{playerName} attack");
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var attackingPlayer))
@@ -410,11 +436,6 @@ namespace rogue_like_multi_server
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he is dead");
                 return boardStateDynamic;
             }
-            if (!attackingPlayer.Entity.Inventory.Contains(ItemType.Sword))
-            {
-                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to attack but he doesn't have a sword");
-                return boardStateDynamic;
-            }
 
             var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
@@ -425,17 +446,19 @@ namespace rogue_like_multi_server
 
             attackingPlayer.InputSequenceNumber = inputSequenceNumber;
 
-            var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, attackingPlayer.Entity, nowTimestamp);
+            var hasSword = attackingPlayer.Entity.Inventory.Contains(ItemType.Sword);
+            var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, attackingPlayer.Entity, nowTimestamp, hasSword, entityName);
 
-            if (victimFound)
+            if (victimFound && hasSword)
             {
+                // Remove a sword if he had one
                 attackingPlayer.Entity.Inventory.Remove(ItemType.Sword);
             }
 
             return boardStateDynamic;
         }
 
-        private ActionEvent HandleAttackOnEntity(Entity entity, Map map, long nowTimestamp, string attackerName)
+        private ActionEvent HandleAttackOnEntity(Entity entity, Map map, long nowTimestamp, string attackerName, int damage)
         {
             ActionEvent evt;
             if (entity.Inventory.Contains(ItemType.Armor))
@@ -445,7 +468,7 @@ namespace rogue_like_multi_server
             }
             else
             {
-                entity.Pv--;
+                entity.Pv -= damage;
                 _mapService.DropItems(map, new[] { ItemType.Blood }, entity.Coord.ToCoord());
                 evt = new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Coord, null, Role.None);
             }
@@ -459,22 +482,22 @@ namespace rogue_like_multi_server
             return evt;
         }
 
-        private bool TryAttackCloseEntityOrPlayer(BoardStateDynamic boardStateDynamic, Entity attackingEntity, long nowTimestamp)
+        private bool TryAttackCloseEntityOrPlayer(BoardStateDynamic boardStateDynamic, Entity attackingEntity, long nowTimestamp, bool hasSword, string entityName = null)
         {
             decimal range = 1;
             var victimFound = false;
             foreach (var entity in boardStateDynamic.Entities)
             {
-                if (attackingEntity.Name != entity.Value.Name && FloatingCoord.Distance2d(attackingEntity.Coord, entity.Value.Coord) <= range)
+                if (attackingEntity.Name != entity.Value.Name && (entityName == null || entity.Value.Name == entityName) && FloatingCoord.Distance2d(attackingEntity.Coord, entity.Value.Coord) <= range)
                 {
-                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name);
+                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 1 : 0));
                     boardStateDynamic.Events.Add(evt);
                     attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
                     // Victim retiliate if not pacific
                     if (nowTimestamp > entity.Value.CoolDownAttack && entity.Value.Aggressivity != Aggressivity.Pacific)
                     {
-                        TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp);
+                        TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false/* entity can't have sword atm*/, attackingEntity.Name);
                     }
 
                     victimFound = true;
@@ -488,14 +511,14 @@ namespace rogue_like_multi_server
                 {
                     if (attackingEntity.Name != player.Value.Entity.Name && FloatingCoord.Distance2d(attackingEntity.Coord, player.Value.Entity.Coord) <= range && player.Value.Entity.Pv > 0)
                     {
-                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name);
+                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 1 : 0));
                         boardStateDynamic.Events.Add(evt);
                         attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
                         // Victim retiliate. Since it's a player he can only do if he has a sword
-                        if (nowTimestamp > player.Value.Entity.CoolDownAttack && player.Value.Entity.Inventory.Contains(ItemType.Sword))
+                        if (nowTimestamp > player.Value.Entity.CoolDownAttack)
                         {
-                            TryAttackCloseEntityOrPlayer(boardStateDynamic, player.Value.Entity, nowTimestamp);
+                            TryAttackCloseEntityOrPlayer(boardStateDynamic, player.Value.Entity, nowTimestamp, player.Value.Entity.Inventory.Contains(ItemType.Sword), attackingEntity.Name);
                         }
 
                         victimFound = true;
@@ -550,18 +573,9 @@ namespace rogue_like_multi_server
                 map,
                 new Dictionary<string, Entity>()
                 {
-                    { "snake", new Entity(new FloatingCoord(30, 30), "snake", 14, new List<ItemType>()
-                    {
-                        ItemType.Wood, ItemType.Wood, ItemType.HealthPotion
-                    }, 3, 0, Aggressivity.Aggressive) },
-                    { "rat", new Entity(new FloatingCoord(56, 56), "rat", 16, new List<ItemType>()
-                    {
-                        ItemType.Wood
-                    }, 2, 0, Aggressivity.Neutral) },
-                    { "dog", new Entity(new FloatingCoord(48, 48), "dog", 15, new List<ItemType>()
-                    {
-                        ItemType.Wood, ItemType.Armor
-                    }, 2, 0, Aggressivity.Pacific) }
+                    { "snake", new Entity(new FloatingCoord(30, 30), "snake", 14, _mapService.GetRandomLoot(), 5, 1, Aggressivity.Aggressive) },
+                    { "rat", new Entity(new FloatingCoord(56, 56), "rat", 16, _mapService.GetRandomLoot(), 4, 1, Aggressivity.Neutral) },
+                    { "dog", new Entity(new FloatingCoord(48, 48), "dog", 15, _mapService.GetRandomLoot(), 4, 1, Aggressivity.Pacific) }
                 },
                 new Dictionary<string, Player>(),
                 Role.None,
@@ -601,6 +615,6 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 
-        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
+        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber, string entityName);
     }
 }

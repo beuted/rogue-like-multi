@@ -1,12 +1,23 @@
+using Newtonsoft.Json;
 using rogue;
+using System.Collections.Generic;
 
 namespace rogue_like_multi_server
 {
     public class Map
     {
+        [JsonProperty("cells")]
         public Cell[][] Cells;
+
+        [JsonProperty("mapWidth")]
         public int MapWidth = 100;
+
+        [JsonProperty("mapHeight")]
         public int MapHeight = 100;
+
+        // For easier item management: TODO maybe send this to front-end
+        [JsonIgnore()]
+        public Dictionary<Coord, ItemType> Items;
 
         public Map(int mapWidth, int mapHeight)
         {
@@ -18,16 +29,23 @@ namespace rogue_like_multi_server
             {
                 Cells[i] = new Cell[mapHeight];
             }
+            Items = new Dictionary<Coord, ItemType>();
         }
 
-        public void SetCell(int i, int j, FloorType floorType)
+        public void SetCell(Coord coord, FloorType floorType)
         {
-            Cells[i][j] = new Cell(floorType, null);
+            Cells[coord.X][coord.Y] = new Cell(floorType, null);
         }
 
-        public void SetItem(int i, int j, ItemType? item)
+        public void SetItem(Coord coord, ItemType? item)
         {
-            Cells[i][j].ItemType = item;
+            Cells[coord.X][coord.Y].ItemType = item;
+
+            Items.Remove(coord); //TODO we should not overrids, weird have a look at this
+            if (item.HasValue)
+            {
+                Items.Add(coord, item.Value);
+            }
         }
     }
 }

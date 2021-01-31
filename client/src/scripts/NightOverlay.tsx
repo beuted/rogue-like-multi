@@ -82,7 +82,7 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
     <div className="night-overlay">
       <div className="modal">
         <div className="modal-block">
-          <b>Players alive</b>
+          <b>Players:</b>
           <div className="players-alive">
             {playerDisplays.map(p => (
               <div key={p.name} className="vote-line">
@@ -97,7 +97,7 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
           </div>
         </div>
         <div className="modal-block">
-          <b>Available food: {foodGiven.length}</b>
+          <b>Available food today: {foodGiven.length} / {playerDisplays.filter(p => p.alive).length}</b>
           <div>
             {foodGiven.map((f, i) => (
               <div key={i}>{f.from} : 1 food given</div>
@@ -107,10 +107,10 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
         </div>
 
         <div className="modal-block">
-          <b>Collected bags: {materialGiven.length}</b>
+          <b>Collected wood today: {materialGiven.length} / XXX</b>
           <div>
             {materialGiven.map((m, i) => (
-              <div key={i}>{m.from} : 1 material given</div>
+              <div key={i}>{m.from} : 1 wood given</div>
             ))}
           </div>
           <button disabled={!hasMaterial} onClick={() => giveMaterial()}>Give 1 material</button>
