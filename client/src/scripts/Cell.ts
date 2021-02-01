@@ -54,19 +54,21 @@ export enum FloorType {
   Floor35 = 198,
   Floor36 = 201,
   Floor37 = 202,
-  Floor38 = 203,
+  Floor38 = 203
 }
 
 export enum ItemType {
   Empty = -1,
   Key = 57,
-  Bag = 27,
   Sword = 46,
   Food = 58,
   Wood = 100,
   Blood = 102,
   HealthPotion = 103,
   Backpack = 105,
+  DeadBody1 = 118,
+  DeadBody2 = 218,
+  DeadBody3 = 228,
 }
 
 export class CellHelper {

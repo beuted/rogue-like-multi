@@ -53,7 +53,7 @@ namespace rogue
         Floor35 = 198,
         Floor36 = 201,
         Floor37 = 202,
-        Floor38 = 203,
+        Floor38 = 203
     }
 
     public static class FloorTypeExtensions

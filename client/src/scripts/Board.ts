@@ -1,5 +1,5 @@
 import { Cell, CellHelper, ItemType } from "./Cell";
-import { Entity } from "./Entity";
+import { Entity, EntityType } from "./Entity";
 import { Coord } from "./Coord";
 import { Input, InputType } from "./InputManager";
 
@@ -31,6 +31,12 @@ export type GameState = {
 export type GameConfig = {
   nbSecsPerCycle: number;
   nbSecsDiscuss: number;
+  badGuyVision: number;
+  itemSpawn: { [key in ItemType]: number };
+  entitySpawn: { [key in EntityType]: number };
+  nbMaterialToWin: number;
+  playerSpeed: number;
+  entitySpeed: number;
 }
 
 export enum ActionEventType {

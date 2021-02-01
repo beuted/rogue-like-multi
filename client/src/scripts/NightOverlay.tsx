@@ -27,7 +27,7 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
       const playerName = board.player.entity.name;
       const nightState = board.nightState;
       const players = Object.values(board.players).map(x => x.entity);
-      const hasMaterial = board.player.entity.inventory.includes(ItemType.Bag);
+      const hasMaterial = board.player.entity.inventory.includes(ItemType.Wood);
       const hasFood = board.player.entity.inventory.includes(ItemType.Food);
 
       const playerDisplays: PlayerDisplay[] = [];

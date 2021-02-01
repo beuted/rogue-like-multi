@@ -184,8 +184,8 @@ export class RenderService {
     }
   }
 
-  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbMsPerCycle: number, delta: number) {
-    this.lightRenderService.render(character, timestampDiff, isHiding, nbMsPerCycle);
+  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbMsPerCycle: number, badGuyVision: number, delta: number) {
+    this.lightRenderService.render(character, timestampDiff, isHiding, nbMsPerCycle, badGuyVision);
     this.particleRenderService.render(delta);
   }
 
@@ -279,7 +279,7 @@ export class RenderService {
           this.cellsContainer.addChild(itemCell);
 
           if (!isHiding && CellHelper.isHiding(cells[i][j])) {
-            itemCell.alpha = 0.7;
+            itemCell.alpha = 0.6;
           } else {
             itemCell.alpha = 1.0;
           }

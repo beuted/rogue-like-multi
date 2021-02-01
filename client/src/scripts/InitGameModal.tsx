@@ -2,12 +2,29 @@ import './InitGameModal.css';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { GameServerClient } from './GameServerClient';
+import { EntityType } from './Entity';
+import { ItemType } from './Cell';
 
 const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClient }) => {
   const [gameHash, setGameHash] = useState<string>("");
   const [playerList, setPlayerList] = useState<string[]>([]);
   const [timePerCycle, setTimePerCycle] = useState<number>(120);
   const [timeToDiscuss, setTimeToDiscuss] = useState<number>(12);
+  const [badGuyVision, setBadGuyVision] = useState<number>(1.0);
+  const [nbMaterialToWin, setNbMaterialToWin] = useState<number>(30);
+  const [playerSpeed, setPlayerSpeed] = useState<number>(1);
+  const [entitySpeed, setEntitySpeed] = useState<number>(1);
+  const [dogSpawn, setDogSpawn] = useState<number>(3);
+  const [ratSpawn, setRatSpawn] = useState<number>(3);
+  const [snakeSpawn, setSnakeSpawn] = useState<number>(3);
+  const [woodSpawn, setWoodSpawn] = useState<number>(5);
+  const [foodSpawn, setFoodSpawn] = useState<number>(10);
+  const [keySpawn, setKeySpawn] = useState<number>(3);
+  const [swordSpawn, setSwordSpawn] = useState<number>(3);
+  const [backpackSpawn, setBackpackSpawn] = useState<number>(0);
+  const [healthPotionSpawn, setHealthPotionSpawn] = useState<number>(1);
+
+
   const [showLobbyModal, setShowLobbyModal] = useState<boolean>(true);
   const [charId, setCharId] = useState<number>(0);
 
@@ -37,10 +54,16 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     setShowLobbyModal(false);
   }, [])
 
+  const canCreateGame = () => {
+    return timePerCycle != null && timeToDiscuss != null && badGuyVision != null && nbMaterialToWin != null && playerSpeed != null && entitySpeed != null
+      && dogSpawn != null && ratSpawn != null && snakeSpawn != null
+      && woodSpawn != null && foodSpawn != null && keySpawn != null && swordSpawn != null && backpackSpawn != null && healthPotionSpawn != null;
+  }
+
   // Create game button
   const clickCreateGame = async () => {
-    if (timePerCycle && timeToDiscuss) {
-      let hash = await createGame(Number(timePerCycle), Number(timeToDiscuss));
+    if (canCreateGame()) {
+      let hash = await createGame();
       if (!hash) {
         alert('There is already a game running, one game at a time !');
         return;
@@ -75,8 +98,33 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     await gameServerClient.setPlayerSkinId(gameHash, gameServerClient.username, SkinMap[newCharId]);
   };
 
-  async function createGame(timePerCycle: number, timeToDiscuss: number): Promise<string> {
-    return await gameServerClient.createGame(timePerCycle, timeToDiscuss);
+  async function createGame(): Promise<string> {
+    return await gameServerClient.createGame({
+      nbSecsPerCycle: Number(timePerCycle),
+      nbSecsDiscuss: Number(timeToDiscuss),
+      badGuyVision: Number(badGuyVision),
+      nbMaterialToWin: Number(nbMaterialToWin),
+      playerSpeed: Number(playerSpeed),
+      entitySpeed: Number(entitySpeed),
+      entitySpawn: {
+        [EntityType.Dog]: Number(dogSpawn),
+        [EntityType.Rat]: Number(ratSpawn),
+        [EntityType.Snake]: Number(snakeSpawn),
+      },
+      itemSpawn: {
+        [ItemType.Empty]: 0,
+        [ItemType.Blood]: 0,
+        [ItemType.DeadBody1]: 0,
+        [ItemType.DeadBody2]: 0,
+        [ItemType.DeadBody3]: 0,
+        [ItemType.Wood]: Number(woodSpawn),
+        [ItemType.Food]: Number(foodSpawn),
+        [ItemType.Key]: Number(keySpawn),
+        [ItemType.Sword]: Number(swordSpawn),
+        [ItemType.Backpack]: Number(backpackSpawn),
+        [ItemType.HealthPotion]: Number(healthPotionSpawn),
+      }
+    });
   }
 
   async function joinGame(gameHash: string): Promise<string> {
@@ -87,28 +135,39 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     await gameServerClient.startGame(gameHash);
   }
 
-  const handleTimePerCycle = (event: any) => {
-    setTimePerCycle(event.target.value);
-  }
-
-  const handleTimeToDiscuss = (event: any) => {
-    setTimeToDiscuss(event.target.value);
-  }
-
-  const handleGameHash = (event: any) => {
-    setGameHash(event.target.value);
-  }
-
   return (
     <div className="init-game">
       <div className="modal" style={{ display: showLobbyModal ? 'none' : 'flex' }}>
         <div className="modal-block">
-          <div>Time per Cycle (secs): <input type="number" placeholder="120" value={timePerCycle} onChange={handleTimePerCycle}></input></div>
-          <div>Time To Discuss (secs): <input type="number" placeholder="20" value={timeToDiscuss} onChange={handleTimeToDiscuss}></input></div>
-          <div><button disabled={!timeToDiscuss || !timePerCycle} onClick={clickCreateGame}>Create Game</button></div>
+          <div>Time per Cycle (secs): <input type="number" placeholder="120" value={timePerCycle} onChange={(e: any) => setTimePerCycle(e.target.value)}></input></div>
+          <div>Time To Discuss (secs): <input type="number" placeholder="20" value={timeToDiscuss} onChange={(e: any) => setTimeToDiscuss(e.target.value)}></input></div>
+          <div>Bad Guy Vision (Between 0 and 1.0): <input type="number" min="0" max="1" placeholder="1" value={badGuyVision} onChange={(e: any) => setBadGuyVision(e.target.value)}></input></div>
+          <div>Nb material needed to win: <input type="number" min="1" placeholder="30" value={nbMaterialToWin} onChange={(e: any) => setNbMaterialToWin(e.target.value)}></input></div>
+          <div>Player speed factor: <input type="number" placeholder="1" value={playerSpeed} onChange={(e: any) => setPlayerSpeed(e.target.value)}></input></div>
+          <div>Entity speed factor: <input type="number" placeholder="1" value={entitySpeed} onChange={(e: any) => setEntitySpeed(e.target.value)}></input></div>
+          <div>
+            <div>Nb Mob spawn per day:</div>
+            <ul>
+              <li><div>Wood: <input type="number" placeholder="5" value={woodSpawn} onChange={(e: any) => setWoodSpawn(e.target.value)}></input></div></li>
+              <li><div>Food: <input type="number" placeholder="10" value={foodSpawn} onChange={(e: any) => setFoodSpawn(e.target.value)}></input></div></li>
+              <li><div>Key: <input type="number" placeholder="3" value={keySpawn} onChange={(e: any) => setKeySpawn(e.target.value)}></input></div></li>
+              <li><div>Sword: <input type="number" placeholder="3" value={swordSpawn} onChange={(e: any) => setSwordSpawn(e.target.value)}></input></div></li>
+              <li><div>Backpack: <input type="number" placeholder="0" value={backpackSpawn} onChange={(e: any) => setBackpackSpawn(e.target.value)}></input></div></li>
+              <li><div>HealthPotion: <input type="number" placeholder="1" value={healthPotionSpawn} onChange={(e: any) => setHealthPotionSpawn(e.target.value)}></input></div></li>
+            </ul>
+          </div>
+          <div>
+            <div>Nb Item spawn per day:</div>
+            <ul>
+              <li><div>Dog: <input type="number" placeholder="3" value={dogSpawn} onChange={(e: any) => setDogSpawn(e.target.value)}></input></div></li>
+              <li><div>Rat: <input type="number" placeholder="3" value={ratSpawn} onChange={(e: any) => setRatSpawn(e.target.value)}></input></div></li>
+              <li><div>Snake: <input type="number" placeholder="3" value={snakeSpawn} onChange={(e: any) => setSnakeSpawn(e.target.value)}></input></div></li>
+            </ul>
+          </div>
+          <div><button disabled={!canCreateGame()} onClick={clickCreateGame}>Create Game</button></div>
         </div>
         <div className="modal-block">
-          <div><input type="text" placeholder="Game id" value={gameHash} onChange={handleGameHash}></input> <button disabled={!gameHash} onClick={clickJoinGame}>Join
+          <div><input type="text" placeholder="Game id" value={gameHash} onChange={(e: any) => setGameHash(e.target.value)}></input> <button disabled={!gameHash} onClick={clickJoinGame}>Join
               Game</button></div>
         </div>
       </div>

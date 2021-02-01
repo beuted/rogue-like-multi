@@ -111,7 +111,7 @@ export class BoardScene {
         this.guiController.setShowGameModal(true);
         break;
       case GameStatus.Play:
-        const speed = 0.08;
+        const speed = 0.08 * this.board.gameConfig.playerSpeed;
         var entityInRange = this.findEntityInRange(this.board.player, this.board.entities, this.board.players);
         let input = this.inputManager.get(this.board.player, entityInRange?.name, parseFloat((delta * speed).toFixed(3)));
 
@@ -135,7 +135,7 @@ export class BoardScene {
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
-        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle * 1000, delta);
+        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle * 1000, this.board.gameConfig.badGuyVision, delta);
 
         this.guiController.setShowNightOverlay(false);
         break;

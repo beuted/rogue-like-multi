@@ -9,11 +9,14 @@ namespace rogue_like_multi_server
 {
     public interface IMapService
     {
-        Map Generate(int mapWidth, int mapHeight, string file);
-        FloatingCoord FindValidMovment(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs);
-        Map CleanMap(Map map);
-        Map FillMapWithRandomObjects(Map map, Dictionary<ItemType, int> itemSpawns);
+        Map Generate(int mapWidth, int mapHeight, string file, GameConfig config);
+        FloatingCoord FindValidNextCoord(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs);
+        Map CleanItems(Map map);
+        Dictionary<string, Entity> CleanEntities(Dictionary<string, Entity> entities);
+        Map FillMapWithRandomItems(Map map, Dictionary<ItemType, int> itemSpawns);
+        Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns);
         Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
+        Map DropDeadBody(Map map, int spriteId, Coord coord);
         List<ItemType> GetRandomLoot(int modificator = 0);
         Map PickupItem(Map map, Coord coord);
     }
@@ -27,7 +30,7 @@ namespace rogue_like_multi_server
             _randomGeneratorService = randomGeneratorService;
         }
 
-        public Map Generate(int mapWidth, int mapHeight, string file)
+        public Map Generate(int mapWidth, int mapHeight, string file, GameConfig config)
         {
             var map = new Map(mapWidth, mapHeight);
 
@@ -58,19 +61,12 @@ namespace rogue_like_multi_server
                 }
             }
 
-            map = FillMapWithRandomObjects(map, new Dictionary<ItemType, int>() {
-                { ItemType.Wood, 5 },
-                { ItemType.Food, 10 },
-                { ItemType.Key, 5 },
-                { ItemType.Sword, 5 },
-                { ItemType.Backpack, 5 },
-                { ItemType.HealthPotion, 5 },
-            });
+            map = FillMapWithRandomItems(map, config.ItemSpawn);
 
             return map;
         }
 
-        public Map CleanMap(Map map)
+        public Map CleanItems(Map map)
         {
             foreach (var itemKey in map.Items.Keys.ToList())
             {
@@ -80,20 +76,40 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        public Map FillMapWithRandomObjects(Map map, Dictionary<ItemType, int> itemSpawns)
+        public Dictionary<string, Entity> CleanEntities(Dictionary<string, Entity> entities)
+        {
+            return new Dictionary<string, Entity>();
+        }
+
+        public Map FillMapWithRandomItems(Map map, Dictionary<ItemType, int> itemSpawns)
         {
             foreach (var itemSpawn in itemSpawns)
             {
                 for (var i = 0; i < itemSpawn.Value; i++)
                 {
-                    map = SetRandomPositionObject(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3), itemSpawn.Key);
+                    map = SetRandomPositionItem(map, new Coord(3, 3), new Coord(76 - 3, 81 - 3), itemSpawn.Key);
                 }
             }         
 
             return map;
         }
 
-        public FloatingCoord FindValidMovment(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs)
+        public Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns)
+        {
+            var entities = new Dictionary<string, Entity>();
+
+            foreach (var entitySpawn in entitySpawns)
+            {
+                for (var i = 0; i < entitySpawn.Value; i++)
+                {
+                    entities = SetRandomPositionEntity(map, entities, new Coord(3, 3), new Coord(76 - 3, 81 - 3), entitySpawn.Key);
+                }
+            }
+
+            return entities;
+        }
+
+        public FloatingCoord FindValidNextCoord(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs)
         {
             var multiplicator = velocity * Convert.ToDecimal(elapsedMs);
 
@@ -103,28 +119,41 @@ namespace rogue_like_multi_server
                 var direction = targetPosition.Value - startFloatingCoord;
                 // We should normalize or transform into one of 9 directions but la flemme
                 var greaterDimension = Math.Max(Math.Abs(direction.X), Math.Abs(direction.Y));
-                return (multiplicator / greaterDimension) * direction;
+                var newFloatingCoord2 = startFloatingCoord + (multiplicator / greaterDimension) * direction;
+
+                var newCoord2 = newFloatingCoord2.ToCoord();
+                if (map.Cells[newCoord2.X][newCoord2.Y].FloorType.IsWalkable())
+                    return newFloatingCoord2;
+
+                return startFloatingCoord;
             }
 
             // Random movements
             var possibleMovements = new List<FloatingCoord>();
             var startCoord = startFloatingCoord.ToCoord();
-            for (var i = Math.Max(0, startCoord.X - 1); i <= Math.Min(map.MapWidth, startCoord.X) + 1; i++)
+            for (var i = -1; i <= + 1; i++)
             {
-                for (var j = Math.Max(0, startCoord.X - 1); j <= Math.Min(map.MapHeight, startCoord.X) + 1; j++)
+                for (var j = -1; j <= + 1; j++)
                 {
-                    // Dirty way to avoid diagonals
-                    if (map.Cells[i][j].FloorType.IsWalkable() && !((i==-1 && j==-1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)))
+                    if (!((i == -1 && j == -1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)) // Dirty way to avoid diagonals
+                        && (startCoord.X + i >= 0 && startCoord.X + i <= map.MapWidth && startCoord.Y + j >= 0 && startCoord.Y + j <= map.MapHeight)
+                        && map.Cells[startCoord.X+i][startCoord.Y+j].FloorType.IsWalkable())
                         possibleMovements.Add(new FloatingCoord(i, j));
                     else
-                        possibleMovements.Add(startFloatingCoord);
+                        possibleMovements.Add(new FloatingCoord(0, 0));
                 }
             }
             if (possibleMovements.Count == 0)
-                return new FloatingCoord(0, 0);
+                return startFloatingCoord;
 
             var index = GetRandomNumber(0, possibleMovements.Count - 1);
-            return multiplicator * (possibleMovements[index] - startFloatingCoord); // No need to normalize since no diagonals vector has a 1 length
+            var newFloatingCoord = startFloatingCoord + multiplicator * possibleMovements[index]; // No need to normalize since no diagonals vector has a 1 length
+            
+            var newCoord = newFloatingCoord.ToCoord();
+
+            if (map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
+                return newFloatingCoord;
+            return startFloatingCoord;
         }
 
         public Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false)
@@ -134,6 +163,23 @@ namespace rogue_like_multi_server
                 map = DropItem(map, item, coord, notOnCell);
             }
 
+            return map;
+        }
+
+        public Map DropDeadBody(Map map, int spriteId, Coord coord)
+        {
+            switch (spriteId)
+            {
+                case 6:
+                    map = DropItem(map, ItemType.DeadBody1, coord);
+                    break;
+                case 4:
+                    map = DropItem(map, ItemType.DeadBody2, coord);
+                    break;
+                case 5:
+                    map = DropItem(map, ItemType.DeadBody3, coord);
+                    break;
+            }
             return map;
         }
 
@@ -169,7 +215,7 @@ namespace rogue_like_multi_server
             {
                 var newCoord = baseCoord + new Coord(i, j);
                 if (IsInRange(newCoord, map)
-                    && (map.Cells[newCoord.X][newCoord.Y].ItemType == null || map.Cells[newCoord.X][newCoord.Y].ItemType == ItemType.Empty)
+                    && (!map.Cells[newCoord.X][newCoord.Y].ItemType.HasValue || map.Cells[newCoord.X][newCoord.Y].ItemType.Value == ItemType.Empty)
                     && map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
                 {
                     map.SetItem(newCoord, item);
@@ -184,7 +230,7 @@ namespace rogue_like_multi_server
             return 0 <= coord.X && coord.X < map.MapWidth && 0 <= coord.Y && coord.Y < map.MapHeight;
         }
 
-        private Map SetRandomPositionObject(Map map, Coord minCoord, Coord maxCoord, ItemType item)
+        private Map SetRandomPositionItem(Map map, Coord minCoord, Coord maxCoord, ItemType item)
         {
             int x;
             int y;
@@ -205,10 +251,28 @@ namespace rogue_like_multi_server
 
             return map;
         }
-        private FloorType GetRandomSpriteId() {
-            FloorType[] okSpriteId = {FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Plain, FloorType.Flowers,
-                FloorType.Flowers, FloorType.Sprout, FloorType.Evergreen, FloorType.Tree, FloorType.Trees};
-            return okSpriteId[_randomGeneratorService.Generate(0, okSpriteId.Length)];
+
+        private Dictionary<string, Entity> SetRandomPositionEntity(Map map, Dictionary<string, Entity> entities, Coord minCoord, Coord maxCoord, EntityType entityType)
+        {
+            int x;
+            int y;
+            var i = 0;
+            do
+            {
+                i++;
+                x = GetRandomNumber(minCoord.X, maxCoord.X);
+                y = GetRandomNumber(minCoord.Y, maxCoord.Y);
+            } while (!map.Cells[x][y].FloorType.IsWalkable() || i > 100);
+
+            if (!map.Cells[x][y].FloorType.IsWalkable())
+            {
+                return null;
+            }
+
+            var name = "e_" + entityType.ToString() + '-' + Guid.NewGuid(); // TODO: Very little chance that's not unique...
+            entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomLoot(), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
+
+            return entities;
         }
 
         private int GetRandomNumber(int min, int max)

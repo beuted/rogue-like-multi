@@ -24,7 +24,7 @@ namespace rogue_like_multi_server
         {
             return new BoardState(
                 GenerateStatic(gameConfig),
-                GenerateDynamic()
+                GenerateDynamic(gameConfig)
             );
         }
 
@@ -69,6 +69,7 @@ namespace rogue_like_multi_server
             {
                 if (player.Value.Entity.Pv <= 0 && player.Value.Entity.Inventory.Count > 0)
                 {
+                    boardStateDynamic.Map = _mapService.DropDeadBody(boardStateDynamic.Map, player.Value.Entity.SpriteId, player.Value.Entity.Coord.ToCoord());
                     boardStateDynamic.Map = _mapService.DropItems(boardStateDynamic.Map, player.Value.Entity.Inventory, player.Value.Entity.Coord.ToCoord());
                     player.Value.Entity.Inventory.RemoveAll(x => true);
                 }
@@ -77,12 +78,12 @@ namespace rogue_like_multi_server
             //IA stuff
             foreach (var entity in boardStateDynamic.Entities)
             {
-                var velocity = 0.001m;
+                var velocity = 0.001m * config.EntitySpeed;
                 var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
-                FloatingCoord? targetPlayerPosition = targetPlayer != null ? (FloatingCoord ?) targetPlayer.Entity.Coord : null;
+                FloatingCoord? targetPlayerPosition = targetPlayer != null && targetPlayer.Entity.Pv > 0 ? (FloatingCoord ?) targetPlayer.Entity.Coord : null;
 
-                var direction = _mapService.FindValidMovment(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
-                entity.Value.Coord = entity.Value.Coord + direction;
+                var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
+                entity.Value.Coord = nextCoord;
 
                 if (entity.Value.Aggressivity == Aggressivity.Aggressive)
                 {
@@ -146,15 +147,12 @@ namespace rogue_like_multi_server
                 boardStateDynamic.GameStatus = GameStatus.Play;
 
                 // Drop items on the map
-                boardStateDynamic.Map = _mapService.CleanMap(boardStateDynamic.Map);
-                boardStateDynamic.Map = _mapService.FillMapWithRandomObjects(boardStateDynamic.Map, new Dictionary<ItemType, int>() {
-                    { ItemType.Wood, 5 },
-                    { ItemType.Food, 10 },
-                    { ItemType.Key, 5 },
-                    { ItemType.Sword, 5 },
-                    { ItemType.Backpack, 5 },
-                    { ItemType.HealthPotion, 5 },
-                });
+                boardStateDynamic.Map = _mapService.CleanItems(boardStateDynamic.Map);
+                boardStateDynamic.Map = _mapService.FillMapWithRandomItems(boardStateDynamic.Map, config.ItemSpawn);
+
+                // Spawn entities
+                boardStateDynamic.Entities = _mapService.CleanEntities(boardStateDynamic.Entities);
+                boardStateDynamic.Entities = _mapService.FillMapWithRandomEntities(boardStateDynamic.Map, config.EntitySpawn);
 
                 // Reset players positions
                 int posOffset = 0;
@@ -167,7 +165,7 @@ namespace rogue_like_multi_server
                 // Give sword to the bad guy if he doesn't have one
                 foreach (var player in boardStateDynamic.Players.Where(x => x.Value.Role == Role.Bad).Select(x => x.Value))
                 {
-                    if (player.Entity.Inventory.Any(x => x == ItemType.Sword)) {
+                    if (!player.Entity.Inventory.Any(x => x == ItemType.Sword)) {
                         player.Entity.Inventory.Add(ItemType.Sword);
                     }
                 }
@@ -176,12 +174,16 @@ namespace rogue_like_multi_server
             // Find winner Team
             if (boardStateDynamic.GameStatus != GameStatus.Prepare) {
                 // If all goods are dead the bads win the game
-                /*if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
+                if (!boardStateDynamic.Players.Where(x => x.Value.Role == Role.Good && x.Value.Entity.Pv > 0).Any())
                 {
                     boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp*1000, default, default, Role.Bad));
                     boardStateDynamic.GameStatus = GameStatus.Prepare;
-                }*/
-                // Not the other other way around
+                }
+                if (boardStateDynamic.NightState.MaterialGiven.Count >= config.NbMaterialToWin)
+                {
+                    boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.EndGame, nowTimestamp * 1000, default, default, Role.Good));
+                    boardStateDynamic.GameStatus = GameStatus.Prepare;
+                }
             }
 
             // Clean old events (older than 5 secs)
@@ -232,7 +234,7 @@ namespace rogue_like_multi_server
                 return boardStateDynamic;
 
             // Pickup objects
-            if (map.Cells[gridCoord.X][gridCoord.Y].ItemType != null && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Empty && map.Cells[gridCoord.X][gridCoord.Y].ItemType != ItemType.Blood)
+            if (map.Cells[gridCoord.X][gridCoord.Y].ItemType.HasValue && map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value.CanBePickup())
             {
                 // 6 items max 9 with backpack
                 if (player.Entity.Inventory.Count <= 5 || (player.Entity.Inventory.Contains(ItemType.Backpack) && player.Entity.Inventory.Count <= 9))
@@ -395,7 +397,7 @@ namespace rogue_like_multi_server
                 player.IsConnected = true;
                 return boardStateDynamic;
             }
-            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 4, new List<ItemType>(), 3, 4, Aggressivity.Neutral), -1, true));
+            boardStateDynamic.Players.Add(playerName, new Player(new Entity(coord, playerName, 4, new List<ItemType>(), 3, 1, Aggressivity.Neutral), -1, true));
 
             return boardStateDynamic;
         }
@@ -564,19 +566,14 @@ namespace rogue_like_multi_server
             return new BoardStateStatic(gameConfig);
         }
 
-        private BoardStateDynamic GenerateDynamic()
+        private BoardStateDynamic GenerateDynamic(GameConfig gameConfig)
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
-            var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"));
+            var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"), gameConfig);
             var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             return new BoardStateDynamic(
                 map,
-                new Dictionary<string, Entity>()
-                {
-                    { "snake", new Entity(new FloatingCoord(30, 30), "snake", 14, _mapService.GetRandomLoot(), 5, 1, Aggressivity.Aggressive) },
-                    { "rat", new Entity(new FloatingCoord(56, 56), "rat", 16, _mapService.GetRandomLoot(), 4, 1, Aggressivity.Neutral) },
-                    { "dog", new Entity(new FloatingCoord(48, 48), "dog", 15, _mapService.GetRandomLoot(), 4, 1, Aggressivity.Pacific) }
-                },
+                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn),
                 new Dictionary<string, Player>(),
                 Role.None,
                 now,

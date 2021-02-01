@@ -1,4 +1,4 @@
-import { GameState } from "./Board";
+import { GameState, GameConfig } from "./Board";
 
 export class GameServerClient {
   public username: string;
@@ -49,14 +49,14 @@ export class GameServerClient {
       })
   }
 
-  public async createGame(nbSecsPerCycle: number, nbSecsDiscuss: number): Promise<string | null> {
+  public async createGame(gameConfig: GameConfig): Promise<string | null> {
     return await fetch('/api/game-state/create', {
       method: 'POST',
       headers: new Headers({
         'Authorization': `Basic ${btoa(`${this.username}:${GameServerClient.password}`)}`,
         'Content-Type': 'application/json'
       }),
-      body: JSON.stringify({ nbSecsPerCycle: nbSecsPerCycle, nbSecsDiscuss: nbSecsDiscuss }),
+      body: JSON.stringify(gameConfig),
     })
       .then(response => {
         if (!response.ok) {
