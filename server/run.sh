@@ -1,0 +1,1 @@
+ dotnet rogue-like-multi-server.dll --urls=http://localhost:19689/
