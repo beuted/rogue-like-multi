@@ -75,7 +75,7 @@ namespace rogue_like_multi_server
                 }
             }
 
-            //IA stuff
+            // IA stuff
             foreach (var entity in boardStateDynamic.Entities)
             {
                 var velocity = 0.001m * config.EntitySpeed;

@@ -240,9 +240,16 @@ namespace rogue_like_multi_server
                 i++;
                 x = GetRandomNumber(minCoord.X, maxCoord.X);
                 y = GetRandomNumber(minCoord.Y, maxCoord.Y);
-            } while ((map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty || !map.Cells[x][y].FloorType.IsWalkable()) || i > 100);
+            } while (
+                // Not at the start zone between 44, 44 and 56, 56
+                ((x >= 44 && x <= 56 && x >= 56 && y <= 56)
+                // Not where there is already an item or on a wall
+                || (map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty || !map.Cells[x][y].FloorType.IsWalkable()))
+                // stop condition
+                && i <= 100
+            );
 
-            if (map.Cells[x][y].ItemType != null && map.Cells[x][y].ItemType != ItemType.Empty || !map.Cells[x][y].FloorType.IsWalkable())
+            if (i > 100)
             {
                 return null;
             }
@@ -262,9 +269,15 @@ namespace rogue_like_multi_server
                 i++;
                 x = GetRandomNumber(minCoord.X, maxCoord.X);
                 y = GetRandomNumber(minCoord.Y, maxCoord.Y);
-            } while (!map.Cells[x][y].FloorType.IsWalkable() || i > 100);
+            } while (
+                // Not at the start zone between 44, 44 and 56, 56
+                ((x >= 44 && x <= 56 && x >= 56 && y <= 56)
+                // Not where there is already an item or on a wall
+                ||  !map.Cells[x][y].FloorType.IsWalkable())
+                // stop condition
+                && i <= 100);
 
-            if (!map.Cells[x][y].FloorType.IsWalkable())
+            if (i > 100)
             {
                 return null;
             }
