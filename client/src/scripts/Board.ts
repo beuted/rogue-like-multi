@@ -1,4 +1,4 @@
-import { Cell, CellHelper, ItemType } from "./Cell";
+import { Cell, CellHelper, ItemType, FloorType } from "./Cell";
 import { Entity, EntityType } from "./Entity";
 import { Coord } from "./Coord";
 import { Input, InputType } from "./InputManager";
@@ -28,15 +28,17 @@ export type GameState = {
   boardStateStatic: { gameConfig: GameConfig };
 }
 
+export type GameConfigStringPpties = "nbSecsPerCycle" | "nbSecsDiscuss" | "badGuyVision" | "nbMaterialToWin" | "playerSpeed" | "entitySpeed";
+
 export type GameConfig = {
   nbSecsPerCycle: number;
   nbSecsDiscuss: number;
   badGuyVision: number;
-  itemSpawn: { [key in ItemType]: number };
-  entitySpawn: { [key in EntityType]: number };
   nbMaterialToWin: number;
   playerSpeed: number;
   entitySpeed: number;
+  itemSpawn: { [key in ItemType]: number };
+  entitySpawn: { [key in EntityType]: number };
 }
 
 export enum ActionEventType {
@@ -102,7 +104,9 @@ export type BoardStateDynamic = {
   events: ActionEvent[],
   nightState: NightState
   map: {
-    cells: Cell[][]
+    cells: Cell[][],
+    items: { [key: string]: ItemType },
+    changingFloors: { [key: string]: FloorType },
   },
   nbBagsFound: number,
   winnerTeam: Role,
@@ -126,6 +130,9 @@ export class Board {
   public gameConfig: GameConfig;
   public nightState: NightState
 
+  private previousChangingFloor: { [key: string]: FloorType } = {};
+  private previousItems: { [key: string]: ItemType } = {};
+
   constructor() {
   }
 
@@ -148,7 +155,12 @@ export class Board {
 
     this.entities = boardStateDynamic.entities;
     this.players = boardStateDynamic.players;
-    this.cells = boardStateDynamic.map.cells;
+
+    if (boardStateDynamic.map.cells) // case of the init
+      this.cells = boardStateDynamic.map.cells;
+    else  // case of the update
+      this.updateCells(boardStateDynamic.map.changingFloors, boardStateDynamic.map.items)
+
     this.player = boardStateDynamic.players[this.player.entity.name];
     this.winnerTeam = boardStateDynamic.winnerTeam;
     this.nowTimestamp = boardStateDynamic.nowTimestamp;
@@ -196,5 +208,43 @@ export class Board {
       this.entitiesPreviousCoords[entityName] = this.entities[entityName].coord;
     for (var playerName in this.players)
       this.entitiesPreviousCoords[playerName] = this.players[playerName].entity.coord;
+  }
+
+  private updateCells(changingFloors: { [key: string]: FloorType }, items: { [key: string]: ItemType }) {
+    // Clean based on previous changing floor
+    for (let key in this.previousChangingFloor) {
+      let commaPos = key.indexOf(',');
+      const x = Number(key.substr(0, commaPos));
+      const y = Number(key.substr(commaPos + 1, key.length - 1));
+      this.cells[x][y].floorType = FloorType.Plain;
+    }
+
+    // Add new floors
+    for (let key in changingFloors) {
+      let commaPos = key.indexOf(',');
+      const x = Number(key.substr(0, commaPos));
+      const y = Number(key.substr(commaPos + 1, key.length - 1));
+      this.cells[x][y].floorType = changingFloors[key];
+    }
+
+    // Clean based on previous items
+    for (let key in this.previousItems) {
+      let commaPos = key.indexOf(',');
+      const x = Number(key.substr(0, commaPos));
+      const y = Number(key.substr(commaPos + 1, key.length - 1));
+      this.cells[x][y].itemType = ItemType.Empty;
+    }
+
+    // Add new items
+    for (let key in items) {
+      let commaPos = key.indexOf(',');
+      const x = Number(key.substr(0, commaPos));
+      const y = Number(key.substr(commaPos + 1, key.length - 1));
+      this.cells[x][y].itemType = items[key];
+    }
+
+    // Update local cache of previous values
+    this.previousChangingFloor = changingFloors;
+    this.previousItems = items;
   }
 }

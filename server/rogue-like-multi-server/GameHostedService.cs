@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -67,7 +68,7 @@ namespace rogue_like_multi_server
             if (_gameService.BoardState == null)
                 return;
             var players = _gameService.GetPlayers();
-            await _chatHubContext.Clients.Users(players).SendAsync("setBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetClientView());
+            await _chatHubContext.Clients.Users(players.Keys.ToArray()).SendAsync("updateBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetLightClientView());
         }
     }
 }

@@ -2,8 +2,86 @@ body, html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: CompassPro;
+    font-size: 16pt;
+    background-color: #000;
 }
 
-#game {
+h1, h2, h3, h4, h5, button {
+    all: unset;
+}
+
+h1 {
+    font-size: 26pt;
+}
+
+h2 {
+    font-size: 20pt;
+}
+
+.mt-1 {
+    margin-top: 8px;
+}
+
+.mb-1 {
+    margin-bottom: 8px;
+}
+
+.mr-1 {
+    margin-right: 8px;
+}
+
+.ml-1 {
+    margin-left: 8px;
+}
+
+.mt-2 {
+    margin-top: 16px;
+}
+
+.mb-2 {
+    margin-bottom: 16px;
+}
+
+.mr-2 {
+    margin-right: 16px;
+}
+
+.ml-2 {
+    margin-left: 16px;
+}
+
+.game-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.game {
     overflow: hidden;
+    border: solid #222 2px;
+}
+
+@font-face {
+    font-family: MatchupPro;
+    src: url(../assets/fonts/matchup-pro-v1.1/MatchupPro.woff), url(../assets/fonts/matchup-pro-v1.1/MatchupPro.ttf);
+}
+
+@font-face {
+    font-family: ExpressionPro;
+    src: url(../assets/fonts/expression-pro-v1.1/ExpressionPro.woff), url(../assets/fonts/expression-pro-v1.1/ExpressionPro.ttf);
+}
+
+@font-face {
+    font-family: EquipmentPro;
+    src: url(../assets/fonts/equipment-pro-v1.1/EquipmentPro.woff), url(../assets/fonts/equipment-pro-v1.1/EquipmentPro.ttf);
+}
+
+@font-face {
+    font-family: FutilePro;
+    src: url(../assets/fonts/futile-pro-v1/FutilePro.woff), url(../assets/fonts/futile-pro-v1/FutilePro.ttf);
+}
+
+@font-face {
+    font-family: CompassPro;
+    src: url(../assets/fonts/compass-pro-v1.1/CompassPro.woff), url(../assets/fonts/compass-pro-v1.1/CompassPro.ttf);
 }

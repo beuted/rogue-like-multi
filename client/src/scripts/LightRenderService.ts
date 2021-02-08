@@ -77,13 +77,15 @@ export class LightRenderService {
     let circleSize;
     if (character.entity.pv <= 0) {
       circleSize = 1
-    } else if (character.role == Role.Bad) {
-      circleSize = badGuyVision
     } else {
       var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbMsPerCycle - Math.PI / 2) + 1; // Day cycle
       if (isHiding)
         daylightFactor = Math.min(0.2, daylightFactor);
       circleSize = 0.1 + 0.5 * daylightFactor;
+
+      if (character.role == Role.Bad) {
+        circleSize = Math.max(circleSize, badGuyVision);
+      }
     }
 
     circleSize += 0.005 * Math.sin(Date.now() / 100); // flyckering

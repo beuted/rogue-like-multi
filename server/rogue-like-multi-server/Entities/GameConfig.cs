@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using rogue_like_multi_server;
 using System.Collections.Generic;
 
 namespace rogue
@@ -14,9 +15,11 @@ namespace rogue
         [JsonProperty("badGuyVision")]
         public decimal BadGuyVision;
 
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<ItemType, int>))]
         [JsonProperty("itemSpawn")]
         public Dictionary<ItemType, int> ItemSpawn;
 
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, int>))]
         [JsonProperty("entitySpawn")]
         public Dictionary<EntityType, int> EntitySpawn;
 
@@ -28,7 +31,6 @@ namespace rogue
 
         [JsonProperty("entitySpeed")]
         public decimal EntitySpeed;
-
 
         public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss, decimal badGuyVision, Dictionary<ItemType, int> itemSpawn, Dictionary<EntityType, int> entitySpawn, int nbMaterialToWin, decimal playerSpeed, decimal entitySpeed)
         {

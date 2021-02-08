@@ -100,11 +100,18 @@ namespace rogue
         FloorType.Floor37,
         FloorType.Floor38};
 
+        private static readonly FloorType[] ChangingFloorTypes = { FloorType.ClosedDoor, FloorType.OpenDoor, FloorType.ClosedChest };
+
         private static readonly FloorType[] ClosedFloorTypes = {FloorType.ClosedDoor, FloorType.ClosedChest};
 
         public static bool IsWalkable(this FloorType floorType, bool hasKey = false)
         {
             return (hasKey && ClosedFloorTypes.Contains(floorType)) || WalkableFloorTypes.Contains(floorType);
+        }
+
+        public static bool IsChanging(this FloorType floorType)
+        {
+            return ChangingFloorTypes.Contains(floorType);
         }
     }
 }

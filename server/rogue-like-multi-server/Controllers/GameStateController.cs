@@ -39,6 +39,20 @@ namespace rogue_like_multi_server.Controllers
             return Ok(gameHash);
         }
 
+        [HttpPost("{gameHash}/config")]
+        public IActionResult UpdateGameConfig(string gameHash, [FromBody] GameConfig gameConfig)
+        {
+            _gameService.UpdateGameConfig(gameConfig);
+            return Ok(gameHash);
+        }
+
+        [HttpGet("{gameHash}/config")]
+        public IActionResult FetchGameConfig(string gameHash)
+        {
+            return Ok(_gameService.GetGameConfig());
+        }
+
+
         [HttpPost("{gameHash}/join")]
         public IActionResult JoinGame(string gameHash)
         {

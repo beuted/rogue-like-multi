@@ -28,6 +28,14 @@ namespace rogue_like_multi_server
             );
         }
 
+        public BoardState ChangeConfig(GameConfig gameConfig, Dictionary<string, Player> players)
+        {
+            return new BoardState(
+                GenerateStatic(gameConfig),
+                GenerateDynamicKeepPlayers(gameConfig, players)
+            );
+        }
+
         public BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic)
         {
             boardStateDynamic.GameStatus = GameStatus.Play;
@@ -132,10 +140,17 @@ namespace rogue_like_multi_server
                 if (missingFood > 0)
                 {
                     // Damage a player for each food missing
+                    var alreadyPunished = new List<int>();
                     for (var i = 0; i < missingFood; i++)
                     {
                         var playersAlive = boardStateDynamic.Players.Values.Where(x => x.Entity.Pv > 0).ToList();
-                        var rndIndex = _randomGeneratorService.Generate(0, playersAlive.Count() - 1);
+                        int rndIndex;
+                        do
+                        {
+                            rndIndex = _randomGeneratorService.Generate(0, playersAlive.Count() - 1);
+                        } while (alreadyPunished.Contains(rndIndex));
+
+                        alreadyPunished.Add(rndIndex);
                         playersAlive[rndIndex].Entity.Pv--;
                     }
                 }
@@ -237,7 +252,7 @@ namespace rogue_like_multi_server
             if (map.Cells[gridCoord.X][gridCoord.Y].ItemType.HasValue && map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value.CanBePickup())
             {
                 // 6 items max 9 with backpack
-                if (player.Entity.Inventory.Count <= 5 || (player.Entity.Inventory.Contains(ItemType.Backpack) && player.Entity.Inventory.Count <= 9))
+                if (player.Entity.Inventory.Count <= 5 || ((map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value == ItemType.Backpack || player.Entity.Inventory.Contains(ItemType.Backpack)) && player.Entity.Inventory.Count <= 9))
                 {
                     player.Entity.Inventory.Add(map.Cells[gridCoord.X][gridCoord.Y].ItemType.Value);
                     _mapService.PickupItem(map, gridCoord);
@@ -248,14 +263,15 @@ namespace rogue_like_multi_server
             if (map.Cells[gridCoord.X][gridCoord.Y].FloorType == FloorType.ClosedDoor && player.Entity.Inventory.Contains(ItemType.Key))
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
-                map.Cells[gridCoord.X][gridCoord.Y].FloorType = FloorType.OpenDoor;
+                map.SetFloorType(gridCoord, FloorType.OpenDoor);
+
             }
 
             // Remove key if on closed chest
             if (map.Cells[gridCoord.X][gridCoord.Y].FloorType == FloorType.ClosedChest && player.Entity.Inventory.Contains(ItemType.Key))
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
-                map.Cells[gridCoord.X][gridCoord.Y].FloorType = FloorType.Plain;
+                map.SetFloorType(gridCoord, FloorType.Plain);
                 _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomLoot(15), gridCoord);
             }
 
@@ -402,9 +418,9 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        public List<string> GetPlayers(BoardStateDynamic boardStateDynamic)
+        public Dictionary<string, Player> GetPlayers(BoardStateDynamic boardStateDynamic)
         {
-            return boardStateDynamic.Players.Keys.ToList();
+            return boardStateDynamic.Players;
         }
 
         public BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName)
@@ -533,7 +549,7 @@ namespace rogue_like_multi_server
 
         private bool DidEverybodyVoted(BoardStateDynamic boardStateDynamic)
         {
-            return boardStateDynamic.NightState.Votes.Count >= boardStateDynamic.Players.Count;
+            return boardStateDynamic.NightState.Votes.Count >= boardStateDynamic.Players.Count(x => x.Value.Entity.Pv > 0);
         }
 
         private string ResolveVotes(BoardStateDynamic boardStateDynamic)
@@ -583,11 +599,31 @@ namespace rogue_like_multi_server
                 new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>())
             );
         }
+
+        private BoardStateDynamic GenerateDynamicKeepPlayers(GameConfig gameConfig, Dictionary<string, Player> players)
+        {
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
+            var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"), gameConfig);
+            var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            return new BoardStateDynamic(
+                map,
+                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn),
+                players,
+                Role.None,
+                now,
+                now,
+                GameStatus.Prepare,
+                new List<ActionEvent>(),
+                new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>())
+            );
+        }
     }
 
     public interface IBoardStateService
     {
         BoardState Generate(GameConfig gameConfig);
+
+        BoardState ChangeConfig(GameConfig gameConfig, Dictionary<string, Player> players);
 
         BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic);
 
@@ -608,7 +644,7 @@ namespace rogue_like_multi_server
 
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
 
-        List<string> GetPlayers(BoardStateDynamic boardStateDynamic);
+        Dictionary<string, Player> GetPlayers(BoardStateDynamic boardStateDynamic);
 
         BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
 

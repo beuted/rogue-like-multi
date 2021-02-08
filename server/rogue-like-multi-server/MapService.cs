@@ -146,10 +146,12 @@ namespace rogue_like_multi_server
             if (possibleMovements.Count == 0)
                 return startFloatingCoord;
 
-            var index = GetRandomNumber(0, possibleMovements.Count - 1);
+            var index = _randomGeneratorService.Generate(0, possibleMovements.Count - 1);
             var newFloatingCoord = startFloatingCoord + multiplicator * possibleMovements[index]; // No need to normalize since no diagonals vector has a 1 length
             
             var newCoord = newFloatingCoord.ToCoord();
+            if (newCoord.X > map.MapWidth - 1 || newCoord.X < 0 || newCoord.Y > map.MapHeight - 1 || newCoord.Y < 0)
+                return startFloatingCoord;
 
             if (map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
                 return newFloatingCoord;
@@ -190,7 +192,7 @@ namespace rogue_like_multi_server
             foreach (var itemType in Enum.GetValues(typeof(ItemType)) as ItemType[])
             {
                 var rarity = itemType.GetDropRate(modificator);
-                if (rarity > 0 && GetRandomNumber(0, 100) <= rarity)
+                if (rarity > 0 && _randomGeneratorService.Generate(0, 100) <= rarity)
                 {
                     items.Add(itemType);
                 }
@@ -238,8 +240,8 @@ namespace rogue_like_multi_server
             do
             {
                 i++;
-                x = GetRandomNumber(minCoord.X, maxCoord.X);
-                y = GetRandomNumber(minCoord.Y, maxCoord.Y);
+                x = _randomGeneratorService.Generate(minCoord.X, maxCoord.X);
+                y = _randomGeneratorService.Generate(minCoord.Y, maxCoord.Y);
             } while (
                 // Not at the start zone between 44, 44 and 56, 56
                 ((x >= 44 && x <= 56 && x >= 56 && y <= 56)
@@ -267,11 +269,11 @@ namespace rogue_like_multi_server
             do
             {
                 i++;
-                x = GetRandomNumber(minCoord.X, maxCoord.X);
-                y = GetRandomNumber(minCoord.Y, maxCoord.Y);
+                x = _randomGeneratorService.Generate(minCoord.X, maxCoord.X);
+                y = _randomGeneratorService.Generate(minCoord.Y, maxCoord.Y);
             } while (
                 // Not at the start zone between 44, 44 and 56, 56
-                ((x >= 44 && x <= 56 && x >= 56 && y <= 56)
+                ((x >= 44 && x <= 56 && y >= 44 && y <= 56)
                 // Not where there is already an item or on a wall
                 ||  !map.Cells[x][y].FloorType.IsWalkable())
                 // stop condition
@@ -286,11 +288,6 @@ namespace rogue_like_multi_server
             entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomLoot(), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
 
             return entities;
-        }
-
-        private int GetRandomNumber(int min, int max)
-        {
-            return _randomGeneratorService.Generate(min, max+1);
         }
     }
 }

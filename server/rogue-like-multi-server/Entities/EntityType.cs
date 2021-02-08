@@ -16,7 +16,7 @@ namespace rogue
         {
             { EntityType.Snake, 8 },
             { EntityType.Dog, 6 },
-            { EntityType.Rat, 6 },
+            { EntityType.Rat, 4 },
         };
 
         private static Dictionary<EntityType, int> entityTypeDamage = new Dictionary<EntityType, int>()

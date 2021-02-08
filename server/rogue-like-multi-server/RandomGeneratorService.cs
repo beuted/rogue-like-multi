@@ -21,7 +21,7 @@ namespace rogue_like_multi_server
 
         public int Generate(int min, int max)
         {
-            return _rnd.Next(min, max);
+            return _rnd.Next(min, max+1);
         }
     }
 }

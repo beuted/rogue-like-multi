@@ -13,6 +13,7 @@ import { EventHandler } from "./EventHandler";
 import { CellHelper, Cell } from "./Cell";
 import { CoordHelper } from "./Coord";
 import { Entity } from "./Entity";
+import * as FontFaceObserver from "fontfaceobserver"
 
 export class BoardScene {
   private spriteManager: SpriteManager;
@@ -39,7 +40,7 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-    this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 8, 25, 10);
+    this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 'assets/menu.png', 8, 25, 10);
     this.soundManager = new SoundManager(this.app.loader, 'assets/sounds/');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
@@ -54,13 +55,18 @@ export class BoardScene {
 
     //this.soundManager.playMusic();
 
+    for (const fontName of ['MatchupPro', 'ExpressionPro', 'EquipmentPro', 'FutilePro', 'CompassPro']) {
+      var font = new FontFaceObserver(fontName);
+      await font.load();
+    }
+
     console.log("Everything initialized");
 
     // Display stuff
     const sceneContainer = this.renderService.init();
     this.app.stage.addChild(sceneContainer);
 
-    this.socketClient.registerListener(SocketMessageReceived.SetBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
+    this.socketClient.registerListener(SocketMessageReceived.UpdateBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
       this.eventHandler.update(boardStateDynamic.events);
 
@@ -115,7 +121,7 @@ export class BoardScene {
         var entityInRange = this.findEntityInRange(this.board.player, this.board.entities, this.board.players);
         let input = this.inputManager.get(this.board.player, entityInRange?.name, parseFloat((delta * speed).toFixed(3)));
 
-        if ((input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack)) {
+        if (input.direction.x != 0 || input.direction.y != 0 || input.type == InputType.Attack || input.type == InputType.UseItem) {
           this.characterController.sendInput(input);
 
           // Apply the inputs will be overriden by the server when we receive a notif from it

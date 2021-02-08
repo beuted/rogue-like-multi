@@ -1,7 +1,7 @@
 import './ChatBox.css';
 import * as React from 'react';
 import { useState } from 'react';
-import { SocketClient, SocketMessageReceived } from './SocketClient';
+import { SocketClient, SocketMessageReceived } from '../SocketClient';
 
 type Message = {
   message: string,

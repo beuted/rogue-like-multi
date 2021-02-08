@@ -34,14 +34,26 @@ namespace rogue_like_multi_server
             return "random-hash";
         }
 
+        public void UpdateGameConfig(GameConfig gameConfig)
+        {
+            BoardState = _boardStateService.ChangeConfig(gameConfig, BoardState.BoardStateDynamic.Players);
+        }
+
+        public GameConfig GetGameConfig()
+        {
+            return BoardState.BoardStateStatic.GameConfig;
+        }
+
+
         public async Task StartGame()
         {
-            BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic);
             if (BoardState == null)
                 return;
 
+            BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic);
+
             var players = _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
-            await _chatHubContext.Clients.Users(players).SendAsync("initBoardState", BoardState.GetClientView());
+            await _chatHubContext.Clients.Users(players.Keys.ToArray()).SendAsync("initBoardState", BoardState.GetClientView());
         }
 
         public void SetPlayerSkinId(string playerName, int skinId)
@@ -147,10 +159,10 @@ namespace rogue_like_multi_server
             BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(49, 49));
         }
 
-        public List<string> GetPlayers()
+        public Dictionary<string, Player> GetPlayers()
         {
             if (BoardState == null)
-                return new List<string>();
+                return new Dictionary<string, Player>();
             return _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
         }
 
@@ -167,6 +179,10 @@ namespace rogue_like_multi_server
         BoardState BoardState { get; }
 
         string Init(GameConfig gameConfig, string playerName);
+
+        void UpdateGameConfig(GameConfig gameConfig);
+
+        GameConfig GetGameConfig();
 
         Task StartGame();
 
@@ -190,7 +206,7 @@ namespace rogue_like_multi_server
 
         void AddPlayer(string username);
 
-        List<string> GetPlayers();
+        Dictionary<string, Player> GetPlayers();
 
         void RemovePlayer(string username);
     }

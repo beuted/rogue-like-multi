@@ -1,4 +1,4 @@
-import { GameState, GameConfig } from "./Board";
+import { GameState, GameConfig, Player } from "./Board";
 
 export class GameServerClient {
   public username: string;
@@ -66,6 +66,40 @@ export class GameServerClient {
       })
   }
 
+  public async updateGameConfig(gameHash: string, gameConfig: GameConfig): Promise<string | null> {
+    return await fetch(`/api/game-state/${gameHash}/config`, {
+      method: 'POST',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa(`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+      body: JSON.stringify(gameConfig),
+    })
+      .then(response => {
+        if (!response.ok) {
+          return null;
+        }
+        return response.text();
+      })
+  }
+
+
+  public async fetchGameConfig(gameHash: string): Promise<GameConfig | null> {
+    return await fetch(`/api/game-state/${gameHash}/config`, {
+      method: 'GET',
+      headers: new Headers({
+        'Authorization': `Basic ${btoa(`${this.username}:${GameServerClient.password}`)}`,
+        'Content-Type': 'application/json'
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          return null;
+        }
+        return response.json();
+      })
+  }
+
   public async joinGame(gameHash: string): Promise<string | null> {
     return await fetch(`/api/game-state/${gameHash}/join`, {
       method: 'POST',
@@ -114,7 +148,7 @@ export class GameServerClient {
       })
   }
 
-  public async getPlayers(gameHash: string): Promise<string[] | null> {
+  public async getPlayers(gameHash: string): Promise<{ [name: string]: Player } | null> {
     return await fetch(`/api/game-state/${gameHash}/players`, {
       method: 'GET',
       headers: new Headers({

@@ -42,7 +42,7 @@ export enum SocketMessageSent {
 }
 
 export enum SocketMessageReceived {
-  SetBoardStateDynamic = "setBoardStateDynamic",
+  UpdateBoardStateDynamic = "updateBoardStateDynamic",
   InitBoardState = "initBoardState",
   NewMessage = "newMessage"
 }

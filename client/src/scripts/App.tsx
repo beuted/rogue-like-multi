@@ -1,12 +1,11 @@
 import * as React from 'react';
-import ChatBox from './ChatBox';
 import { SocketClient, SocketMessageReceived } from './SocketClient';
-import InitGameModal from './InitGameModal';
+import InitGameModal from './Ui/InitGameModal';
 import { GameServerClient } from './GameServerClient';
 import { useEffect, useState } from 'react';
 import { BoardScene } from './BoardScene';
 import { GameState, Board } from './Board';
-import NightOverlay from './NightOverlay';
+import NightOverlay from './Ui/NightOverlay';
 import { InputManager } from './InputManager';
 import { CharacterController } from './CharacterController';
 
@@ -60,13 +59,12 @@ const App = ({ app }: { app: PIXI.Application }) => {
   }, [user, boardScene])
 
   return (
-    <div>
-      <div id="game"></div>
+    <div className="game-container">
+      <div className="game" id="game"></div>
       {!loading ?
         <div>
           {showGameModal ? <InitGameModal gameServerClient={gameServerClient}></InitGameModal> : null}
           {showNightOverlay ? <NightOverlay inputManager={inputManager} characterController={characterController} board={board}></NightOverlay> : null}
-          <ChatBox socketClient={socketClient}></ChatBox>
         </div> : <div>Loading ...</div>}
     </div>
   )

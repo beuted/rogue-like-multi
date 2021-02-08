@@ -48,12 +48,21 @@ namespace rogue
             NightState = nightState;
         }
 
-        public BoardStateDynamic GetClientView()
+        public BoardStateDynamic GetClientView() // Used init of the model
         {
             var playersFiltered = Players
                 .Where(kvp => kvp.Value.IsConnected)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            return new BoardStateDynamic(Map, Entities, playersFiltered, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(), GameStatus, Events, NightState);
+            return new BoardStateDynamic(Map, Entities, Players, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(), GameStatus, Events, NightState);
+        }
+
+        //TODO: Should be different object maybe
+        public BoardStateDynamic GetLightClientView() // Used for Updates of the model
+        {
+            var playersFiltered = Players
+                .Where(kvp => kvp.Value.IsConnected)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return new BoardStateDynamic(new Map(Map.Items, Map.ChangingFloor), Entities, Players, WinnerTeam, StartTimestamp, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(), GameStatus, Events, NightState);
         }
     }
 }

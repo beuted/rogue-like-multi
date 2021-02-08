@@ -9,15 +9,18 @@ namespace rogue_like_multi_server
         [JsonProperty("cells")]
         public Cell[][] Cells;
 
-        [JsonProperty("mapWidth")]
+        [JsonIgnore()]
         public int MapWidth = 100;
 
-        [JsonProperty("mapHeight")]
+        [JsonIgnore()]
         public int MapHeight = 100;
 
-        // For easier item management: TODO maybe send this to front-end
-        [JsonIgnore()]
+        // To avoid sending the whole map everytime
+        [JsonProperty("items")]
         public Dictionary<Coord, ItemType> Items;
+
+        [JsonProperty("changingFloors")]
+        public Dictionary<Coord, FloorType> ChangingFloor;
 
         public Map(int mapWidth, int mapHeight)
         {
@@ -30,11 +33,29 @@ namespace rogue_like_multi_server
                 Cells[i] = new Cell[mapHeight];
             }
             Items = new Dictionary<Coord, ItemType>();
+            ChangingFloor = new Dictionary<Coord, FloorType>();
+        }
+
+        public Map(Dictionary<Coord, ItemType> items, Dictionary<Coord, FloorType> changingFloor)
+        {
+            Items = items;
+            ChangingFloor = changingFloor;
+        }
+
+        public void SetFloorType(Coord coord, FloorType floorType)
+        {
+            Cells[coord.X][coord.Y].FloorType = floorType;
+
+            if (ChangingFloor[coord].IsChanging())
+                ChangingFloor[coord] = floorType;
         }
 
         public void SetCell(Coord coord, FloorType floorType)
         {
             Cells[coord.X][coord.Y] = new Cell(floorType, null);
+
+            if (floorType.IsChanging())
+                ChangingFloor.Add(coord, floorType);
         }
 
         public void SetItem(Coord coord, ItemType? item)
@@ -42,7 +63,7 @@ namespace rogue_like_multi_server
             Cells[coord.X][coord.Y].ItemType = item;
 
             Items.Remove(coord); //TODO we should not overrids, weird have a look at this
-            if (item.HasValue)
+            if (item.HasValue && item.Value!= ItemType.Empty)
             {
                 Items.Add(coord, item.Value);
             }

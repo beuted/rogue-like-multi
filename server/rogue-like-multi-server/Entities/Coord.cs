@@ -76,9 +76,10 @@ namespace rogue
             return new FloatingCoord(X, Y);
         }
 
+        // /!\ Used for key serialization of map dictionnaries that use Coord as key
         public override string ToString()
         {
-            return $"({X}, {Y})";
+            return $"{X},{Y}";
         }
     }
 }

@@ -24,7 +24,6 @@ namespace rogue_like_multi_server
             {
                 if (!request.Headers.TryGetValue("Authorization", out var auth))
                     request.Headers.Add("Authorization", $"Basic {accessToken}");
-                var tutu = auth;
             }
 
             await _next(httpContext);

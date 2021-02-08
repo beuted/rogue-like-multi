@@ -23,7 +23,10 @@ export class RenderService {
   private characterSprite: AnimatedSprite;
   private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
+  private inventoryIndexes: Text[] = [];
+  private inventoryBg: Sprite;
   private pvSprites: Sprite[] = [];
+  private roleSprite: Sprite;
 
   private roleText: Text;
 
@@ -190,15 +193,30 @@ export class RenderService {
   }
 
   public renderInventory(character: Entity) {
+    if (!this.inventoryBg) {
+      this.inventoryBg = new Sprite();
+      this.inventoryBg.texture = this.spriteManager.inventoryBgTexture;
+      this.inventoryBg.x = 2;
+      this.inventoryBg.y = 18 * this.spriteManager.tilesetSize - 5;
+      this.inventoryContainer.addChild(this.inventoryBg);
+    }
+
     let i = 0;
     for (; i < character.inventory.length; i++) {
       let item = character.inventory[i];
       if (!this.inventorySprites[i]) {
         this.inventorySprites[i] = new Sprite();
-        this.inventorySprites[i].x = (i + 20) * this.spriteManager.tilesetSize;
-        this.inventorySprites[i].y = 3 * this.spriteManager.tilesetSize;
+        this.inventorySprites[i].x = 3 + (i) * (this.spriteManager.tilesetSize + 4);
+        this.inventorySprites[i].y = 18 * this.spriteManager.tilesetSize - 4;
         this.inventoryContainer.addChild(this.inventorySprites[i]);
         this.inventorySprites[i].interactive = true;
+
+        this.inventoryIndexes[i] = new Text(String(i + 1), { fontFamily: 'MatchupPro', fontSize: 16, fill: 0xffffff, align: 'center' });
+        this.inventoryIndexes[i].x = 3 + (i) * (this.spriteManager.tilesetSize + 4);
+        this.inventoryIndexes[i].y = 18 * this.spriteManager.tilesetSize - 4;
+        this.inventoryIndexes[i].scale.set(0.25);
+        this.inventoryContainer.addChild(this.inventoryIndexes[i]);
+
       }
       this.inventorySprites[i].texture = this.spriteManager.textures[item];
 
@@ -229,6 +247,10 @@ export class RenderService {
       this.inventoryContainer.removeChild(this.inventorySprites[j]);
       delete this.inventorySprites[j];
       this.inventorySprites.pop();
+
+      this.inventoryContainer.removeChild(this.inventoryIndexes[j]);
+      delete this.inventoryIndexes[j];
+      this.inventoryIndexes.pop();
     }
   }
 
@@ -236,8 +258,8 @@ export class RenderService {
     if (this.pvSprites.length == 0) {
       for (let i = 0; i < character.maxPv; i++) {
         this.pvSprites[i] = new Sprite();
-        this.pvSprites[i].x = (i + 20) * this.spriteManager.tilesetSize;
-        this.pvSprites[i].y = 5 * this.spriteManager.tilesetSize;
+        this.pvSprites[i].x = (i + 16) * this.spriteManager.tilesetSize - 4;
+        this.pvSprites[i].y = 18 * this.spriteManager.tilesetSize - 4;
         this.pvContainer.addChild(this.pvSprites[i]);
       }
     }
@@ -252,13 +274,27 @@ export class RenderService {
   }
 
   public renderGameState(role: Role, timestampDiff: number) {
+    if (!this.roleSprite) {
+      this.roleSprite = new Sprite();
+      if (role == Role.Bad)
+        this.roleSprite.texture = this.spriteManager.textures[128];
+      else
+        this.roleSprite.texture = this.spriteManager.textures[129];
+      this.roleSprite.x = 2;
+      this.roleSprite.y = 2;
+      this.pvContainer.addChild(this.roleSprite);
+    }
     if (!this.roleText) {
-      this.roleText = new Text('', { fontFamily: 'Arial', fontSize: this.spriteManager.tilesetSize, fill: 0xffffff, align: 'center' });
-      this.roleText.x = 20 * this.spriteManager.tilesetSize;
-      this.roleText.y = 1 * this.spriteManager.tilesetSize;
+      this.roleText = new Text('', { fontFamily: 'MatchupPro', fontSize: 32, fill: 0xffffff, align: 'center' });
+      this.roleText.x = 12;
+      this.roleText.y = 3;
+      this.roleText.scale.set(0.25);
       this.pvContainer.addChild(this.roleText);
     }
-    this.roleText.text = `${role == Role.Bad ? "Bad" : "Good"} Time: ${String(Math.floor(timestampDiff / 1000))}`;
+    let timeSec = Math.floor(timestampDiff / 1000);
+    const sec = timeSec % 60;
+    const min = Math.floor(timeSec / 60);
+    this.roleText.text = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
   public renderMap(cells: Cell[][], currentPlayer: Player, players: { [name: string]: Player }, entities: { [name: string]: Entity }, entitiesPreviousCoords: { [name: string]: Coord }, entityInRangeName: string, isHiding: boolean, interpolFactor: number) {

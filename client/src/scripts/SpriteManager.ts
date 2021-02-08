@@ -3,13 +3,15 @@ import { Texture, Rectangle, Loader, LoaderResource } from 'pixi.js';
 export class SpriteManager {
   public textures: Texture[] = [];
   public animations: { [key: number]: Texture[] };
+  public inventoryBgTexture: Texture;
 
-  constructor(private appLoader: Loader, private tilesetPath: string, public tilesetSize: number, private tilesetHeight: number, private tilesetWidth: number) { }
+  constructor(private appLoader: Loader, private tilesetPath: string, private menuPath: string, public tilesetSize: number, private tilesetHeight: number, private tilesetWidth: number) { }
 
   init() {
     return new Promise((resolve) => {
       this.appLoader
         .add('tilemap', this.tilesetPath)
+        .add('menu', this.menuPath)
         .on('progress', loadProgressHandler)
         .load(() => {
           let baseTexture = this.appLoader.resources['tilemap'].texture.baseTexture
@@ -66,6 +68,14 @@ export class SpriteManager {
               this.textures[241],
               this.textures[242]],
           }
+
+          let menuTexture = this.appLoader.resources['menu'].texture.baseTexture;
+          let texture = new Texture(menuTexture);
+          let rectangle = new Rectangle(0, 0, 118, 11);
+          texture.frame = rectangle;
+          this.inventoryBgTexture = texture;
+
+
           resolve();
         });
     });

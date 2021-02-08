@@ -32,7 +32,7 @@ namespace rogue_like_multi_server.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has connected");
+            _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} has connected");
 
             _gameService.ConnectPlayer(Context.User.Identity.Name);
             await _gameService.SendPlayerInit(Context.User.Identity.Name);
@@ -41,7 +41,7 @@ namespace rogue_like_multi_server.Hubs
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} Has disconnected");
+            _logger.Log(LogLevel.Information, $"{Context.User.Identity.Name} has disconnected");
             _gameService.RemovePlayer(Context.User.Identity.Name);
             await base.OnDisconnectedAsync(exception);
         }
