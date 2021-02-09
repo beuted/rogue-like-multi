@@ -29,7 +29,7 @@ namespace rogue_like_multi_server
         {
             if (BoardState != null)
                 return null; // We don't allow to create a game if one is already running
-            BoardState = _boardStateService.Generate(gameConfig);
+            BoardState = _boardStateService.InitWithConfig(gameConfig); // We will generate the dynamic config when pressing "StartGame"
             AddPlayer(playerName);
             return "random-hash";
         }
@@ -50,6 +50,10 @@ namespace rogue_like_multi_server
             if (BoardState == null)
                 return;
 
+            // Generate the Map, Entities etc... based on the current config, but we keep the current players that have been added in the lobby
+            BoardState = _boardStateService.Generate(BoardState.BoardStateStatic.GameConfig, BoardState.BoardStateDynamic.Players);
+
+            // Distribute the roles to the players and set the game status "start"
             BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic);
 
             var players = _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
@@ -82,7 +86,7 @@ namespace rogue_like_multi_server
         {
             if (BoardState.BoardStateDynamic.WinnerTeam == Role.None)
                 return false;
-            BoardState = _boardStateService.Generate(gameConfig);
+            BoardState = _boardStateService.Generate(gameConfig, new Dictionary<string, Player>());
             return true;
         }
 

@@ -167,7 +167,7 @@ export class BoardScene {
       }
     }
     for (let player of Object.values(players)) {
-      if (player.entity.name = currentPlayer.entity.name)
+      if (player.entity.name == currentPlayer.entity.name)
         continue;
       const dist = CoordHelper.distance(coord, player.entity.coord);
       if (dist < minDist && dist < 1) {

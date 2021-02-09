@@ -20,11 +20,19 @@ namespace rogue_like_multi_server
             _randomGeneratorService = randomGeneratorService;
         }
 
-        public BoardState Generate(GameConfig gameConfig)
+        public BoardState Generate(GameConfig gameConfig, Dictionary<string, Player> players)
         {
             return new BoardState(
                 GenerateStatic(gameConfig),
-                GenerateDynamic(gameConfig)
+                GenerateDynamic(gameConfig, players)
+            );
+        }
+
+        public BoardState InitWithConfig(GameConfig gameConfig)
+        {
+            return new BoardState(
+                GenerateStatic(gameConfig),
+                GenerateEmptyDynamic()
             );
         }
 
@@ -84,34 +92,36 @@ namespace rogue_like_multi_server
             }
 
             // IA stuff
-            foreach (var entity in boardStateDynamic.Entities)
-            {
-                var velocity = 0.001m * config.EntitySpeed;
-                var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
-                FloatingCoord? targetPlayerPosition = targetPlayer != null && targetPlayer.Entity.Pv > 0 ? (FloatingCoord ?) targetPlayer.Entity.Coord : null;
-
-                var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
-                entity.Value.Coord = nextCoord;
-
-                if (entity.Value.Aggressivity == Aggressivity.Aggressive)
+            if (boardStateDynamic.GameStatus == GameStatus.Play) {
+                foreach (var entity in boardStateDynamic.Entities)
                 {
-                    var noPlayersInRange = true;
-                    foreach (var player in boardStateDynamic.Players)
+                    var velocity = 0.001m * config.EntitySpeed;
+                    var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
+                    FloatingCoord? targetPlayerPosition = targetPlayer != null && targetPlayer.Entity.Pv > 0 ? (FloatingCoord?)targetPlayer.Entity.Coord : null;
+
+                    var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
+                    entity.Value.Coord = nextCoord;
+
+                    if (entity.Value.Aggressivity == Aggressivity.Aggressive)
                     {
-                        if (FloatingCoord.Distance2d(entity.Value.Coord, player.Value.Entity.Coord) < 1)
+                        var noPlayersInRange = true;
+                        foreach (var player in boardStateDynamic.Players)
                         {
-                            noPlayersInRange = false;
-                            entity.Value.TimeSinceInRange += turnElapsedMs;
-                            if (entity.Value.TimeSinceInRange > 1000 && nowTimestamp > entity.Value.CoolDownAttack)
+                            if (FloatingCoord.Distance2d(entity.Value.Coord, player.Value.Entity.Coord) < 1)
                             {
-                                var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false);
-                                entity.Value.TimeSinceInRange = 0;
+                                noPlayersInRange = false;
+                                entity.Value.TimeSinceInRange += turnElapsedMs;
+                                if (entity.Value.TimeSinceInRange > 1000 && nowTimestamp > entity.Value.CoolDownAttack)
+                                {
+                                    var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false);
+                                    entity.Value.TimeSinceInRange = 0;
+                                }
+                                break;
                             }
-                            break;
                         }
+                        if (noPlayersInRange)
+                            entity.Value.TimeSinceInRange = 0;
                     }
-                    if (noPlayersInRange)
-                        entity.Value.TimeSinceInRange = 0;
                 }
             }
 
@@ -582,7 +592,7 @@ namespace rogue_like_multi_server
             return new BoardStateStatic(gameConfig);
         }
 
-        private BoardStateDynamic GenerateDynamic(GameConfig gameConfig)
+        private BoardStateDynamic GenerateDynamic(GameConfig gameConfig, Dictionary<string, Player> players)
         {
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, System.AppDomain.CurrentDomain.RelativeSearchPath ?? "");
             var map = _mapService.Generate(100, 100, Path.Combine(path, "dist/assets/map.json"), gameConfig);
@@ -590,6 +600,22 @@ namespace rogue_like_multi_server
             return new BoardStateDynamic(
                 map,
                 _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn),
+                players,
+                Role.None,
+                now,
+                now,
+                GameStatus.Prepare,
+                new List<ActionEvent>(),
+                new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>())
+            );
+        }
+
+        private BoardStateDynamic GenerateEmptyDynamic()
+        {
+            var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            return new BoardStateDynamic(
+                new Map(0, 0),
+                new Dictionary<string, Entity>(),
                 new Dictionary<string, Player>(),
                 Role.None,
                 now,
@@ -621,7 +647,9 @@ namespace rogue_like_multi_server
 
     public interface IBoardStateService
     {
-        BoardState Generate(GameConfig gameConfig);
+        BoardState Generate(GameConfig gameConfig, Dictionary<string, Player> players);
+
+        BoardState InitWithConfig(GameConfig gameConfig);
 
         BoardState ChangeConfig(GameConfig gameConfig, Dictionary<string, Player> players);
 

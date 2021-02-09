@@ -41,11 +41,19 @@ namespace rogue
         [JsonProperty("materialGiven")]
         public List<Gift> MaterialGiven;
 
+        [JsonConstructor]
         public NightState(List<Vote> votes, List<Gift> foodGiven, List<Gift> materialGiven)
         {
             Votes = votes;
             FoodGiven = foodGiven;
             MaterialGiven = materialGiven;
+        }
+
+        public NightState()
+        {
+            Votes = new List<Vote>();
+            FoodGiven = new List<Gift>();
+            MaterialGiven = new List<Gift>();
         }
     }
 }
