@@ -167,7 +167,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     <div className="init-game">
 
       <div className="modal main-menu" style={{ display: !showLobbyModal && !showConfig && !showInfo ? 'flex' : 'none' }}>
-        <div className="info-button" onClick={() => setShowInfo(true)}><SpriteImage sprite={74}></SpriteImage></div>
+        <div className="info-button" onClick={() => setShowInfo(true)}><SpriteImage sprite={74} size={4}></SpriteImage></div>
         <h1>Leave the woods</h1>
         <button className="button" disabled={!canCreateGame()} onClick={clickCreateGame}>Create Game</button>
         <div className="join-game-group">
@@ -249,7 +249,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
           </div>
         </div>
         <div className="config-button" onClick={() => { setShowConfig(false); updateGameConfig() }}>
-          <SpriteImage sprite={66 as ItemType} size={5}></SpriteImage>
+          <SpriteImage sprite={66} size={4}></SpriteImage>
         </div>
       </div>
 

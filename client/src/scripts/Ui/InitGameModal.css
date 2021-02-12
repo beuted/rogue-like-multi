@@ -24,6 +24,7 @@
   flex-direction: column;
   justify-content: normal;
   align-items: center;
+  overflow-y: auto;
 }
 
 .modal-block {
@@ -151,6 +152,7 @@ button:hover {
   align-items: center;
   width: 760px;
   height: 60px;
+  margin-bottom: 15px;
 }
 
 .config-button:hover {
