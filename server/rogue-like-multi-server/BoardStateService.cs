@@ -95,11 +95,11 @@ namespace rogue_like_multi_server
             if (boardStateDynamic.GameStatus == GameStatus.Play) {
                 foreach (var entity in boardStateDynamic.Entities)
                 {
-                    var velocity = 0.001m * config.EntitySpeed;
+                    var velocity = 0.004m * config.EntitySpeed;
                     var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
                     FloatingCoord? targetPlayerPosition = targetPlayer != null && targetPlayer.Entity.Pv > 0 ? (FloatingCoord?)targetPlayer.Entity.Coord : null;
 
-                    var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, velocity, Convert.ToDecimal(turnElapsedMs));
+                    var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, entity.Value.Aggressivity, velocity, Convert.ToDecimal(turnElapsedMs));
                     entity.Value.Coord = nextCoord;
 
                     if (entity.Value.Aggressivity == Aggressivity.Aggressive)
@@ -282,7 +282,7 @@ namespace rogue_like_multi_server
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
                 map.SetFloorType(gridCoord, FloorType.Plain);
-                _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomLoot(15), gridCoord);
+                _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomLoot(), gridCoord);
             }
 
             return boardStateDynamic;
@@ -356,7 +356,7 @@ namespace rogue_like_multi_server
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't exist on the server");
                 return boardStateDynamic;
             }
-            if (!player.Entity.Inventory.Any(x => x == ItemType.Wood))
+            if (!player.Entity.Inventory.Any(x => x == ItemType.Emerald))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to give material but he doesn't have any");
                 return boardStateDynamic;
@@ -364,7 +364,7 @@ namespace rogue_like_multi_server
 
             player.InputSequenceNumber = inputSequenceNumber;
 
-            player.Entity.Inventory.Remove(ItemType.Wood);
+            player.Entity.Inventory.Remove(ItemType.Emerald);
             boardStateDynamic.NightState.MaterialGiven.Add(new Gift(playerName));
             return boardStateDynamic;
         }
@@ -501,11 +501,11 @@ namespace rogue_like_multi_server
                 evt = new ActionEvent(ActionEventType.Attack, nowTimestamp, entity.Coord, null, Role.None);
             }
 
-            if (entity.Aggressivity == Aggressivity.Neutral || entity.Aggressivity == Aggressivity.Aggressive)
+            if (entity.Aggressivity == Aggressivity.Neutral)
             {
                 entity.Aggressivity = Aggressivity.Aggressive;
-                entity.TargetPlayer = attackerName;
             }
+            entity.TargetPlayer = attackerName;
 
             return evt;
         }

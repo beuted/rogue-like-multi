@@ -14,6 +14,7 @@ namespace rogue
         Blood = 102,
         HealthPotion = 103,
         Backpack = 105,
+        Emerald = 106,
         DeadBody1 = 118,
         DeadBody2 = 218,
         DeadBody3 = 228,
@@ -21,28 +22,87 @@ namespace rogue
 
     public static class ItemTypeExtensions
     {
-        private static Dictionary<ItemType, int> itemDropRate = new Dictionary<ItemType, int>()
-        {
+        private static Dictionary<ItemType, int> chestItemDropRate = new Dictionary<ItemType, int> {
             { ItemType.Empty, 0 },
             { ItemType.Blood, 0 },
             { ItemType.DeadBody1, 0 },
             { ItemType.DeadBody2, 0 },
             { ItemType.DeadBody3, 0 },
+            { ItemType.Wood, 0 },
             { ItemType.Food, 50 },
-            { ItemType.Wood, 25 },
+            { ItemType.Emerald, 60 },
             { ItemType.Sword, 25 },
             { ItemType.Key, 10 },
-            { ItemType.Armor, 10 },
-            { ItemType.HealthPotion, 10 },
-            { ItemType.Backpack, 5 },
+            { ItemType.Armor, 25 },
+            { ItemType.HealthPotion, 25 },
+            { ItemType.Backpack, 20 },
+        };
+        private static Dictionary<EntityType, Dictionary<ItemType, int>> entitiesItemDropRate = new Dictionary<EntityType, Dictionary<ItemType, int>>()
+
+        {
+            { EntityType.Rat,  new Dictionary<ItemType, int> {
+                { ItemType.Empty, 0 },
+                { ItemType.Blood, 0 },
+                { ItemType.DeadBody1, 0 },
+                { ItemType.DeadBody2, 0 },
+                { ItemType.DeadBody3, 0 },
+                { ItemType.Wood, 0 },
+                { ItemType.Food, 50 },
+                { ItemType.Emerald, 25 },
+                { ItemType.Sword, 40 },
+                { ItemType.Key, 10 },
+                { ItemType.Armor, 10 },
+                { ItemType.HealthPotion, 10 },
+                { ItemType.Backpack, 5 },
+            }},
+            { EntityType.Dog,  new Dictionary<ItemType, int> {
+                { ItemType.Empty, 0 },
+                { ItemType.Blood, 0 },
+                { ItemType.DeadBody1, 0 },
+                { ItemType.DeadBody2, 0 },
+                { ItemType.DeadBody3, 0 },
+                { ItemType.Wood, 0 },
+                { ItemType.Food, 50 },
+                { ItemType.Emerald, 40 },
+                { ItemType.Sword, 40 },
+                { ItemType.Key, 60 },
+                { ItemType.Armor, 10 },
+                { ItemType.HealthPotion, 10 },
+                { ItemType.Backpack, 25 },
+            }},
+            { EntityType.Snake,  new Dictionary<ItemType, int> {
+                { ItemType.Empty, 0 },
+                { ItemType.Blood, 0 },
+                { ItemType.DeadBody1, 0 },
+                { ItemType.DeadBody2, 0 },
+                { ItemType.DeadBody3, 0 },
+                { ItemType.Wood, 0 },
+                { ItemType.Food, 50 },
+                { ItemType.Emerald, 60 },
+                { ItemType.Sword, 25 },
+                { ItemType.Key, 80 },
+                { ItemType.Armor, 5 },
+                { ItemType.HealthPotion, 60 },
+                { ItemType.Backpack, 50 },
+            }}
         };
 
         // Rarity means the item as a dropRate + modificator % chance being drop
-        public static int GetDropRate(this ItemType item, int modificator = 0)
+        public static int GetDropRate(this ItemType item, EntityType? entityType = null)
         {
-            if (itemDropRate.TryGetValue(item, out var rarity) && rarity > 0)
+            // If entityType is null we return the chest drop rate
+            if (!entityType.HasValue)
             {
-                return Math.Min(rarity + modificator, 95);
+                if (chestItemDropRate.TryGetValue(item, out var rarity) && rarity > 0)
+                     return Math.Min(rarity, 95);
+                return 0;
+            }
+            if (entitiesItemDropRate.TryGetValue(entityType.Value, out var itemDropRate))
+            {
+                if (itemDropRate.TryGetValue(item, out var rarity) && rarity > 0)
+                {
+                    return Math.Min(rarity, 95);
+                }
             }
             return 0;
         }

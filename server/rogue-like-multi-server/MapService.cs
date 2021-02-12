@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using rogue;
 
@@ -10,24 +11,26 @@ namespace rogue_like_multi_server
     public interface IMapService
     {
         Map Generate(int mapWidth, int mapHeight, string file, GameConfig config);
-        FloatingCoord FindValidNextCoord(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs);
+        FloatingCoord FindValidNextCoord(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs);
         Map CleanItems(Map map);
         Dictionary<string, Entity> CleanEntities(Dictionary<string, Entity> entities);
         Map FillMapWithRandomItems(Map map, Dictionary<ItemType, int> itemSpawns);
         Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns);
         Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
         Map DropDeadBody(Map map, int spriteId, Coord coord);
-        List<ItemType> GetRandomLoot(int modificator = 0);
+        List<ItemType> GetRandomLoot(EntityType? entityType = null);
         Map PickupItem(Map map, Coord coord);
     }
 
     public class MapService: IMapService
     {
         private IRandomGeneratorService _randomGeneratorService;
+        private ILogger<MapService> _logger;
 
-        public MapService(IRandomGeneratorService randomGeneratorService)
+        public MapService(ILogger<MapService> logger, IRandomGeneratorService randomGeneratorService)
         {
             _randomGeneratorService = randomGeneratorService;
+            _logger = logger;
         }
 
         public Map Generate(int mapWidth, int mapHeight, string file, GameConfig config)
@@ -109,22 +112,35 @@ namespace rogue_like_multi_server
             return entities;
         }
 
-        public FloatingCoord FindValidNextCoord(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, decimal velocity, decimal elapsedMs)
+        public FloatingCoord FindValidNextCoord(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs)
         {
             var multiplicator = velocity * Convert.ToDecimal(elapsedMs);
 
             // If we have a target player close enough
-            if (targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < 5m)
+            if (aggressivity != Aggressivity.Neutral && targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < 5m)
             {
                 var direction = targetPosition.Value - startFloatingCoord;
-                // We should normalize or transform into one of 9 directions but la flemme
-                var greaterDimension = Math.Max(Math.Abs(direction.X), Math.Abs(direction.Y));
-                var newFloatingCoord2 = startFloatingCoord + (multiplicator / greaterDimension) * direction;
+                var normalizedDirection = 1 / FloatingCoord.Distance(startFloatingCoord, targetPosition.Value) * direction;
+                var newFloatingCoord2 = startFloatingCoord;
+                var newFloatingCoord2Half = startFloatingCoord;
+                var addition = multiplicator * normalizedDirection;
+                if (aggressivity == Aggressivity.Aggressive) {
+                    newFloatingCoord2 += addition;
+                    newFloatingCoord2Half += 0.5m * addition;
+                } else {
+                    newFloatingCoord2 -= addition;
+                    newFloatingCoord2Half -= 0.5m * addition;
+                }
 
                 var newCoord2 = newFloatingCoord2.ToCoord();
-                if (map.Cells[newCoord2.X][newCoord2.Y].FloorType.IsWalkable())
+                var newCoordHalf2 = newFloatingCoord2Half.ToCoord(); // Just a bit more safety on passing through wall because the entity is too fast :/
+                if (map.Cells[newCoord2.X][newCoord2.Y].FloorType.IsWalkable()
+                    && map.Cells[newCoordHalf2.X][newCoordHalf2.Y].FloorType.IsWalkable())
+                {
                     return newFloatingCoord2;
+                }
 
+                _logger.Log(LogLevel.Warning, $"Entity tried to move but there is a wall");
                 return startFloatingCoord;
             }
 
@@ -185,13 +201,13 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        public List<ItemType> GetRandomLoot(int modificator = 0)
+        public List<ItemType> GetRandomLoot(EntityType? entityType = null)
         {
             var items = new List<ItemType>();
 
             foreach (var itemType in Enum.GetValues(typeof(ItemType)) as ItemType[])
             {
-                var rarity = itemType.GetDropRate(modificator);
+                var rarity = itemType.GetDropRate(entityType);
                 if (rarity > 0 && _randomGeneratorService.Generate(0, 100) <= rarity)
                 {
                     items.Add(itemType);
@@ -284,8 +300,8 @@ namespace rogue_like_multi_server
                 return null;
             }
 
-            var name = "e_" + entityType.ToString() + '-' + Guid.NewGuid(); // TODO: Very little chance that's not unique...
-            entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomLoot(), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
+            var name = "e_" + entityType.ToString() + '-' + Guid.NewGuid();
+            entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomLoot(entityType), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
 
             return entities;
         }

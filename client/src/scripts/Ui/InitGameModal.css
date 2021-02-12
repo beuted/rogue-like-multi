@@ -36,8 +36,19 @@
 }
 
 .main-menu {
+  position: relative;
   align-items: center;
   justify-content: space-evenly;
+}
+
+.info-button {
+  position: absolute;
+  right: 30px;
+  top: 30px;
+}
+.info-button:hover {
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 .join-game-group {

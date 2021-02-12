@@ -63,7 +63,8 @@ namespace rogue
 
         public static decimal Distance(FloatingCoord a, FloatingCoord b)
         {
-            return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+            // There will be rounding issues here but I don't think that's a big deal
+            return (decimal)Math.Sqrt((double)((a.X - b.X)* (a.X - b.X) + (a.Y - b.Y)* (a.Y - b.Y)));
         }
 
         public static decimal Distance2d(FloatingCoord a, FloatingCoord b)
@@ -74,6 +75,11 @@ namespace rogue
         public Coord ToCoord()
         {
             return new Coord(Convert.ToInt32(X), Convert.ToInt32(Y));
+        }
+
+        public Coord FloorCoord()
+        {
+            return new Coord(Convert.ToInt32(Decimal.Floor(X)), Convert.ToInt32(Decimal.Floor(Y)));
         }
 
         public FloatingCoord ProjectOnX()
@@ -88,7 +94,7 @@ namespace rogue
 
         public override string ToString()
         {
-            return $"({X}, {Y})";
+            return $"{X},{Y}";
         }
     }
 }

@@ -8,11 +8,12 @@ import SpriteImage from './SpriteImage';
 import CustomInput from './CustomInput';
 import { Player, GameConfig, GameConfigStringPpties } from '../Board';
 import Spinner from './Spinner';
+import InformationModal from './InformationModal';
 
 const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClient }) => {
   const DefaultGameConfig: GameConfig = {
     nbSecsPerCycle: 120,
-    nbSecsDiscuss: 12,
+    nbSecsDiscuss: 60,
     badGuyVision: 1.0,
     playerSpeed: 1.0,
     entitySpeed: 1.0,
@@ -23,7 +24,8 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
       [ItemType.DeadBody1]: 0,
       [ItemType.DeadBody2]: 0,
       [ItemType.DeadBody3]: 0,
-      [ItemType.Wood]: Number(5),
+      [ItemType.Wood]: 0,
+      [ItemType.Emerald]: Number(5),
       [ItemType.Food]: Number(10),
       [ItemType.Key]: Number(3),
       [ItemType.Sword]: Number(3),
@@ -45,6 +47,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
 
   const [showLobbyModal, setShowLobbyModal] = useState<boolean>(true);
   const [showConfig, setShowConfig] = useState<boolean>(false);
+  const [showInfo, setShowInfo] = useState<boolean>(false);
 
   const [charId, setCharId] = useState<number>(0);
 
@@ -78,7 +81,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     return gameConfig.nbSecsPerCycle != null && gameConfig.nbSecsPerCycle != null && gameConfig.badGuyVision != null && gameConfig.nbMaterialToWin != null
       && gameConfig.playerSpeed != null && gameConfig.entitySpeed != null
       && gameConfig.entitySpawn[EntityType.Dog] != null && gameConfig.entitySpawn[EntityType.Rat] != null && gameConfig.entitySpawn[EntityType.Snake] != null
-      && gameConfig.itemSpawn[ItemType.Wood] != null && gameConfig.itemSpawn[ItemType.Food] != null && gameConfig.itemSpawn[ItemType.Key] != null
+      && gameConfig.itemSpawn[ItemType.Emerald] != null && gameConfig.itemSpawn[ItemType.Food] != null && gameConfig.itemSpawn[ItemType.Key] != null
       && gameConfig.itemSpawn[ItemType.Sword] != null && gameConfig.itemSpawn[ItemType.Backpack] != null && gameConfig.itemSpawn[ItemType.HealthPotion] != null;
   }
 
@@ -163,13 +166,18 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   return (
     <div className="init-game">
 
-      <div className="modal main-menu" style={{ display: !showLobbyModal && !showConfig ? 'flex' : 'none' }}>
+      <div className="modal main-menu" style={{ display: !showLobbyModal && !showConfig && !showInfo ? 'flex' : 'none' }}>
+        <div className="info-button" onClick={() => setShowInfo(true)}><SpriteImage sprite={74}></SpriteImage></div>
         <h1>Leave the woods</h1>
         <button className="button" disabled={!canCreateGame()} onClick={clickCreateGame}>Create Game</button>
         <div className="join-game-group">
           <CustomInput type="text" name="Game id" placeholder="Game id" value={gameHash} onChange={(e: any) => setGameHash(e.target.value)} light></CustomInput>
           <button disabled={!gameHash} onClick={clickJoinGame} className="button">Join Game</button>
         </div>
+      </div>
+
+      <div style={{ display: showInfo ? 'flex' : 'none' }}>
+        <InformationModal hideModal={() => setShowInfo(false)}></InformationModal>
       </div>
 
       <div className="modal" style={{ display: showConfig ? 'flex' : 'none' }}>
@@ -195,8 +203,8 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
                 <div className="list-item">
                   <div>Item spawn:</div>
                   <div className="item">
-                    <SpriteImage sprite={ItemType.Wood}></SpriteImage>
-                    <CustomInput name="" placeholder={5} value={gameConfig.itemSpawn[ItemType.Wood]} onChange={(e: any) => setGameConfigItemSpawn(ItemType.Wood, e.target.value)} light></CustomInput>
+                    <SpriteImage sprite={ItemType.Emerald}></SpriteImage>
+                    <CustomInput name="" placeholder={5} value={gameConfig.itemSpawn[ItemType.Emerald]} onChange={(e: any) => setGameConfigItemSpawn(ItemType.Emerald, e.target.value)} light></CustomInput>
                   </div>
                   <div className="item">
                     <SpriteImage sprite={ItemType.Food}></SpriteImage>

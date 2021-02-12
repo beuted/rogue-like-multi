@@ -66,6 +66,7 @@ export enum ItemType {
   Blood = 102,
   HealthPotion = 103,
   Backpack = 105,
+  Emerald = 106,
   DeadBody1 = 118,
   DeadBody2 = 218,
   DeadBody3 = 228,

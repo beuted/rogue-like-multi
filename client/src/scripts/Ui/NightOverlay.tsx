@@ -31,7 +31,7 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
       const playerName = board.player.entity.name;
       const nightState = board.nightState;
       const players = Object.values(board.players).map(x => x.entity);
-      const hasMaterial = board.player.entity.inventory.includes(ItemType.Wood);
+      const hasMaterial = board.player.entity.inventory.includes(ItemType.Emerald);
       const hasFood = board.player.entity.inventory.includes(ItemType.Food);
       const isAlive = board.player.entity.pv > 0;
 
@@ -120,12 +120,12 @@ const NightOverlay = ({ inputManager, characterController, board }: NightOverlay
           </div>
 
           <div className="collect-item">
-            <div>Collected wood today: {materialGiven.length} / {nbMaterialToWin}</div>
+            <div>Collected emeralds today: {materialGiven.length} / {nbMaterialToWin}</div>
             <div className="collect-item-list">
               {materialGiven.map((m, i) => (
                 <div key={i}>
                   <div className="player-name mb-1 mr-1">{m.from}</div>
-                  <SpriteImage sprite={ItemType.Wood}></SpriteImage>
+                  <SpriteImage sprite={ItemType.Emerald}></SpriteImage>
                 </div>
               ))}
             </div>
