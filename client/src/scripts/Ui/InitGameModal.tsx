@@ -18,6 +18,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     playerSpeed: 1.0,
     entitySpeed: 1.0,
     nbMaterialToWin: 30,
+    entityAggroDistance: 4,
     itemSpawn: {
       [ItemType.Empty]: 0,
       [ItemType.Blood]: 0,

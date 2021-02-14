@@ -37,8 +37,11 @@ export type GameConfig = {
   nbMaterialToWin: number;
   playerSpeed: number;
   entitySpeed: number;
+  entityAggroDistance: number;
   itemSpawn: { [key in ItemType]: number };
   entitySpawn: { [key in EntityType]: number };
+  entityLoot: { [key in EntityType]: { [key in ItemType]: number } };
+  chestLoot: { [key in ItemType]: number };
 }
 
 export enum ActionEventType {

@@ -7,6 +7,27 @@ using rogue;
 
 namespace rogue_like_multi_server
 {
+    public interface IBoardStateService
+    {
+        BoardState Generate(GameConfig gameConfig, Dictionary<string, Player> players);
+        BoardState InitWithConfig(GameConfig gameConfig);
+        BoardState ChangeConfig(GameConfig gameConfig, Dictionary<string, Player> players);
+        BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic);
+        BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig gameConfig, long turnElapsedMs);
+        BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
+            FloatingCoord velocity, double inputSequenceNumber, Dictionary<ItemType, int> chestLoot);
+        BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber);
+        BoardStateDynamic ApplyGiveFood(BoardStateDynamic boardStateDynamic, string playerName,
+            double inputSequenceNumber);
+        BoardStateDynamic ApplyGiveMaterial(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
+        BoardStateDynamic ApplyUseItem(BoardStateDynamic boardStateDynamic, string playerName, ItemType item, double inputSequenceNumber);
+        BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
+        BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
+        Dictionary<string, Player> GetPlayers(BoardStateDynamic boardStateDynamic);
+        BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
+        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber, string entityName);
+    }
+
     public class BoardStateService: IBoardStateService
     {
         private readonly ILogger<BoardStateService> _logger;
@@ -177,7 +198,7 @@ namespace rogue_like_multi_server
 
                 // Spawn entities
                 boardStateDynamic.Entities = _mapService.CleanEntities(boardStateDynamic.Entities);
-                boardStateDynamic.Entities = _mapService.FillMapWithRandomEntities(boardStateDynamic.Map, config.EntitySpawn);
+                boardStateDynamic.Entities = _mapService.FillMapWithRandomEntities(boardStateDynamic.Map, config.EntitySpawn, config.EntityLoot);
 
                 // Reset players positions
                 int posOffset = 0;
@@ -235,7 +256,7 @@ namespace rogue_like_multi_server
         }
 
         public BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
-            FloatingCoord velocity, double inputSequenceNumber)
+            FloatingCoord velocity, double inputSequenceNumber, Dictionary<ItemType, int> chestLoot)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
@@ -282,7 +303,7 @@ namespace rogue_like_multi_server
             {
                 player.Entity.Inventory.Remove(ItemType.Key);
                 map.SetFloorType(gridCoord, FloorType.Plain);
-                _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomLoot(), gridCoord);
+                _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomChestLoot(chestLoot), gridCoord);
             }
 
             return boardStateDynamic;
@@ -386,7 +407,7 @@ namespace rogue_like_multi_server
 
             player.InputSequenceNumber = inputSequenceNumber;
 
-            
+
             if (item == ItemType.HealthPotion)
             {
                 player.Entity.Inventory.Remove(item);
@@ -599,7 +620,7 @@ namespace rogue_like_multi_server
             var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             return new BoardStateDynamic(
                 map,
-                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn),
+                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn, gameConfig.EntityLoot),
                 players,
                 Role.None,
                 now,
@@ -633,7 +654,7 @@ namespace rogue_like_multi_server
             var now = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             return new BoardStateDynamic(
                 map,
-                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn),
+                _mapService.FillMapWithRandomEntities(map, gameConfig.EntitySpawn, gameConfig.EntityLoot),
                 players,
                 Role.None,
                 now,
@@ -643,39 +664,5 @@ namespace rogue_like_multi_server
                 new NightState(new List<Vote>(), new List<Gift>(), new List<Gift>())
             );
         }
-    }
-
-    public interface IBoardStateService
-    {
-        BoardState Generate(GameConfig gameConfig, Dictionary<string, Player> players);
-
-        BoardState InitWithConfig(GameConfig gameConfig);
-
-        BoardState ChangeConfig(GameConfig gameConfig, Dictionary<string, Player> players);
-
-        BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic);
-
-        BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig gameConfig, long turnElapsedMs);
-
-        BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
-            FloatingCoord velocity, double inputSequenceNumber);
-
-        BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber);
-
-        BoardStateDynamic ApplyGiveFood(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
-
-        BoardStateDynamic ApplyGiveMaterial(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
-
-        BoardStateDynamic ApplyUseItem(BoardStateDynamic boardStateDynamic, string playerName, ItemType item, double inputSequenceNumber);
-        
-        BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
-
-        BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
-
-        Dictionary<string, Player> GetPlayers(BoardStateDynamic boardStateDynamic);
-
-        BoardStateDynamic RemovePlayer(BoardStateDynamic boardStateDynamic, string playerName);
-
-        BoardStateDynamic PlayerActionAttack(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber, string entityName);
     }
 }

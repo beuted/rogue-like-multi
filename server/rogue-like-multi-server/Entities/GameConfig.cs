@@ -23,6 +23,14 @@ namespace rogue
         [JsonProperty("entitySpawn")]
         public Dictionary<EntityType, int> EntitySpawn;
 
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, int>))]
+        [JsonProperty("chestLoot")]
+        public Dictionary<ItemType, int> ChestLoot;
+
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, Dictionary<ItemType, int>>))]
+        [JsonProperty("entityLoot")]
+        public Dictionary<EntityType, Dictionary<ItemType, int>> EntityLoot;
+
         [JsonProperty("nbMaterialToWin")]
         public int NbMaterialToWin;
 
@@ -32,16 +40,24 @@ namespace rogue
         [JsonProperty("entitySpeed")]
         public decimal EntitySpeed;
 
-        public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss, decimal badGuyVision, Dictionary<ItemType, int> itemSpawn, Dictionary<EntityType, int> entitySpawn, int nbMaterialToWin, decimal playerSpeed, decimal entitySpeed)
+        [JsonProperty("entityAggroDistance")]
+        public int EntityAggroDistance;
+
+        public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss, decimal badGuyVision, Dictionary<ItemType, int> itemSpawn,
+            Dictionary<EntityType, int> entitySpawn, Dictionary<ItemType, int> chestLoot, Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot,
+            int nbMaterialToWin, decimal playerSpeed, decimal entitySpeed, int entityAggroDistance)
         {
             NbSecsPerCycle = nbSecsPerCycle;
             NbSecsDiscuss = nbSecsDiscuss;
             BadGuyVision = badGuyVision;
             ItemSpawn = itemSpawn;
             EntitySpawn = entitySpawn;
+            ChestLoot = chestLoot;
+            EntityLoot = entityLoot;
             NbMaterialToWin = nbMaterialToWin;
             PlayerSpeed = playerSpeed;
             EntitySpeed = entitySpeed;
+            EntityAggroDistance = entityAggroDistance;
         }
     }
 }

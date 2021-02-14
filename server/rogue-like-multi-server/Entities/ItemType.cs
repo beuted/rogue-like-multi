@@ -37,8 +37,8 @@ namespace rogue
             { ItemType.HealthPotion, 25 },
             { ItemType.Backpack, 20 },
         };
-        private static Dictionary<EntityType, Dictionary<ItemType, int>> entitiesItemDropRate = new Dictionary<EntityType, Dictionary<ItemType, int>>()
 
+        private static Dictionary<EntityType, Dictionary<ItemType, int>> entitiesItemDropRate = new Dictionary<EntityType, Dictionary<ItemType, int>>()
         {
             { EntityType.Rat,  new Dictionary<ItemType, int> {
                 { ItemType.Empty, 0 },
@@ -88,21 +88,11 @@ namespace rogue
         };
 
         // Rarity means the item as a dropRate + modificator % chance being drop
-        public static int GetDropRate(this ItemType item, EntityType? entityType = null)
+        public static int GetDropRate(this ItemType item, Dictionary<ItemType, int> lootRate)
         {
-            // If entityType is null we return the chest drop rate
-            if (!entityType.HasValue)
+            if (lootRate.TryGetValue(item, out var rarity) && rarity > 0)
             {
-                if (chestItemDropRate.TryGetValue(item, out var rarity) && rarity > 0)
-                     return Math.Min(rarity, 95);
-                return 0;
-            }
-            if (entitiesItemDropRate.TryGetValue(entityType.Value, out var itemDropRate))
-            {
-                if (itemDropRate.TryGetValue(item, out var rarity) && rarity > 0)
-                {
-                    return Math.Min(rarity, 95);
-                }
+                return Math.Min(rarity, 95);
             }
             return 0;
         }

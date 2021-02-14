@@ -118,11 +118,11 @@ namespace rogue_like_multi_server
                 if (playerInput == null)
                 {
                     //TODO: This should not be needed to investigate
-                    continue; 
+                    continue;
                 }
 
                 if (playerInput.Item2.Type == InputType.Move && (playerInput.Item2.Direction.Value.X != 0 || playerInput.Item2.Direction.Value.Y != 0))
-                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime.Value * playerInput.Item2.Direction.Value, playerInput.Item2.InputSequenceNumber);
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyPlayerVelocity(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.PressTime.Value * playerInput.Item2.Direction.Value, playerInput.Item2.InputSequenceNumber, BoardState.BoardStateStatic.GameConfig.ChestLoot);
                 else if(playerInput.Item2.Type == InputType.Attack)
                     BoardState.BoardStateDynamic = _boardStateService.PlayerActionAttack(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber, playerInput.Item2.EntityName);
                 else if (playerInput.Item2.Type == InputType.Vote)
@@ -159,7 +159,7 @@ namespace rogue_like_multi_server
         public void AddPlayer(string playerName)
         {
             if (BoardState == null || BoardState.BoardStateDynamic == null || BoardState.BoardStateDynamic.GameStatus != GameStatus.Prepare)
-                return; // You cannot join a game that is not tsarted OR already running 
+                return; // You cannot join a game that is not tsarted OR already running
             BoardState.BoardStateDynamic = _boardStateService.AddPlayer(BoardState.BoardStateDynamic, playerName, new FloatingCoord(49, 49));
         }
 
