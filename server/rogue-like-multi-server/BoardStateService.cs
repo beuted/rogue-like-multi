@@ -15,7 +15,7 @@ namespace rogue_like_multi_server
         BoardStateDynamic StartGame(BoardStateDynamic boardStateDynamic);
         BoardStateDynamic Update(BoardStateDynamic boardStateDynamic, GameConfig gameConfig, long turnElapsedMs);
         BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
-            FloatingCoord velocity, double inputSequenceNumber, Dictionary<ItemType, int> chestLoot);
+            FloatingCoord velocity, double inputSequenceNumber, LootTable chestLoot);
         BoardStateDynamic ApplyPlayerVote(BoardStateDynamic boardStateDynamic, string playerName, string vote, double inputSequenceNumber);
         BoardStateDynamic ApplyGiveFood(BoardStateDynamic boardStateDynamic, string playerName,
             double inputSequenceNumber);
@@ -120,7 +120,7 @@ namespace rogue_like_multi_server
                     var targetPlayer = entity.Value.TargetPlayer != null ? boardStateDynamic.Players.Values.FirstOrDefault(x => x.Entity.Name == entity.Value.TargetPlayer) : null;
                     FloatingCoord? targetPlayerPosition = targetPlayer != null && targetPlayer.Entity.Pv > 0 ? (FloatingCoord?)targetPlayer.Entity.Coord : null;
 
-                    var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, entity.Value.Aggressivity, velocity, Convert.ToDecimal(turnElapsedMs));
+                    var nextCoord = _mapService.FindValidNextCoord(boardStateDynamic.Map, entity.Value.Coord, targetPlayerPosition, entity.Value.Aggressivity, velocity, Convert.ToDecimal(turnElapsedMs), config.EntityAggroDistance);
                     entity.Value.Coord = nextCoord;
 
                     if (entity.Value.Aggressivity == Aggressivity.Aggressive)
@@ -256,7 +256,7 @@ namespace rogue_like_multi_server
         }
 
         public BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
-            FloatingCoord velocity, double inputSequenceNumber, Dictionary<ItemType, int> chestLoot)
+            FloatingCoord velocity, double inputSequenceNumber, LootTable chestLoot)
         {
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {

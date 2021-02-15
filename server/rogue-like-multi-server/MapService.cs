@@ -11,15 +11,15 @@ namespace rogue_like_multi_server
     public interface IMapService
     {
         Map Generate(int mapWidth, int mapHeight, string file, GameConfig config);
-        FloatingCoord FindValidNextCoord(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs);
+        FloatingCoord FindValidNextCoord(Map map, FloatingCoord startCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs, int entityAggroDistance);
         Map CleanItems(Map map);
         Dictionary<string, Entity> CleanEntities(Dictionary<string, Entity> entities);
         Map FillMapWithRandomItems(Map map, Dictionary<ItemType, int> itemSpawns);
-        Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns, Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot);
+        Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns, Dictionary<EntityType, LootTable> entityLoot);
         Map DropItems(Map map, IList<ItemType> items, Coord coord, bool notOnCell = false);
         Map DropDeadBody(Map map, int spriteId, Coord coord);
-        List<ItemType> GetRandomEntityLoot(Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot, EntityType entityType);
-        List<ItemType> GetRandomChestLoot(Dictionary<ItemType, int> chestLoot);
+        List<ItemType> GetRandomEntityLoot(LootTable entityLoot);
+        List<ItemType> GetRandomChestLoot(LootTable chestLoot);
 
         Map PickupItem(Map map, Coord coord);
     }
@@ -99,7 +99,7 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        public Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns, Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot)
+        public Dictionary<string, Entity> FillMapWithRandomEntities(Map map, Dictionary<EntityType, int> entitySpawns, Dictionary<EntityType, LootTable> entityLoot)
         {
             var entities = new Dictionary<string, Entity>();
 
@@ -114,12 +114,12 @@ namespace rogue_like_multi_server
             return entities;
         }
 
-        public FloatingCoord FindValidNextCoord(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs)
+        public FloatingCoord FindValidNextCoord(Map map, FloatingCoord startFloatingCoord, FloatingCoord? targetPosition, Aggressivity aggressivity, decimal velocity, decimal elapsedMs, int entityAggroDistance)
         {
             var multiplicator = velocity * Convert.ToDecimal(elapsedMs);
 
             // If we have a target player close enough
-            if (aggressivity != Aggressivity.Neutral && targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < 5m)
+            if (aggressivity != Aggressivity.Neutral && targetPosition != null && FloatingCoord.Distance2d(startFloatingCoord, targetPosition.Value) < Convert.ToDecimal(entityAggroDistance))
             {
                 var direction = targetPosition.Value - startFloatingCoord;
                 var normalizedDirection = 1 / FloatingCoord.Distance(startFloatingCoord, targetPosition.Value) * direction;
@@ -203,13 +203,13 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        public List<ItemType> GetRandomEntityLoot(Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot, EntityType entityType)
+        public List<ItemType> GetRandomEntityLoot(LootTable lootTable)
         {
             var items = new List<ItemType>();
 
             foreach (var itemType in Enum.GetValues(typeof(ItemType)) as ItemType[])
             {
-                var rarity = itemType.GetDropRate(entityLoot[entityType]);
+                var rarity = itemType.GetDropRate(lootTable);
                 if (rarity > 0 && _randomGeneratorService.Generate(0, 100) <= rarity)
                 {
                     items.Add(itemType);
@@ -219,7 +219,7 @@ namespace rogue_like_multi_server
             return items;
         }
 
-        public List<ItemType> GetRandomChestLoot(Dictionary<ItemType, int> chestLoot)
+        public List<ItemType> GetRandomChestLoot(LootTable chestLoot)
         {
             var items = new List<ItemType>();
 
@@ -295,7 +295,7 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        private Dictionary<string, Entity> SetRandomPositionEntity(Map map, Dictionary<string, Entity> entities, Coord minCoord, Coord maxCoord, EntityType entityType, Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot)
+        private Dictionary<string, Entity> SetRandomPositionEntity(Map map, Dictionary<string, Entity> entities, Coord minCoord, Coord maxCoord, EntityType entityType, Dictionary<EntityType, LootTable> entityLoot)
         {
             int x;
             int y;
@@ -319,7 +319,7 @@ namespace rogue_like_multi_server
             }
 
             var name = "e_" + entityType.ToString() + '-' + Guid.NewGuid();
-            entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomEntityLoot(entityLoot, entityType), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
+            entities.Add(name, new Entity(new FloatingCoord(x, y), name, (int) entityType, GetRandomEntityLoot(entityLoot[entityType]), entityType.GetMaxPv(), entityType.GetDamage(), entityType.GetAggressivity()));
 
             return entities;
         }

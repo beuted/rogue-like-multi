@@ -10,15 +10,18 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using rogue_like_multi_server.Hubs;
 
 namespace rogue_like_multi_server
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly ILogger<Startup> _logger;
+        public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
             Configuration = configuration;
+            _logger = logger;
         }
 
         public IConfiguration Configuration { get; }
@@ -34,7 +37,14 @@ namespace rogue_like_multi_server
                     .AllowAnyOrigin();
             }));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddJsonOptions(options => {
+                    options.SerializerSettings.Error = (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args) =>
+                    {
+                        _logger.Log(LogLevel.Warning, $"Deserialisation error {args.ErrorContext.Error.Message} : {args.ErrorContext.Error.InnerException.Message}");
+                    };
+                });
 
             // configure basic authentication
             services.AddAuthentication("BasicAuthentication")

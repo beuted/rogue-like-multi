@@ -16,7 +16,7 @@ namespace rogue_like_multi_server
             foreach (KeyValuePair<T, U> pair in dictionary)
             {
                 writer.WritePropertyName(Convert.ToInt32(pair.Key).ToString());
-                writer.WriteValue(pair.Value);
+                serializer.Serialize(writer, pair.Value);
             }
 
             writer.WriteEndObject();

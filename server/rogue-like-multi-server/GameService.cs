@@ -44,6 +44,13 @@ namespace rogue_like_multi_server
             return BoardState.BoardStateStatic.GameConfig;
         }
 
+        public BoardState FindGame(string gameHash)
+        {
+            if (BoardState != null)
+                return BoardState;
+            return null;
+        }
+
 
         public async Task StartGame()
         {
@@ -181,37 +188,22 @@ namespace rogue_like_multi_server
     public interface IGameService
     {
         BoardState BoardState { get; }
-
         string Init(GameConfig gameConfig, string playerName);
-
         void UpdateGameConfig(GameConfig gameConfig);
-
         GameConfig GetGameConfig();
-
+        BoardState FindGame(string gameHash);
         Task StartGame();
-
         void SetPlayerSkinId(string userName, int skinId);
-
         bool TryReset(GameConfig gameConfig);
-
         void HardReset();
-
         void Update(long turnElapsedMs);
-
         void ReceivePlayerInput(long time, string playerName, Input input);
-
         void ApplyPlayerInputs();
-
         Task SendPlayerInit(string playerName);
-
         Task SendPlayerMessage(string playerName, string message);
-
         void ConnectPlayer(string playerName);
-
         void AddPlayer(string username);
-
         Dictionary<string, Player> GetPlayers();
-
         void RemovePlayer(string username);
     }
 }

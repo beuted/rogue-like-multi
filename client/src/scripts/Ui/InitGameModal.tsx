@@ -26,29 +26,101 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
       [ItemType.DeadBody2]: 0,
       [ItemType.DeadBody3]: 0,
       [ItemType.Wood]: 0,
-      [ItemType.Emerald]: Number(5),
-      [ItemType.Food]: Number(10),
-      [ItemType.Key]: Number(3),
-      [ItemType.Sword]: Number(3),
-      [ItemType.Backpack]: Number(0),
-      [ItemType.HealthPotion]: Number(1),
+      [ItemType.Emerald]: 5,
+      [ItemType.Food]: 10,
+      [ItemType.Key]: 3,
+      [ItemType.Sword]: 3,
+      [ItemType.Backpack]: 0,
+      [ItemType.HealthPotion]: 1,
     } as any,
     entitySpawn: {
-      [EntityType.Dog]: Number(3),
-      [EntityType.Rat]: Number(3),
-      [EntityType.Snake]: Number(3),
+      [EntityType.Dog]: 3,
+      [EntityType.Rat]: 3,
+      [EntityType.Snake]: 3,
+    },
+    entityLoot: {
+      [EntityType.Rat]: {
+        loot: {
+          [ItemType.Empty]: 0,
+          [ItemType.Blood]: 0,
+          [ItemType.DeadBody1]: 0,
+          [ItemType.DeadBody2]: 0,
+          [ItemType.DeadBody3]: 0,
+          [ItemType.Wood]: 0,
+          [ItemType.Food]: 50,
+          [ItemType.Emerald]: 25,
+          [ItemType.Sword]: 40,
+          [ItemType.Key]: 10,
+          [ItemType.Armor]: 10,
+          [ItemType.HealthPotion]: 10,
+          [ItemType.Backpack]: 5,
+        }
+      },
+      [EntityType.Dog]: {
+        loot: {
+          [ItemType.Empty]: 0,
+          [ItemType.Blood]: 0,
+          [ItemType.DeadBody1]: 0,
+          [ItemType.DeadBody2]: 0,
+          [ItemType.DeadBody3]: 0,
+          [ItemType.Wood]: 0,
+          [ItemType.Food]: 50,
+          [ItemType.Emerald]: 40,
+          [ItemType.Sword]: 40,
+          [ItemType.Key]: 60,
+          [ItemType.Armor]: 10,
+          [ItemType.HealthPotion]: 10,
+          [ItemType.Backpack]: 25,
+        }
+      },
+      [EntityType.Snake]: {
+        loot: {
+          [ItemType.Empty]: 0,
+          [ItemType.Blood]: 0,
+          [ItemType.DeadBody1]: 0,
+          [ItemType.DeadBody2]: 0,
+          [ItemType.DeadBody3]: 0,
+          [ItemType.Wood]: 0,
+          [ItemType.Food]: 50,
+          [ItemType.Emerald]: 60,
+          [ItemType.Sword]: 25,
+          [ItemType.Key]: 80,
+          [ItemType.Armor]: 5,
+          [ItemType.HealthPotion]: 60,
+          [ItemType.Backpack]: 50,
+        }
+      }
+    },
+    chestLoot: {
+      loot: {
+        [ItemType.Empty]: 0,
+        [ItemType.Blood]: 0,
+        [ItemType.DeadBody1]: 0,
+        [ItemType.DeadBody2]: 0,
+        [ItemType.DeadBody3]: 0,
+        [ItemType.Wood]: 0,
+        [ItemType.Food]: 50,
+        [ItemType.Emerald]: 60,
+        [ItemType.Sword]: 25,
+        [ItemType.Key]: 10,
+        [ItemType.Armor]: 25,
+        [ItemType.HealthPotion]: 25,
+        [ItemType.Backpack]: 20,
+      }
     }
-
   }
 
   const [gameHash, setGameHash] = useState<string>("");
   const [playerList, setPlayerList] = useState<{ [name: string]: Player }>({});
 
   const [gameConfig, setGameConfig] = useState<GameConfig>(DefaultGameConfig);
+  const [gameConfigJson, setGameConfigJson] = useState<string>(JSON.stringify(DefaultGameConfig, undefined, 2));
 
   const [showLobbyModal, setShowLobbyModal] = useState<boolean>(true);
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [showInfo, setShowInfo] = useState<boolean>(false);
+  const [showJsonConfig, setShowJsonConfig] = useState<boolean>(false);
+
 
   const [charId, setCharId] = useState<number>(0);
 
@@ -73,6 +145,10 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
       if (interval) clearInterval(interval);
     }
   }, [showLobbyModal])
+
+  useEffect(() => {
+    setGameConfigJson(JSON.stringify(gameConfig));
+  }, [gameConfig])
 
   useEffect(() => {
     setShowLobbyModal(false);
@@ -102,7 +178,12 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   // Join game button
   const clickJoinGame = async () => {
     if (gameHash) {
-      await joinGame();
+      let gameState = await gameServerClient.getState(gameHash);
+      if (!gameState) {
+        alert(`We could not find a game with id ${gameHash}`)
+        return;
+      }
+      await gameServerClient.joinGame(gameHash);
       setShowLobbyModal(true);
     }
   };
@@ -124,18 +205,20 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   }
 
   async function updateGameConfig() {
-    return await gameServerClient.updateGameConfig(gameHash, gameConfig);
+    let gameConfigNew: GameConfig;
+    try {
+      gameConfigNew = JSON.parse(gameConfigJson);
+      await gameServerClient.updateGameConfig(gameHash, gameConfigNew);
+    } catch (e) {
+      return; // If we can't parse or if backend return error just return
+    }
+    // Esle set the config with new value
+    setGameConfig(gameConfigNew);
   }
 
   async function fetchGameConfig() {
-    //TODO
     let game = await gameServerClient.fetchGameConfig(gameHash);
-    console.log(game)
     setGameConfig(game);
-  }
-
-  async function joinGame(): Promise<void> {
-    await gameServerClient.joinGame(gameHash);
   }
 
   async function startGame() {
@@ -184,6 +267,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
       <div className="modal" style={{ display: showConfig ? 'flex' : 'none' }}>
         <div className="modal-block">
           <h1>Game configuration</h1>
+          <div className="info-button" onClick={() => setShowJsonConfig(!showJsonConfig)}><SpriteImage sprite={39} size={4}></SpriteImage></div>
           <div className="standard-config">
             <div>
               <CustomInput name="Time per Cycle (secs)" value={gameConfig.nbSecsPerCycle} placeholder={120} onChange={(e: any) => setGameConfigPpty("nbSecsPerCycle", e.target.value)}></CustomInput>
@@ -197,7 +281,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
             </div>
           </div>
 
-          <div className="advanced-config">
+          {!showJsonConfig ? (<div className="advanced-config">
             <h2>Advanced</h2>
             <div className="advanced-config-container">
               <div>
@@ -242,12 +326,15 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
                   </div>
                   <div className="item">
                     <SpriteImage sprite={EntityType.Snake}></SpriteImage>
-                    <CustomInput name="dddd" placeholder={3} value={gameConfig.entitySpawn[EntityType.Snake]} onChange={(e: any) => setGameConfigEntitySpawn(EntityType.Snake, e.target.value)} light></CustomInput>
+                    <CustomInput name="" placeholder={3} value={gameConfig.entitySpawn[EntityType.Snake]} onChange={(e: any) => setGameConfigEntitySpawn(EntityType.Snake, e.target.value)} light></CustomInput>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </div>) :
+            (<div>
+              <textarea name="" value={gameConfigJson} onChange={(e: any) => setGameConfigJson(e.target.value)}></textarea>
+            </div>)}
         </div>
         <div className="config-button" onClick={() => { setShowConfig(false); updateGameConfig() }}>
           <SpriteImage sprite={66} size={4}></SpriteImage>

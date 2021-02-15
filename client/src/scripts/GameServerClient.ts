@@ -34,8 +34,8 @@ export class GameServerClient {
     return user;
   }
 
-  public async getState(): Promise<GameState | null> {
-    return await fetch('/api/game-state', {
+  public async getState(gameHash: string): Promise<GameState | null> {
+    return await fetch(`/api/game-state/${gameHash}`, {
       method: 'GET',
       headers: new Headers({
         'Authorization': `Basic ${btoa(`${this.username}:${GameServerClient.password}`)}`
@@ -45,7 +45,11 @@ export class GameServerClient {
         if (!response.ok) {
           return null;
         }
-        return response.json();
+        return response.text();
+      }).then(text => {
+        if (text)
+          return JSON.parse(text);
+        return null;
       })
   }
 

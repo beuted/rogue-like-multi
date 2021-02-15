@@ -88,9 +88,9 @@ namespace rogue
         };
 
         // Rarity means the item as a dropRate + modificator % chance being drop
-        public static int GetDropRate(this ItemType item, Dictionary<ItemType, int> lootRate)
+        public static int GetDropRate(this ItemType item, LootTable lootTable)
         {
-            if (lootRate.TryGetValue(item, out var rarity) && rarity > 0)
+            if (lootTable.Loot.TryGetValue(item, out var rarity) && rarity > 0)
             {
                 return Math.Min(rarity, 95);
             }

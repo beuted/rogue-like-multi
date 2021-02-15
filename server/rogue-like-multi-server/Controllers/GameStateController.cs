@@ -18,10 +18,10 @@ namespace rogue_like_multi_server.Controllers
         }
 
         // GET api/game-state
-        [HttpGet]
-        public BoardState Get()
+        [HttpGet("{gameHash}")]
+        public IActionResult GetState(string gameHash)
         {
-            return _gameService.BoardState;
+            return Ok(_gameService.FindGame(gameHash));
         }
 
         [HttpPost("reset")]

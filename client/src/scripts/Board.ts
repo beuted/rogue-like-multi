@@ -30,6 +30,10 @@ export type GameState = {
 
 export type GameConfigStringPpties = "nbSecsPerCycle" | "nbSecsDiscuss" | "badGuyVision" | "nbMaterialToWin" | "playerSpeed" | "entitySpeed";
 
+export type LootTable = {
+  loot: { [key in ItemType]: number }
+}
+
 export type GameConfig = {
   nbSecsPerCycle: number;
   nbSecsDiscuss: number;
@@ -40,8 +44,8 @@ export type GameConfig = {
   entityAggroDistance: number;
   itemSpawn: { [key in ItemType]: number };
   entitySpawn: { [key in EntityType]: number };
-  entityLoot: { [key in EntityType]: { [key in ItemType]: number } };
-  chestLoot: { [key in ItemType]: number };
+  entityLoot: { [key in EntityType]: LootTable };
+  chestLoot: LootTable;
 }
 
 export enum ActionEventType {

@@ -4,6 +4,13 @@ using System.Collections.Generic;
 
 namespace rogue
 {
+    public class LootTable 
+    {
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<ItemType, int>))]
+        [JsonProperty("loot")]
+        public Dictionary<ItemType, int> Loot;
+    }
+
     public class GameConfig
     {
         [JsonProperty("nbSecsPerCycle")]
@@ -23,13 +30,12 @@ namespace rogue
         [JsonProperty("entitySpawn")]
         public Dictionary<EntityType, int> EntitySpawn;
 
-        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, int>))]
         [JsonProperty("chestLoot")]
-        public Dictionary<ItemType, int> ChestLoot;
+        public LootTable ChestLoot;
 
-        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, Dictionary<ItemType, int>>))]
+        [JsonConverter(typeof(DictionaryWithEnumKeyConverter<EntityType, LootTable>))]
         [JsonProperty("entityLoot")]
-        public Dictionary<EntityType, Dictionary<ItemType, int>> EntityLoot;
+        public Dictionary<EntityType, LootTable> EntityLoot;
 
         [JsonProperty("nbMaterialToWin")]
         public int NbMaterialToWin;
@@ -44,7 +50,7 @@ namespace rogue
         public int EntityAggroDistance;
 
         public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss, decimal badGuyVision, Dictionary<ItemType, int> itemSpawn,
-            Dictionary<EntityType, int> entitySpawn, Dictionary<ItemType, int> chestLoot, Dictionary<EntityType, Dictionary<ItemType, int>> entityLoot,
+            Dictionary<EntityType, int> entitySpawn, LootTable chestLoot, Dictionary<EntityType, LootTable> entityLoot,
             int nbMaterialToWin, decimal playerSpeed, decimal entitySpeed, int entityAggroDistance)
         {
             NbSecsPerCycle = nbSecsPerCycle;
