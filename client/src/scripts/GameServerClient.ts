@@ -6,7 +6,7 @@ export class GameServerClient {
 
   public async authenticate(): Promise<{ username: string, password: string } | null> {
     this.username = localStorage.getItem('username');
-    while (!this.username || this.username == '') {
+    while (!this.username || this.username == '' || this.username == 'null') {
       this.username = prompt('Please enter your username');
       localStorage.setItem('username', this.username);
     }
@@ -47,6 +47,7 @@ export class GameServerClient {
         }
         return response.text();
       }).then(text => {
+        // If there is no game backend returns null, that get
         if (text)
           return JSON.parse(text);
         return null;

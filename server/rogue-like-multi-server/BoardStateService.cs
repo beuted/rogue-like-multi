@@ -132,8 +132,9 @@ namespace rogue_like_multi_server
                             {
                                 noPlayersInRange = false;
                                 entity.Value.TimeSinceInRange += turnElapsedMs;
-                                if (entity.Value.TimeSinceInRange > 1000 && nowTimestamp > entity.Value.CoolDownAttack)
+                                if (entity.Value.TimeSinceInRange > 500 && nowTimestamp > entity.Value.CoolDownAttack)
                                 {
+                                    entity.Value.TargetPlayer = player.Value.Entity.Name; // He gets the aggro
                                     var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false);
                                     entity.Value.TimeSinceInRange = 0;
                                 }
