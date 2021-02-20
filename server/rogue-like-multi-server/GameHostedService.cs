@@ -68,6 +68,7 @@ namespace rogue_like_multi_server
             if (_gameService.BoardState == null)
                 return;
             var players = _gameService.GetPlayers();
+            // Ideally we should filter events and send only events that are "in range" for each player
             await _chatHubContext.Clients.Users(players.Keys.ToArray()).SendAsync("updateBoardStateDynamic", _gameService.BoardState.BoardStateDynamic.GetLightClientView());
         }
     }

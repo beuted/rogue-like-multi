@@ -1,6 +1,7 @@
 import { ParticleRenderService } from "./ParticleRenderService";
 import { ActionEvent, ActionEventType, Role } from "./Board";
 import { SoundManager, Sound } from "./SoundManager";
+import { Coord, CoordHelper } from "./Coord";
 
 export class EventHandler {
   private handledEvents: string[] = [];
@@ -12,10 +13,18 @@ export class EventHandler {
       localStorage.setItem('handledEvents', JSON.stringify(this.handledEvents));
   }
 
-  update(events: ActionEvent[]) {
+  update(events: ActionEvent[], playerCoord: Coord) {
     // TODO clean la liste de temps en temps
     for (const event of events) {
       if (!this.handledEvents.includes(event.guid)) {
+        if ((event.coord.x != 0 || event.coord.y != 0) && CoordHelper.maxDistanceOnOneDimension(playerCoord, event.coord) > 10) {
+          // We ignore events that have a position and this position is far from the player
+          // Ideally this should be done by the server
+          this.handledEvents.push(event.guid);
+          localStorage.setItem('handledEvents', JSON.stringify(this.handledEvents));
+          return;
+        }
+
         switch (event.type) {
           case ActionEventType.Attack:
             this.particleRenderService.handleEvent(event);
@@ -31,7 +40,7 @@ export class EventHandler {
             break;
           case ActionEventType.EndGame:
             window.alert(`${event.winnerTeam == Role.Good ? 'The goods' : 'The bads'} won the game !`);
-            location.reload();
+            location.reload(); // THi is needed atm to reset the state TODO: do a proper state reset !
             break;
           case ActionEventType.VoteResult:
             if (event.playerName != null)

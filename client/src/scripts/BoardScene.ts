@@ -68,7 +68,7 @@ export class BoardScene {
 
     this.socketClient.registerListener(SocketMessageReceived.UpdateBoardStateDynamic, (boardStateDynamic: BoardStateDynamic) => {
       this.board.update(boardStateDynamic);
-      this.eventHandler.update(boardStateDynamic.events);
+      this.eventHandler.update(boardStateDynamic.events, this.board.player.entity.coord);
 
       // Server Reconciliation. Re-apply all the inputs not yet processed by
       // the server.
@@ -140,13 +140,14 @@ export class BoardScene {
         this.renderService.renderCharacter(this.board.player.entity, isHiding, input.direction);
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
-        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
+        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
         this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle * 1000, this.board.gameConfig.badGuyVision, delta);
 
         this.guiController.setShowNightOverlay(false);
         break;
       case GameStatus.Discuss:
-        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp);
+        this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsDiscuss);
+        this.renderService.renderInventory(this.board.player.entity);
         this.guiController.setShowNightOverlay(true);
         break;
       case GameStatus.Pause:
@@ -166,6 +167,11 @@ export class BoardScene {
         closestEntity = entity;
       }
     }
+
+    // Only Bad guts can attack players
+    if (currentPlayer.role != Role.Bad)
+      return closestEntity;
+
     for (let player of Object.values(players)) {
       if (player.entity.name == currentPlayer.entity.name)
         continue;

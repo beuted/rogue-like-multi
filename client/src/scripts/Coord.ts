@@ -16,6 +16,11 @@ export class CoordHelper {
   public static distance(coord1: FloatingCoord, coord2: FloatingCoord) {
     return Math.abs(coord2.x - coord1.x) + Math.abs(coord2.y - coord1.y)
   }
+
+
+  public static maxDistanceOnOneDimension(coord1: FloatingCoord, coord2: FloatingCoord) {
+    return Math.max(Math.abs(coord2.x - coord1.x), Math.abs(coord2.y - coord1.y));
+  }
 }
 
 export class MathHelper {

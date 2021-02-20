@@ -49,6 +49,9 @@ namespace rogue
         [JsonProperty("entityAggroDistance")]
         public int EntityAggroDistance;
 
+        [JsonProperty("nbBadGuys")]
+        public int NbBadGuys;
+        
         public GameConfig(int nbSecsPerCycle, int nbSecsDiscuss, decimal badGuyVision, Dictionary<ItemType, int> itemSpawn,
             Dictionary<EntityType, int> entitySpawn, LootTable chestLoot, Dictionary<EntityType, LootTable> entityLoot,
             int nbMaterialToWin, decimal playerSpeed, decimal entitySpeed, int entityAggroDistance)

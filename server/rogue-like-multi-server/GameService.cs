@@ -61,7 +61,7 @@ namespace rogue_like_multi_server
             BoardState = _boardStateService.Generate(BoardState.BoardStateStatic.GameConfig, BoardState.BoardStateDynamic.Players);
 
             // Distribute the roles to the players and set the game status "start"
-            BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic);
+            BoardState.BoardStateDynamic = _boardStateService.StartGame(BoardState.BoardStateDynamic, BoardState.BoardStateStatic.GameConfig.NbBadGuys);
 
             var players = _boardStateService.GetPlayers(BoardState.BoardStateDynamic);
             await _chatHubContext.Clients.Users(players.Keys.ToArray()).SendAsync("initBoardState", BoardState.GetClientView());

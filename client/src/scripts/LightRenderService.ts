@@ -72,23 +72,23 @@ export class LightRenderService {
     this.playerLightOverlaySprite.x = ((character.entity.coord.x + 0.5) * this.spriteManager.tilesetSize - 0.5);
     this.playerLightOverlaySprite.y = ((character.entity.coord.y + 0.5) * this.spriteManager.tilesetSize - 0.5);
 
-    // Make all lights flycker
-
     let circleSize;
     if (character.entity.pv <= 0) {
       circleSize = 1
     } else {
-      var daylightFactor = Math.sin(timestampDiff * 2 * Math.PI / nbMsPerCycle - Math.PI / 2) + 1; // Day cycle
+      // Factor between 0 and 1
+      var daylightFactor = 0.5 * (Math.sin(timestampDiff * 2 * Math.PI / nbMsPerCycle - Math.PI / 2) + 1); // Day cycle
       if (isHiding)
-        daylightFactor = Math.min(0.2, daylightFactor);
-      circleSize = 0.1 + 0.5 * daylightFactor;
+        circleSize = 0.15;
+      else
+        circleSize = 0.2 + daylightFactor * 0.7;
 
       if (character.role == Role.Bad) {
         circleSize = Math.max(circleSize, badGuyVision);
       }
     }
 
-    circleSize += 0.005 * Math.sin(Date.now() / 100); // flyckering
+    circleSize += 0.005 * Math.sin(Date.now() / 100); // Make all lights flycker
     this.playerLightOverlaySprite.scale.set(circleSize);
 
     for (var key of Object.keys(this.staticLightsGraphics))

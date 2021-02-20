@@ -19,7 +19,7 @@ export class RenderService {
   private pvContainer: Container;
   private cellsContainer: Container;
 
-  private entitySprites: { [name: string]: AnimatedSprite } = {};
+  private entitySprites: { [name: string]: { sprite: AnimatedSprite, name: Text } } = {};
   private characterSprite: AnimatedSprite;
   private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
@@ -68,61 +68,72 @@ export class RenderService {
     this.particleRenderService.init(this.mapContainer, cells);
   }
 
-  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isTargetted: boolean, isHiding: boolean) {
+  public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isTargetted: boolean, isHiding: boolean, showName: boolean) {
     if (!previousEntityPosition)
       previousEntityPosition = entity.coord;
     // Remove if out of bounds or dead
     if (entity.coord.x < playerPosition.x - 9 || entity.coord.x > playerPosition.x + 9 || entity.coord.y < playerPosition.y - 9 || entity.coord.y > playerPosition.y + 9 || entity.pv <= 0) {
       if (this.entitySprites[entity.name]) {
-        this.entitySprites[entity.name].parent.removeChild(this.entitySprites[entity.name]);
+        this.entitySprites[entity.name].sprite.parent.removeChild(this.entitySprites[entity.name].sprite);
+        this.entitySprites[entity.name].name.parent.removeChild(this.entitySprites[entity.name].name);
         delete this.entitySprites[entity.name];
       }
       return;
     }
 
     if (!this.entitySprites[entity.name]) {
-      this.entitySprites[entity.name] = new AnimatedSprite(this.spriteManager.animations[entity.spriteId]);
-      this.entitySprites[entity.name].anchor.set(0.5);
-      this.entitySprites[entity.name].animationSpeed = 0.2;
-      this.entityContainer.addChild(this.entitySprites[entity.name]);
+      this.entitySprites[entity.name] = { sprite: null, name: null };
+      this.entitySprites[entity.name].sprite = new AnimatedSprite(this.spriteManager.animations[entity.spriteId]);
+      this.entitySprites[entity.name].sprite.anchor.set(0.5);
+      this.entitySprites[entity.name].sprite.animationSpeed = 0.2;
+      this.entityContainer.addChild(this.entitySprites[entity.name].sprite);
+
+      this.entitySprites[entity.name].name = new Text(showName ? entity.name : '', { fontFamily: 'MatchupPro', fontSize: 16, fill: 0xffffff88, align: 'center' });
+      this.entitySprites[entity.name].name.anchor.set(0.5);
+      this.entitySprites[entity.name].name.scale.set(0.25);
+      this.entityContainer.addChild(this.entitySprites[entity.name].name);
     }
 
     const coord = CoordHelper.getClosestCoord(entity.coord);
     if (!isHiding && CellHelper.isHiding(cells[coord.x][coord.y])) {
-      if (this.entitySprites[entity.name].alpha == 1.0) {
+      if (this.entitySprites[entity.name].sprite.alpha == 1.0) {
         this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
-      this.entitySprites[entity.name].alpha = 0.1; //TODO: maybe just remove it
+      this.entitySprites[entity.name].sprite.alpha = 0.1; //TODO: maybe just remove it
+      this.entitySprites[entity.name].name.alpha = 0;
     } else {
-      if (this.entitySprites[entity.name].alpha == 0.1) {
+      if (this.entitySprites[entity.name].sprite.alpha == 0.1) {
         this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
-      this.entitySprites[entity.name].alpha = 1.0;
+      this.entitySprites[entity.name].sprite.alpha = 1.0;
+      this.entitySprites[entity.name].name.alpha = 1.0;
     }
 
     if (isTargetted) {
-      this.entitySprites[entity.name].tint = 0xff0000;
+      this.entitySprites[entity.name].sprite.tint = 0xffaaaa;
     } else {
-      this.entitySprites[entity.name].tint = 0xffffff;
+      this.entitySprites[entity.name].sprite.tint = 0xffffff;
     }
 
     const direction = { x: entity.coord.x - previousEntityPosition.x, y: entity.coord.y - previousEntityPosition.y };
     if (direction.x > 0) {
-      this.entitySprites[entity.name].scale.x = 1;
+      this.entitySprites[entity.name].sprite.scale.x = 1;
     } else if (direction.x < 0) {
-      this.entitySprites[entity.name].scale.x = -1;
+      this.entitySprites[entity.name].sprite.scale.x = -1;
     }
 
     if (direction.x == 0 && direction.y == 0) {
-      this.entitySprites[entity.name].gotoAndStop(0);
+      this.entitySprites[entity.name].sprite.gotoAndStop(0);
     } else {
-      this.entitySprites[entity.name].play();
+      this.entitySprites[entity.name].sprite.play();
     }
 
-    this.entitySprites[entity.name].x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
-    this.entitySprites[entity.name].y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].sprite.x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].sprite.y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].name.x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].name.y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) - 0.3) * this.spriteManager.tilesetSize;
   }
 
   public renderCharacter(character: Entity, isHiding: boolean, direction: Coord) {
@@ -273,7 +284,7 @@ export class RenderService {
     }
   }
 
-  public renderGameState(role: Role, timestampDiff: number) {
+  public renderGameState(role: Role, timestampDiff: number, nbSecInCurrentGameMode: number) {
     if (!this.roleSprite) {
       this.roleSprite = new Sprite();
       if (role == Role.Bad)
@@ -291,9 +302,9 @@ export class RenderService {
       this.roleText.scale.set(0.25);
       this.pvContainer.addChild(this.roleText);
     }
-    let timeSec = Math.floor(timestampDiff / 1000);
-    const sec = timeSec % 60;
-    const min = Math.floor(timeSec / 60);
+    let secondsRemaining = nbSecInCurrentGameMode - Math.floor(timestampDiff / 1000);
+    const sec = secondsRemaining % 60;
+    const min = Math.floor(secondsRemaining / 60);
     this.roleText.text = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
@@ -329,18 +340,19 @@ export class RenderService {
       (9 - playerPosition.y) * this.spriteManager.tilesetSize;
 
     for (let entityName in entities) {
-      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells, entityInRangeName == entityName, isHiding);
+      this.renderEntity(entities[entityName], playerPosition, entitiesPreviousCoords[entityName], interpolFactor, cells, entityInRangeName == entityName, isHiding, false);
     }
 
     for (let playerName in players) {
       if (playerName != currentPlayer.entity.name)
-        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, entityInRangeName == playerName, isHiding);
+        this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, entityInRangeName == playerName, isHiding, true);
     }
 
     //If players or entites have been removed from list we need to clean them
     for (let entitySpriteName in this.entitySprites) {
       if (!players[entitySpriteName] && !entities[entitySpriteName]) {
-        this.entityContainer.removeChild(this.entitySprites[entitySpriteName]);
+        this.entityContainer.removeChild(this.entitySprites[entitySpriteName].sprite);
+        this.entityContainer.removeChild(this.entitySprites[entitySpriteName].name);
         delete this.entitySprites[entitySpriteName];
       }
     }

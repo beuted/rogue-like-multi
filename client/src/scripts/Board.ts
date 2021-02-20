@@ -28,7 +28,7 @@ export type GameState = {
   boardStateStatic: { gameConfig: GameConfig };
 }
 
-export type GameConfigStringPpties = "nbSecsPerCycle" | "nbSecsDiscuss" | "badGuyVision" | "nbMaterialToWin" | "playerSpeed" | "entitySpeed";
+export type GameConfigStringPpties = "nbSecsPerCycle" | "nbSecsDiscuss" | "badGuyVision" | "nbMaterialToWin" | "playerSpeed" | "entitySpeed" | "nbBadGuys" | "entityAggroDistance";
 
 export type LootTable = {
   loot: { [key in ItemType]: number }
@@ -41,6 +41,7 @@ export type GameConfig = {
   nbMaterialToWin: number;
   playerSpeed: number;
   entitySpeed: number;
+  nbBadGuys: number;
   entityAggroDistance: number;
   itemSpawn: { [key in ItemType]: number };
   entitySpawn: { [key in EntityType]: number };
@@ -79,6 +80,7 @@ export type VoteResultEvent = {
   timestamp: number,
   guid: string,
   playerName: string,
+  coord: null
 }
 
 export type EndGameEvent = {
@@ -86,6 +88,7 @@ export type EndGameEvent = {
   timestamp: number,
   guid: string,
   winnerTeam: Role
+  coord: null
 }
 
 export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent | HealEvent
@@ -176,17 +179,17 @@ export class Board {
     this.nightState = boardStateDynamic.nightState;
   }
 
-  private findValidCellMove(input: Input, hasKey: boolean): Coord {
+  private findValidCellMove(input: Input, hasKey: boolean, isDead: boolean): Coord {
     let newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
     let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
 
-    if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
+    if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey, isDead)) {
       newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
       newY = this.player.entity.coord.y;
-      if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
+      if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey, isDead)) {
         newX = this.player.entity.coord.x;
         newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
-        if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey)) {
+        if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey, isDead)) {
           return null;
         }
       }
@@ -196,7 +199,8 @@ export class Board {
 
   public applyInput(input: Input) {
     let hasKey = this.player.entity.inventory.indexOf(ItemType.Key) != -1;
-    let newCoord = this.findValidCellMove(input, hasKey);
+    let isDead = this.player.entity.pv <= 0;
+    let newCoord = this.findValidCellMove(input, hasKey, isDead);
     if (newCoord == null)
       return;
 
@@ -205,8 +209,8 @@ export class Board {
       this.player.entity.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
   }
 
-  isWalkable(x: number, y: number, hasKey: boolean) {
-    return x >= 0 && y >= 0 && x <= this.mapLength - 1 && y <= this.mapLength - 1 && CellHelper.isWalkable(this.cells[x][y], hasKey);
+  isWalkable(x: number, y: number, hasKey: boolean, isDead: boolean) {
+    return x >= 0 && y >= 0 && x <= this.mapLength - 1 && y <= this.mapLength - 1 && (isDead || CellHelper.isWalkable(this.cells[x][y], hasKey));
   }
 
   private computeEntitiesPreviousCoord() {

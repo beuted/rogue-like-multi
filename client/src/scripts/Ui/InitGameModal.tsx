@@ -17,8 +17,9 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     badGuyVision: 1.0,
     playerSpeed: 1.0,
     entitySpeed: 1.0,
-    nbMaterialToWin: 30,
+    nbMaterialToWin: 15,
     entityAggroDistance: 4,
+    nbBadGuys: 1,
     itemSpawn: {
       [ItemType.Empty]: 0,
       [ItemType.Blood]: 0,
@@ -155,8 +156,8 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   }, [])
 
   const canCreateGame = () => {
-    return gameConfig.nbSecsPerCycle != null && gameConfig.nbSecsPerCycle != null && gameConfig.badGuyVision != null && gameConfig.nbMaterialToWin != null
-      && gameConfig.playerSpeed != null && gameConfig.entitySpeed != null
+    return gameConfig.nbSecsPerCycle != null && gameConfig.badGuyVision != null && gameConfig.nbMaterialToWin != null
+      && gameConfig.playerSpeed != null && gameConfig.entitySpeed != null && gameConfig.nbBadGuys != null && gameConfig.entityAggroDistance != null
       && gameConfig.entitySpawn[EntityType.Dog] != null && gameConfig.entitySpawn[EntityType.Rat] != null && gameConfig.entitySpawn[EntityType.Snake] != null
       && gameConfig.itemSpawn[ItemType.Emerald] != null && gameConfig.itemSpawn[ItemType.Food] != null && gameConfig.itemSpawn[ItemType.Key] != null
       && gameConfig.itemSpawn[ItemType.Sword] != null && gameConfig.itemSpawn[ItemType.Backpack] != null && gameConfig.itemSpawn[ItemType.HealthPotion] != null;
@@ -247,6 +248,10 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
     setGameConfig(gameConfigCopy);
   }
 
+  function canStartGame() {
+    return Object.values(playerList).length <= 1;
+  }
+
   return (
     <div className="init-game">
 
@@ -272,12 +277,15 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
             <div>
               <CustomInput name="Time per Cycle (secs)" value={gameConfig.nbSecsPerCycle} placeholder={120} onChange={(e: any) => setGameConfigPpty("nbSecsPerCycle", e.target.value)}></CustomInput>
               <CustomInput name="Time To Discuss (secs)" placeholder={20} value={gameConfig.nbSecsDiscuss} onChange={(e: any) => setGameConfigPpty("nbSecsDiscuss", e.target.value)}></CustomInput>
-              <CustomInput name="Bad Guy Vision (Between 0 and 1.0)" placeholder={1} value={gameConfig.badGuyVision} onChange={(e: any) => setGameConfigPpty("badGuyVision", e.target.value)}></CustomInput>
+              <CustomInput name="Mirkwood's minions Vision (0 to 1)" placeholder={1} value={gameConfig.badGuyVision} onChange={(e: any) => setGameConfigPpty("badGuyVision", e.target.value)}></CustomInput>
+              <CustomInput name="Number of Mirkwood's minions" placeholder={1} value={gameConfig.nbBadGuys} onChange={(e: any) => setGameConfigPpty("nbBadGuys", e.target.value)}></CustomInput>
             </div>
             <div>
-              <CustomInput name="Nb material needed to win" placeholder={30} value={gameConfig.nbMaterialToWin} onChange={(e: any) => setGameConfigPpty("nbMaterialToWin", e.target.value)}></CustomInput>
+              <CustomInput name="Emeralds needed to win" placeholder={30} value={gameConfig.nbMaterialToWin} onChange={(e: any) => setGameConfigPpty("nbMaterialToWin", e.target.value)}></CustomInput>
               <CustomInput name="Player speed factor" placeholder={1} value={gameConfig.playerSpeed} onChange={(e: any) => setGameConfigPpty("playerSpeed", e.target.value)}></CustomInput>
               <CustomInput name="Mobs speed factor" placeholder={1} value={gameConfig.entitySpeed} onChange={(e: any) => setGameConfigPpty("entitySpeed", e.target.value)}></CustomInput>
+              <CustomInput name="Mob aggro distance" placeholder={1} value={gameConfig.entityAggroDistance} onChange={(e: any) => setGameConfigPpty("entityAggroDistance", e.target.value)}></CustomInput>
+
             </div>
           </div>
 
@@ -369,7 +377,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
 
         <div className="modal-block init-game-controls">
           <div><button className="button" onClick={() => backToMainMenu()}>Back</button></div>
-          <div><button className="button" onClick={() => startGame()}>Start Game</button></div>
+          <div><button disabled={canStartGame()} className="button" onClick={() => startGame()}>Start Game</button></div>
         </div>
       </div>
     </div >
