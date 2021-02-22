@@ -136,8 +136,8 @@ namespace rogue_like_multi_server
 
                 var newCoord2 = newFloatingCoord2.ToCoord();
                 var newCoordHalf2 = newFloatingCoord2Half.ToCoord(); // Just a bit more safety on passing through wall because the entity is too fast :/
-                if (map.Cells[newCoord2.X][newCoord2.Y].FloorType.IsWalkable()
-                    && map.Cells[newCoordHalf2.X][newCoordHalf2.Y].FloorType.IsWalkable())
+                if (IsInRange(newCoord2, map) && map.Cells[newCoord2.X][newCoord2.Y].FloorType.IsWalkable()
+                    && IsInRange(newCoordHalf2, map) && map.Cells[newCoordHalf2.X][newCoordHalf2.Y].FloorType.IsWalkable())
                 {
                     return newFloatingCoord2;
                 }
