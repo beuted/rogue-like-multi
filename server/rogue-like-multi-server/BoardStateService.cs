@@ -89,6 +89,16 @@ namespace rogue_like_multi_server
                 }
             }
 
+            var nowTimestamp  = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            foreach (var kvp in boardStateDynamic.Players)
+            {
+                if (kvp.Value.Role == Role.Bad)
+                {
+                    // Set cooldown to the bad guy attack to avoid him spawn killing (10 sec start of the game 5 sec each morning)
+                    kvp.Value.Entity.CoolDownAttack = nowTimestamp + 10000;
+                }
+            }
+
             return boardStateDynamic;
         }
 
@@ -211,12 +221,17 @@ namespace rogue_like_multi_server
                 boardStateDynamic.Entities = _mapService.CleanEntities(boardStateDynamic.Entities);
                 boardStateDynamic.Entities = _mapService.FillMapWithRandomEntities(boardStateDynamic.Map, config.EntitySpawn, config.EntityLoot);
 
-                // Reset players positions
+                // Reset players positions & more
                 int posOffset = 0;
                 foreach (var player in boardStateDynamic.Players)
                 {
                     player.Value.Entity.Coord = new FloatingCoord(46 + posOffset, 48);
                     posOffset++;
+                    if (player.Value.Role == Role.Bad)
+                    {
+                        // Set cooldown to the bad guy attack to avoid him spawn killing (10 sec start of the game 5 sec each morning)
+                        player.Value.Entity.CoolDownAttack = nowTimestamp + 5000;
+                    }
                 }
 
                 // Give sword to the bad guy if he doesn't have one
@@ -258,19 +273,20 @@ namespace rogue_like_multi_server
             return boardStateDynamic;
         }
 
-        private bool FindValidCellMove(Cell[][] cells, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, bool isDead, out Coord gridCoord, out FloatingCoord coord)
+        private bool FindValidCellMove(Map map, FloatingCoord playerCoord, FloatingCoord velocity, bool hasKey, bool isDead, out Coord gridCoord, out FloatingCoord coord)
         {
+            var cells = map.Cells;
             coord = playerCoord + velocity;
             gridCoord = coord.ToCoord();
-            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
+            if (_mapService.IsInRange(gridCoord, map) && cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
 
             coord = playerCoord + velocity.ProjectOnX();
             gridCoord = coord.ToCoord();
-            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
+            if (_mapService.IsInRange(gridCoord, map) && cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
 
             coord = playerCoord + velocity.ProjectOnY();
             gridCoord = coord.ToCoord();
-            if (cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
+            if (_mapService.IsInRange(gridCoord, map) && cells[gridCoord.X][gridCoord.Y].FloorType.IsWalkable(hasKey) || isDead) return true;
 
             return false;
         }
@@ -288,7 +304,7 @@ namespace rogue_like_multi_server
 
             var hasKey = player.Entity.Inventory.IndexOf(ItemType.Key) != -1;
             var isDead = player.Entity.Pv <= 0;
-            if (!FindValidCellMove(map.Cells, player.Entity.Coord, velocity, hasKey, isDead, out var gridCoord, out var coord)) {
+            if (!FindValidCellMove(map, player.Entity.Coord, velocity, hasKey, isDead, out var gridCoord, out var coord)) {
                 _logger.Log(LogLevel.Warning,
                     $"Player {playerName} tried to move on {coord} but it is not walkable");
                 return boardStateDynamic;
@@ -519,7 +535,7 @@ namespace rogue_like_multi_server
             attackingPlayer.InputSequenceNumber = inputSequenceNumber;
 
             var hasSword = attackingPlayer.Entity.Inventory.Contains(ItemType.Sword);
-            var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, attackingPlayer.Entity, nowTimestamp, hasSword, canOnlyAttackEntities, entityName);
+            var victimFound = TryAttackCloseEntityOrPlayer(boardStateDynamic, attackingPlayer.Entity, nowTimestamp, hasSword, canOnlyAttackEntities, entityName, 1.5m);
 
             if (victimFound && hasSword)
             {
@@ -554,9 +570,8 @@ namespace rogue_like_multi_server
             return evt;
         }
 
-        private bool TryAttackCloseEntityOrPlayer(BoardStateDynamic boardStateDynamic, Entity attackingEntity, long nowTimestamp, bool hasSword, bool onlyEntities, string entityName = null)
+        private bool TryAttackCloseEntityOrPlayer(BoardStateDynamic boardStateDynamic, Entity attackingEntity, long nowTimestamp, bool hasSword, bool onlyEntities, string entityName = null, decimal range = 1)
         {
-            decimal range = 1;
             var victimFound = false;
             foreach (var entity in boardStateDynamic.Entities)
             {
@@ -564,14 +579,14 @@ namespace rogue_like_multi_server
                     && (entityName == null || entity.Value.Name == entityName)
                     && FloatingCoord.Distance2d(attackingEntity.Coord, entity.Value.Coord) <= range)
                 {
-                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 1 : 0));
+                    var evt = HandleAttackOnEntity(entity.Value, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 2 : 0));
                     boardStateDynamic.Events.Add(evt);
                     attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
-                    // Victim retiliate if not pacific
+                    // Victim retiliate if not pacific (with the same range)
                     if (nowTimestamp > entity.Value.CoolDownAttack && entity.Value.Aggressivity != Aggressivity.Pacific)
                     {
-                        TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false/* entity can't have sword atm*/, false, attackingEntity.Name);
+                        TryAttackCloseEntityOrPlayer(boardStateDynamic, entity.Value, nowTimestamp, false/* entity can't have sword atm*/, false, attackingEntity.Name, range);
                     }
 
                     victimFound = true;
@@ -588,14 +603,14 @@ namespace rogue_like_multi_server
                         && player.Value.Entity.Pv > 0
                         && onlyEntities == false)
                     {
-                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 1 : 0));
+                        var evt = HandleAttackOnEntity(player.Value.Entity, boardStateDynamic.Map, nowTimestamp, attackingEntity.Name, attackingEntity.Damage + (hasSword ? 2 : 0));
                         boardStateDynamic.Events.Add(evt);
                         attackingEntity.CoolDownAttack = nowTimestamp + 2000;
 
-                        // Victim retiliate. Since it's a player he can only do if he has a sword
+                        // Victim retiliate. (with the same range)
                         if (nowTimestamp > player.Value.Entity.CoolDownAttack)
                         {
-                            TryAttackCloseEntityOrPlayer(boardStateDynamic, player.Value.Entity, nowTimestamp, player.Value.Entity.Inventory.Contains(ItemType.Sword), true, attackingEntity.Name);
+                            TryAttackCloseEntityOrPlayer(boardStateDynamic, player.Value.Entity, nowTimestamp, player.Value.Entity.Inventory.Contains(ItemType.Sword), true, attackingEntity.Name, range);
                         }
 
                         victimFound = true;

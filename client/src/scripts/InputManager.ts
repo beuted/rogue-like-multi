@@ -124,9 +124,15 @@ export class InputManager {
   public init() {
     //Capture the keyboard arrow keys
     let left = keyboard("ArrowLeft"),
+      a = keyboard("a"),
+      q = keyboard("q"),
       up = keyboard("ArrowUp"),
+      z = keyboard("z"),
+      w = keyboard("w"),
       right = keyboard("ArrowRight"),
+      d = keyboard("d"),
       down = keyboard("ArrowDown"),
+      s = keyboard("s"),
       space = keyboard(" "),
       key1 = keyboard("1"),
       key1bis = keyboard("&"),
@@ -162,6 +168,8 @@ export class InputManager {
       //Change the player's velocity when the key is pressed
       this.vx = -1;
     };
+    a.press = left.press;
+    q.press = left.press;
 
     //Left arrow key `release` method
     left.release = () => {
@@ -172,36 +180,47 @@ export class InputManager {
         this.vx = 0;
       }
     };
+    a.release = left.release;
+    q.release = left.release;
 
     //Up
     up.press = () => {
       this.vy = -1;
     };
+    z.press = up.press;
+    w.press = up.press;
     up.release = () => {
       if (!down.isDown) {
         this.vy = 0;
       }
     };
+    z.release = up.release;
+    w.release = up.release;
+
 
     //Right
     right.press = () => {
       this.vx = 1;
     };
+    d.press = right.press;
     right.release = () => {
       if (!left.isDown) {
         this.vx = 0;
       }
     };
+    d.release = right.release;
 
     //Down
     down.press = () => {
       this.vy = 1;
     };
+    s.press = down.press;
     down.release = () => {
       if (!up.isDown) {
         this.vy = 0;
       }
     };
+    s.release = down.release;
 
     key1.press = () => {
       if (this.itemPress == null) {

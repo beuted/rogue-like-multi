@@ -20,8 +20,8 @@ namespace rogue_like_multi_server
         Map DropDeadBody(Map map, int spriteId, Coord coord);
         List<ItemType> GetRandomEntityLoot(LootTable entityLoot);
         List<ItemType> GetRandomChestLoot(LootTable chestLoot);
-
         Map PickupItem(Map map, Coord coord);
+        bool IsInRange(Coord coord, Map map);
     }
 
     public class MapService: IMapService
@@ -153,9 +153,10 @@ namespace rogue_like_multi_server
             {
                 for (var j = -1; j <= + 1; j++)
                 {
+                    var coord = new Coord(startCoord.X + i, startCoord.Y + j);
                     if (!((i == -1 && j == -1) || (i == -1 && j == 1) || (i == 1 && j == -1) || (i == 1 && j == 1)) // Dirty way to avoid diagonals
-                        && (startCoord.X + i >= 0 && startCoord.X + i <= map.MapWidth && startCoord.Y + j >= 0 && startCoord.Y + j <= map.MapHeight)
-                        && map.Cells[startCoord.X+i][startCoord.Y+j].FloorType.IsWalkable())
+                        && IsInRange(coord, map)
+                        && map.Cells[coord.X][coord.Y].FloorType.IsWalkable())
                         possibleMovements.Add(new FloatingCoord(i, j));
                     else
                         possibleMovements.Add(new FloatingCoord(0, 0));
@@ -168,7 +169,7 @@ namespace rogue_like_multi_server
             var newFloatingCoord = startFloatingCoord + multiplicator * possibleMovements[index]; // No need to normalize since no diagonals vector has a 1 length
 
             var newCoord = newFloatingCoord.ToCoord();
-            if (newCoord.X > map.MapWidth - 1 || newCoord.X < 0 || newCoord.Y > map.MapHeight - 1 || newCoord.Y < 0)
+            if (!IsInRange(newCoord, map))
                 return startFloatingCoord;
 
             if (map.Cells[newCoord.X][newCoord.Y].FloorType.IsWalkable())
@@ -261,7 +262,7 @@ namespace rogue_like_multi_server
             return map;
         }
 
-        private bool IsInRange(Coord coord, Map map)
+        public bool IsInRange(Coord coord, Map map)
         {
             return 0 <= coord.X && coord.X < map.MapWidth && 0 <= coord.Y && coord.Y < map.MapHeight;
         }

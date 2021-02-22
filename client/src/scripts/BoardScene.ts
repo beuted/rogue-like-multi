@@ -162,13 +162,13 @@ export class BoardScene {
 
     for (let entity of Object.values(entities)) {
       const dist = CoordHelper.distance(coord, entity.coord);
-      if (dist < minDist && dist < 1) {
+      if (dist < minDist && dist < 2) {
         minDist = dist;
         closestEntity = entity;
       }
     }
 
-    // Only Bad guts can attack players
+    // Only Bad guys can attack players
     if (currentPlayer.role != Role.Bad)
       return closestEntity;
 
@@ -176,7 +176,7 @@ export class BoardScene {
       if (player.entity.name == currentPlayer.entity.name)
         continue;
       const dist = CoordHelper.distance(coord, player.entity.coord);
-      if (dist < minDist && dist < 1) {
+      if (dist < minDist && dist < 1.3) {
         minDist = dist;
         closestEntity = player.entity;
       }
