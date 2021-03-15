@@ -39,7 +39,7 @@ export class EventHandler {
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.FlashIn:
-            this.soundManager.play(Sound.Heal, 0.7);
+            this.soundManager.play(Sound.Flash, 0.7);
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.FlashOut:

@@ -252,8 +252,8 @@ export class ParticleRenderService {
           "end": "#2196F3"
         },
         "speed": {
-          "start": 90,
-          "end": 60,
+          "start": 10,
+          "end": 0,
           "minimumSpeedMultiplier": 1
         },
         "acceleration": {
@@ -262,10 +262,10 @@ export class ParticleRenderService {
         },
         "maxSpeed": 0,
         "startRotation": {
-          "min": 270,
-          "max": 270
+          "min": 0,
+          "max": 360
         },
-        "noRotation": true,
+        "noRotation": false,
         "rotationSpeed": {
           "min": 0,
           "max": 0
@@ -275,7 +275,7 @@ export class ParticleRenderService {
           "max": 0.6
         },
         "blendMode": "normal",
-        "frequency": 0.07,
+        "frequency": 0.03,
         "emitterLifetime": 0.3,
         "maxParticles": 1000,
         "pos": {
@@ -399,7 +399,7 @@ export class ParticleRenderService {
           "min": 0,
           "max": 360
         },
-        "noRotation": true,
+        "noRotation": false,
         "rotationSpeed": {
           "min": 0,
           "max": 0

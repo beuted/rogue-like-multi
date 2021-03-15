@@ -4,6 +4,7 @@ import sound from 'pixi-sound';
 export enum Sound {
   Bush = 'enter-bush',
   Parry = 'hit-parry',
+  Flash = 'flash',
   Stab = 'hit-stab',
   Heal = 'heal',
 }
@@ -16,6 +17,7 @@ export class SoundManager {
         .add('musical', this.soundPath + 'musical.mp3')
         .add(Sound.Bush, this.soundPath + 'enter-bush.wav')
         .add(Sound.Parry, this.soundPath + 'hit-parry.wav')
+        .add(Sound.Flash, this.soundPath + 'flash.wav')
         .add(Sound.Stab, this.soundPath + 'Knife-Stab-1.mp3')
         .add(Sound.Heal, this.soundPath + 'drink.mp3')
         .on('progress', loadProgressHandler)
