@@ -29,8 +29,8 @@ export class SoundManager {
     sound.play('musical', { loop: true });
   }
 
-  play(soundName: Sound) {
-    sound.play(soundName, { loop: false });
+  play(soundName: Sound, volume: number = 1) {
+    sound.play(soundName, { loop: false, volume });
   }
 }
 
