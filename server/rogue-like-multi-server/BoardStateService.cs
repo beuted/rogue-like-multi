@@ -21,6 +21,8 @@ namespace rogue_like_multi_server
             double inputSequenceNumber);
         BoardStateDynamic ApplyGiveMaterial(BoardStateDynamic boardStateDynamic, string playerName, double inputSequenceNumber);
         BoardStateDynamic ApplyUseItem(BoardStateDynamic boardStateDynamic, string playerName, ItemType item, double inputSequenceNumber);
+        BoardStateDynamic ApplyDash(BoardStateDynamic boardStateDynamic, string playerName);
+        BoardStateDynamic ApplyFlash(BoardStateDynamic boardStateDynamic, Map map, string playerName, FloatingCoord direction);
         BoardStateDynamic ConnectPlayer(BoardStateDynamic boardStateDynamic, string playerName);
         BoardStateDynamic AddPlayer(BoardStateDynamic boardStateDynamic, string playerName, FloatingCoord coord);
         Dictionary<string, Player> GetPlayers(BoardStateDynamic boardStateDynamic);
@@ -294,6 +296,8 @@ namespace rogue_like_multi_server
         public BoardStateDynamic ApplyPlayerVelocity(BoardStateDynamic boardStateDynamic, Map map, string playerName,
             FloatingCoord velocity, double inputSequenceNumber, LootTable chestLoot)
         {
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+
             if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
             {
                 _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move but he doesn't exist on the server");
@@ -301,6 +305,12 @@ namespace rogue_like_multi_server
             }
 
             player.InputSequenceNumber = inputSequenceNumber;
+
+            // Dash logic
+            if (player.Entity.IsDashing)
+                velocity = 1.5m * velocity;
+            if (player.Entity.CoolDownDash - 1500 < nowTimestamp)
+                player.Entity.IsDashing = false;
 
             var hasKey = player.Entity.Inventory.IndexOf(ItemType.Key) != -1;
             var isDead = player.Entity.Pv <= 0;
@@ -342,6 +352,58 @@ namespace rogue_like_multi_server
                 map.SetFloorType(gridCoord, FloorType.Plain);
                 _mapService.DropItems(boardStateDynamic.Map, _mapService.GetRandomChestLoot(chestLoot), gridCoord);
             }
+
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic ApplyDash(BoardStateDynamic boardStateDynamic, string playerName)
+        {
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to dash but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (player.Role != Role.Bad)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to dash but he isn't a bad guy");
+                return boardStateDynamic;
+            }
+
+            player.Entity.IsDashing = true;
+            player.Entity.CoolDownDash = nowTimestamp + 2000;
+
+            return boardStateDynamic;
+        }
+
+        public BoardStateDynamic ApplyFlash(BoardStateDynamic boardStateDynamic, Map map, string playerName, FloatingCoord direction)
+        {
+            var nowTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+
+            if (!boardStateDynamic.Players.TryGetValue(playerName, out var player))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to flash but he doesn't exist on the server");
+                return boardStateDynamic;
+            }
+            if (player.Role != Role.Bad)
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to flash but he isn't a bad guy");
+                return boardStateDynamic;
+            }
+
+            player.Entity.CoolDownDash = nowTimestamp + 2000;
+
+            if (!FindValidCellMove(map, player.Entity.Coord, 2m * direction, false, false, out var gridCoord, out var coord))
+            {
+                _logger.Log(LogLevel.Warning, $"Player {playerName} tried to move on {coord} but it is not walkable");
+                return boardStateDynamic;
+            }
+
+            boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.FlashIn, nowTimestamp, player.Entity.Coord, default, Role.None));
+            boardStateDynamic.Events.Add(new ActionEvent(ActionEventType.FlashOut, nowTimestamp, coord, default, Role.None));
+
+            player.Entity.Coord = coord;
 
             return boardStateDynamic;
         }

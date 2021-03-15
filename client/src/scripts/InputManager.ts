@@ -1,6 +1,6 @@
 import { keyboard } from "./Keyboard";
 import { Coord } from "./Coord";
-import { Player } from "./Board";
+import { Player, Role } from "./Board";
 import { ItemType } from "./Cell";
 
 export enum InputType {
@@ -9,7 +9,9 @@ export enum InputType {
   Vote = 2,
   GiveFood = 3,
   GiveMaterial = 4,
-  UseItem = 5
+  UseItem = 5,
+  Dash = 6,
+  Flash = 7
 }
 
 export interface Input {
@@ -26,6 +28,8 @@ export class InputManager {
   private vx: number = 0;
   private vy: number = 0;
   private attack: boolean = false;
+  //private dash: boolean = false;
+  private flash: boolean = false;
   private inputSequenceNumber: number = 0;
   private itemPress: number | null = null;
 
@@ -102,10 +106,16 @@ export class InputManager {
     let canAttack = Date.now() > player.entity.coolDownAttack && player.entity.pv > 0;
     const attacking = canAttack ? this.attack : false;
 
+    //let canDash = player.role == Role.Bad && Date.now() > player.entity.coolDownDash && player.entity.pv > 0;
+    //const dashing = canDash ? this.dash : false;
+
+    let canFlash = player.role == Role.Bad && Date.now() > player.entity.coolDownDash && player.entity.pv > 0;
+    const flashing = canFlash ? this.flash : false;
+
     // Diagonal factor to avoid going faster on diagonal
     let diagonalFactor = this.vx != 0 && this.vy != 0 ? 1 / Math.SQRT2 : 1;
     var res: Input = {
-      type: attacking ? InputType.Attack : InputType.Move,
+      type: flashing ? InputType.Flash : attacking ? InputType.Attack : InputType.Move,
       direction: {
         x: this.vx * diagonalFactor,
         y: this.vy * diagonalFactor
@@ -116,7 +126,6 @@ export class InputManager {
       item: null,
       entityName: entityInRangeName
     }
-
 
     return res;
   }
@@ -153,8 +162,8 @@ export class InputManager {
       key9 = keyboard("9"),
       key9bis = keyboard("ç"),
       key0 = keyboard("0"),
-      key0bis = keyboard("à");
-
+      key0bis = keyboard("à"),
+      enter = keyboard("Enter");
 
     space.press = () => {
       this.attack = true;
@@ -162,6 +171,14 @@ export class InputManager {
     space.release = () => {
       this.attack = false;
     }
+
+    enter.press = () => {
+      this.flash = true;
+    }
+    enter.release = () => {
+      this.flash = false;
+    }
+
 
     //Left arrow key `press` method
     left.press = () => {

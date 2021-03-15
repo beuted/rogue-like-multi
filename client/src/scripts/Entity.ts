@@ -15,4 +15,6 @@ export class Entity {
   public maxPv: number;
   public inventory: ItemType[];
   public coolDownAttack: number;
+  public coolDownDash: number
+  public isDashing: boolean;
 }

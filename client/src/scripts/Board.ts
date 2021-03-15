@@ -54,7 +54,9 @@ export enum ActionEventType {
   VoteResult = 1,
   EndGame = 2,
   ShieldBreak = 3,
-  Heal = 4
+  Heal = 4,
+  FlashIn = 5,
+  FlashOut = 6
 }
 
 export type AttackEvent = {
@@ -75,6 +77,18 @@ export type ShieldBreakEvent = {
   guid: string,
   coord: Coord,
 }
+export type FlashInEvent = {
+  type: ActionEventType.FlashIn,
+  timestamp: number,
+  guid: string,
+  coord: Coord,
+}
+export type FlashOutEvent = {
+  type: ActionEventType.FlashOut,
+  timestamp: number,
+  guid: string,
+  coord: Coord,
+}
 export type VoteResultEvent = {
   type: ActionEventType.VoteResult,
   timestamp: number,
@@ -91,7 +105,7 @@ export type EndGameEvent = {
   coord: null
 }
 
-export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent | HealEvent
+export type ActionEvent = AttackEvent | ShieldBreakEvent | EndGameEvent | VoteResultEvent | HealEvent | FlashInEvent | FlashOutEvent
 
 export type Vote = {
   from: string,
@@ -179,9 +193,10 @@ export class Board {
     this.nightState = boardStateDynamic.nightState;
   }
 
-  private findValidCellMove(input: Input, hasKey: boolean, isDead: boolean): Coord {
-    let newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
-    let newY = this.player.entity.coord.y + input.direction.y * input.pressTime;
+  private findValidCellMove(input: Input, hasKey: boolean, isDead: boolean, isDashing: boolean): Coord {
+    var factor = isDashing ? 1.5 : 1;
+    let newX = this.player.entity.coord.x + input.direction.x * input.pressTime * factor;
+    let newY = this.player.entity.coord.y + input.direction.y * input.pressTime * factor;
 
     if (!this.isWalkable(Math.floor(newX + 0.5), Math.floor(newY + 0.5), hasKey, isDead)) {
       newX = this.player.entity.coord.x + input.direction.x * input.pressTime;
@@ -200,13 +215,23 @@ export class Board {
   public applyInput(input: Input) {
     let hasKey = this.player.entity.inventory.indexOf(ItemType.Key) != -1;
     let isDead = this.player.entity.pv <= 0;
-    let newCoord = this.findValidCellMove(input, hasKey, isDead);
+    let newCoord = this.findValidCellMove(input, hasKey, isDead, this.player.entity.isDashing);
     if (newCoord == null)
       return;
 
     this.player.entity.coord = newCoord;
     if (input.type == InputType.Attack)
       this.player.entity.coolDownAttack = input.time + 1500; // The server will have caught up after 1500 ms
+
+    if (input.type == InputType.Dash) {
+      this.player.entity.coolDownDash = input.time + 1500; // The server will have caught up after 1500 ms
+      //this.player.entity.isDashing = true;
+    }
+
+    if (input.type == InputType.Flash) {
+      this.player.entity.coolDownDash = input.time + 1500; // The server will have caught up after 1500 ms
+      //this.player.entity.isDashing = true;
+    }
   }
 
   isWalkable(x: number, y: number, hasKey: boolean, isDead: boolean) {

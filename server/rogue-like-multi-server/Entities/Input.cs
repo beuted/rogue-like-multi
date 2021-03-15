@@ -10,7 +10,9 @@ namespace rogue_like_multi_server.Hubs
         Vote = 2,
         GiveFood = 3,
         GiveMaterial = 4,
-        UseItem = 5
+        UseItem = 5,
+        Dash = 6,
+        Flash = 7
     }
 
     public class Input

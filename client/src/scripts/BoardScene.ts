@@ -40,7 +40,7 @@ export class BoardScene {
     this.board = board;
     this.guiController = guiController;
 
-    this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 'assets/menu.png', 8, 25, 10);
+    this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 'assets/menu.png', 8, 30, 10);
     this.soundManager = new SoundManager(this.app.loader, 'assets/sounds/');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);

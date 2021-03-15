@@ -67,6 +67,21 @@ export class SpriteManager {
               [this.textures[240],
               this.textures[241],
               this.textures[242]],
+            104: // char1 dash
+              [this.textures[250],
+              this.textures[250],
+              this.textures[250],
+              this.textures[251]],
+            105: // char2 dash
+              [this.textures[260],
+              this.textures[260],
+              this.textures[260],
+              this.textures[261]],
+            106: // char3 dash
+              [this.textures[270],
+              this.textures[270],
+              this.textures[270],
+              this.textures[271]],
           }
 
           let menuTexture = this.appLoader.resources['menu'].texture.baseTexture;

@@ -124,6 +124,12 @@ export class RenderService {
       this.entitySprites[entity.name].sprite.scale.x = -1;
     }
 
+    if (entity.isDashing && this.entitySprites[entity.name].sprite.textures != this.spriteManager.animations[entity.spriteId + 100]) {
+      this.entitySprites[entity.name].sprite.textures = this.spriteManager.animations[entity.spriteId + 100];
+    } else if (this.entitySprites[entity.name].sprite.textures != this.spriteManager.animations[entity.spriteId]) {
+      this.entitySprites[entity.name].sprite.textures = this.spriteManager.animations[entity.spriteId];
+    }
+
     if (direction.x == 0 && direction.y == 0) {
       this.entitySprites[entity.name].sprite.gotoAndStop(0);
     } else {
@@ -165,6 +171,12 @@ export class RenderService {
       this.deadCharacterSprite.x = (character.coord.x + 0.5) * this.spriteManager.tilesetSize;
       this.deadCharacterSprite.y = (character.coord.y + 0.5) * this.spriteManager.tilesetSize;
     } else {
+      if (character.isDashing && this.characterSprite.textures != this.spriteManager.animations[character.spriteId + 100]) {
+        this.characterSprite.textures = this.spriteManager.animations[character.spriteId + 100];
+      } else if (this.characterSprite.textures != this.spriteManager.animations[character.spriteId]) {
+        this.characterSprite.textures = this.spriteManager.animations[character.spriteId];
+      }
+
       // Animation
       if (direction.x == 0 && direction.y == 0) {
         this.characterSprite.gotoAndStop(0);

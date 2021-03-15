@@ -38,6 +38,13 @@ export class EventHandler {
             this.soundManager.play(Sound.Heal);
             this.particleRenderService.handleEvent(event);
             break;
+          case ActionEventType.FlashIn:
+            this.soundManager.play(Sound.Heal);
+            this.particleRenderService.handleEvent(event);
+            break;
+          case ActionEventType.FlashOut:
+            this.particleRenderService.handleEvent(event);
+            break;
           case ActionEventType.EndGame:
             window.alert(`${event.winnerTeam == Role.Good ? 'The goods' : 'The bads'} won the game !`);
             location.reload(); // THi is needed atm to reset the state TODO: do a proper state reset !

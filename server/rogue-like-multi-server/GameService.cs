@@ -140,6 +140,10 @@ namespace rogue_like_multi_server
                     BoardState.BoardStateDynamic = _boardStateService.ApplyGiveMaterial(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.InputSequenceNumber);
                 else if (playerInput.Item2.Type == InputType.UseItem && playerInput.Item2.Item.HasValue)
                     BoardState.BoardStateDynamic = _boardStateService.ApplyUseItem(BoardState.BoardStateDynamic, playerInput.Item1, playerInput.Item2.Item.Value, playerInput.Item2.InputSequenceNumber);
+                else if (playerInput.Item2.Type == InputType.Dash)
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyDash(BoardState.BoardStateDynamic, playerInput.Item1);
+                else if (playerInput.Item2.Type == InputType.Flash && (playerInput.Item2.Direction.Value.X != 0 || playerInput.Item2.Direction.Value.Y != 0))
+                    BoardState.BoardStateDynamic = _boardStateService.ApplyFlash(BoardState.BoardStateDynamic, BoardState.BoardStateDynamic.Map, playerInput.Item1, playerInput.Item2.Direction.Value);
             }
         }
 

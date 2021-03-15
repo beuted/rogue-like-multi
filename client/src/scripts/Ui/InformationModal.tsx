@@ -43,8 +43,19 @@ const InformationModal = ({ hideModal }: { hideModal: () => void }) => {
         <h2><SpriteImage sprite={128} size={4}></SpriteImage> <u>As a minion of Mirkwood</u></h2>
         <p>Your goal is to eliminated each and every Wizard that dared enter Mirkwood. <SpriteImage sprite={ItemType.Blood}></SpriteImage></p>
         <p>For this you're granted a greater vision by Mirkwood and a sword every day if you don't have one.</p>
-
       </div>
+      <div className="modal-block">
+        <h2><u>Keyboard</u></h2>
+        <p>​Use the arrows or WASD  or ​ZQSD to move around the map.</p>
+        <p>Use space to swing your sword.</p>
+        <p>Use 1,2,3,4,... to use or drop items. Or just click on them.</p>
+        <p>During the night use your mouse to vote or give items to the group.</p>
+      </div>
+
+
+
+
+
       <div className="config-button">
         <div onClick={() => hideModal()}><SpriteImage sprite={66} size={4}></SpriteImage></div>
       </div>

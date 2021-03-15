@@ -2,7 +2,7 @@ import { Container, Sprite } from "pixi.js";
 import { Coord } from "./Coord";
 import * as particles from 'pixi-particles'
 import { SpriteManager } from "./SpriteManager";
-import { AttackEvent, ActionEventType, ShieldBreakEvent, HealEvent } from "./Board";
+import { AttackEvent, ActionEventType, ShieldBreakEvent, HealEvent, FlashInEvent, FlashOutEvent } from "./Board";
 import { Cell, FloorType } from "./Cell";
 
 export class ParticleRenderService {
@@ -30,11 +30,13 @@ export class ParticleRenderService {
 
   }
 
-  handleEvent(event: AttackEvent | ShieldBreakEvent | HealEvent) {
+  handleEvent(event: AttackEvent | ShieldBreakEvent | HealEvent | FlashInEvent | FlashOutEvent) {
     switch (event.type) {
       case ActionEventType.Attack: this.addBloodStaticEmitter(event.coord); break;
       case ActionEventType.ShieldBreak: this.addSparkleStaticEmitter(event.coord); break;
       case ActionEventType.Heal: this.addHealStaticEmitter(event.coord); break;
+      case ActionEventType.FlashIn: this.addFlashInStaticEmitter(event.coord); break;
+      case ActionEventType.FlashOut: this.addFlashOutStaticEmitter(event.coord); break;
     }
   }
 
@@ -67,7 +69,7 @@ export class ParticleRenderService {
           "min": 0,
           "max": 360
         },
-        "noRotation": false,
+        "noRotation": true,
         "rotationSpeed": {
           "min": -500,
           "max": 500
@@ -131,7 +133,7 @@ export class ParticleRenderService {
           "min": 270,
           "max": 270
         },
-        "noRotation": false,
+        "noRotation": true,
         "rotationSpeed": {
           "min": 0,
           "max": 0
@@ -217,6 +219,74 @@ export class ParticleRenderService {
         "spawnCircle": {
           "x": 0,
           "y": -1,
+          "r": 4
+        }
+      }
+    )
+
+    this.staticParticleEmitters.push(emitter);
+    emitter.emit = true;
+  }
+
+  addFlashInStaticEmitter(position: Coord) {
+    this.addFlashOutStaticEmitter(position);
+  }
+
+  addFlashOutStaticEmitter(position: Coord) {
+    //TODO: clean dictionnary sometimes
+    var emitter = new particles.Emitter(
+      this.particleContainer,
+      ["assets/pixel.png"],
+      {
+        "alpha": {
+          "start": 1,
+          "end": 0
+        },
+        "scale": {
+          "start": 1,
+          "end": 0.2,
+          "minimumScaleMultiplier": 1
+        },
+        "color": {
+          "start": "#ffffff",
+          "end": "#2196F3"
+        },
+        "speed": {
+          "start": 90,
+          "end": 60,
+          "minimumSpeedMultiplier": 1
+        },
+        "acceleration": {
+          "x": 0,
+          "y": 0
+        },
+        "maxSpeed": 0,
+        "startRotation": {
+          "min": 270,
+          "max": 270
+        },
+        "noRotation": true,
+        "rotationSpeed": {
+          "min": 0,
+          "max": 0
+        },
+        "lifetime": {
+          "min": 0.1,
+          "max": 0.6
+        },
+        "blendMode": "normal",
+        "frequency": 0.07,
+        "emitterLifetime": 0.3,
+        "maxParticles": 1000,
+        "pos": {
+          "x": ((position.x + 0.5) * this.spriteManager.tilesetSize - 0.5),
+          "y": ((position.y + 0.5) * this.spriteManager.tilesetSize - 0.5)
+        },
+        "addAtBack": false,
+        "spawnType": "circle",
+        "spawnCircle": {
+          "x": 0,
+          "y": 0,
           "r": 4
         }
       }
@@ -329,7 +399,7 @@ export class ParticleRenderService {
           "min": 0,
           "max": 360
         },
-        "noRotation": false,
+        "noRotation": true,
         "rotationSpeed": {
           "min": 0,
           "max": 0

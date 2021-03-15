@@ -43,6 +43,12 @@ namespace rogue
         [JsonProperty("coolDownAttack")]
         public double CoolDownAttack;
 
+        [JsonProperty("coolDownDash")]
+        public double CoolDownDash;
+
+        [JsonProperty("isDashing")]
+        public bool IsDashing;
+
         [JsonIgnore]
         public string TargetPlayer;
 
@@ -59,6 +65,8 @@ namespace rogue
             Aggressivity = aggressivity;
             TimeSinceInRange = 0;
             CoolDownAttack = 0;
+            CoolDownDash = 0;
+            IsDashing = false;
             TargetPlayer = null;
         }
     }
