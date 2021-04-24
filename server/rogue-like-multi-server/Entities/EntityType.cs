@@ -14,8 +14,8 @@ namespace rogue
     {
         private static Dictionary<EntityType, int> entityTypeMaxPv = new Dictionary<EntityType, int>()
         {
-            { EntityType.Snake, 5 },
-            { EntityType.Dog, 3 },
+            { EntityType.Snake, 2 },
+            { EntityType.Dog, 2 },
             { EntityType.Rat, 3 },
         };
 

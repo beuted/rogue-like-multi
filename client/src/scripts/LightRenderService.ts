@@ -2,7 +2,7 @@ import { Graphics, Container } from "pixi.js";
 import { SpriteManager } from "./SpriteManager";
 import { Coord } from "./Coord";
 import { Cell, FloorType } from "./Cell";
-import { Player, Role } from "./Board";
+import { Player } from "./Board";
 
 export class LightRenderService {
 
@@ -67,7 +67,7 @@ export class LightRenderService {
     this.staticLightsGraphics[id] = light;
   }
 
-  render(character: Player, timestampDiff: number, isHiding: boolean, nbMsPerCycle: number, badGuyVision: number) {
+  render(character: Player, isHiding: boolean) {
     // Move the light that follows the entities to their position
     this.playerLightOverlaySprite.x = ((character.entity.coord.x + 0.5) * this.spriteManager.tilesetSize - 0.5);
     this.playerLightOverlaySprite.y = ((character.entity.coord.y + 0.5) * this.spriteManager.tilesetSize - 0.5);
@@ -77,15 +77,15 @@ export class LightRenderService {
       circleSize = 1
     } else {
       // Factor between 0 and 1
-      var daylightFactor = 0.5 * (Math.sin(timestampDiff * 2 * Math.PI / nbMsPerCycle - Math.PI / 2) + 1); // Day cycle
+      //var daylightFactor = 0.5 * (Math.sin(timestampDiff * 2 * Math.PI / nbMsPerCycle - Math.PI / 2) + 1); // Day cycle
       if (isHiding)
         circleSize = 0.15;
       else
-        circleSize = 0.2 + daylightFactor * 0.7;
+        circleSize = 0.9;
 
-      if (character.role == Role.Bad) {
+      /*if (character.role == Role.Bad) {
         circleSize = Math.max(circleSize, badGuyVision);
-      }
+      }*/
     }
 
     circleSize += 0.005 * Math.sin(Date.now() / 100); // Make all lights flycker

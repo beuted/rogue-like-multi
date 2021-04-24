@@ -210,8 +210,8 @@ export class RenderService {
     }
   }
 
-  public renderEffects(character: Player, timestampDiff: number, isHiding: boolean, nbMsPerCycle: number, badGuyVision: number, delta: number) {
-    this.lightRenderService.render(character, timestampDiff, isHiding, nbMsPerCycle, badGuyVision);
+  public renderEffects(character: Player, isHiding: boolean, delta: number) {
+    this.lightRenderService.render(character, isHiding);
     this.particleRenderService.render(delta);
   }
 

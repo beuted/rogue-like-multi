@@ -141,7 +141,7 @@ export class BoardScene {
         this.renderService.renderInventory(this.board.player.entity);
         this.renderService.renderPv(this.board.player.entity);
         this.renderService.renderGameState(this.board.player.role, this.board.nowTimestamp - this.board.startTimestamp, this.board.gameConfig.nbSecsPerCycle);
-        this.renderService.renderEffects(this.board.player, this.board.nowTimestamp - this.board.startTimestamp, isHiding, this.board.gameConfig.nbSecsPerCycle * 1000, this.board.gameConfig.badGuyVision, delta);
+        this.renderService.renderEffects(this.board.player, isHiding, delta);
 
         this.guiController.setShowNightOverlay(false);
         break;

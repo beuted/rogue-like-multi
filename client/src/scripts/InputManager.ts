@@ -114,11 +114,12 @@ export class InputManager {
 
     // Diagonal factor to avoid going faster on diagonal
     let diagonalFactor = this.vx != 0 && this.vy != 0 ? 1 / Math.SQRT2 : 1;
+    let deadFactor = player.entity.pv > 0 ? 1 : 1.5;
     var res: Input = {
       type: flashing ? InputType.Flash : attacking ? InputType.Attack : InputType.Move,
       direction: {
-        x: this.vx * diagonalFactor,
-        y: this.vy * diagonalFactor
+        x: this.vx * diagonalFactor * deadFactor,
+        y: this.vy * diagonalFactor * deadFactor
       },
       pressTime: delta,
       inputSequenceNumber: this.inputSequenceNumber,
@@ -197,8 +198,16 @@ export class InputManager {
         this.vx = 0;
       }
     };
-    a.release = left.release;
-    q.release = left.release;
+    a.release = () => {
+      if (!d.isDown) {
+        this.vx = 0;
+      }
+    };
+    q.release = () => {
+      if (!d.isDown) {
+        this.vx = 0;
+      }
+    };
 
     //Up
     up.press = () => {
@@ -211,8 +220,16 @@ export class InputManager {
         this.vy = 0;
       }
     };
-    z.release = up.release;
-    w.release = up.release;
+    z.release = () => {
+      if (!s.isDown) {
+        this.vy = 0;
+      }
+    };
+    w.release = () => {
+      if (!s.isDown) {
+        this.vy = 0;
+      }
+    };
 
 
     //Right
@@ -225,8 +242,11 @@ export class InputManager {
         this.vx = 0;
       }
     };
-    d.release = right.release;
-
+    d.release = () => {
+      if (!q.isDown) {
+        this.vx = 0;
+      }
+    };
     //Down
     down.press = () => {
       this.vy = 1;
@@ -237,7 +257,11 @@ export class InputManager {
         this.vy = 0;
       }
     };
-    s.release = down.release;
+    s.release = () => {
+      if (!z.isDown) {
+        this.vy = 0;
+      }
+    };
 
     key1.press = () => {
       if (this.itemPress == null) {
