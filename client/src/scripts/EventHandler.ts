@@ -5,6 +5,7 @@ import { Coord, CoordHelper } from "./Coord";
 
 export class EventHandler {
   private handledEvents: string[] = [];
+  private hasDeclaredVictory: boolean = false;
   constructor(private particleRenderService: ParticleRenderService, private soundManager: SoundManager) {
     let handledEventsJson = localStorage.getItem('handledEvents');
     if (handledEventsJson != null)
@@ -46,8 +47,11 @@ export class EventHandler {
             this.particleRenderService.handleEvent(event);
             break;
           case ActionEventType.EndGame:
-            window.alert(`${event.winnerTeam == Role.Good ? 'The goods' : 'The bads'} won the game !`);
-            location.reload(); // THi is needed atm to reset the state TODO: do a proper state reset !
+            if (!this.hasDeclaredVictory) // Just another hack to avoid showing this message a thousand times
+              break;
+            this.hasDeclaredVictory = true;
+            window.alert(`${event.winnerTeam == Role.Good ? 'The wizards' : 'Mirkwood forest'} won the game !`);
+            location.reload(); // This is needed atm to reset the state TODO: do a proper state reset !
             break;
           case ActionEventType.VoteResult:
             if (event.playerName != null)

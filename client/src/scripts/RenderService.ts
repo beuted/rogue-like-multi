@@ -27,6 +27,7 @@ export class RenderService {
   private inventoryBg: Sprite;
   private pvSprites: Sprite[] = [];
   private roleSprite: Sprite;
+  private musicSprite: Sprite;
 
   private roleText: Text;
 
@@ -297,19 +298,45 @@ export class RenderService {
   }
 
   public renderGameState(role: Role, timestampDiff: number, nbSecInCurrentGameMode: number) {
+    if (!this.musicSprite) {
+      this.musicSprite = new Sprite();
+      this.musicSprite.texture = this.spriteManager.textures[109];
+      this.musicSprite.x = 2;
+      this.musicSprite.y = 2;
+      this.musicSprite.interactive = true;
+
+      this.musicSprite.off('mousedown');
+      this.musicSprite.on('mousedown',
+        (_: any) => {
+          if (this.soundManager.isMusicPlaying)
+            this.soundManager.stopMusic();
+          else
+            this.soundManager.playMusic();
+        }
+      );
+
+      this.pvContainer.addChild(this.musicSprite);
+    }
+
+    if (this.soundManager.isMusicPlaying) {
+      this.musicSprite.texture = this.spriteManager.textures[109];
+    } else {
+      this.musicSprite.texture = this.spriteManager.textures[119];
+    }
+
     if (!this.roleSprite) {
       this.roleSprite = new Sprite();
       if (role == Role.Bad)
         this.roleSprite.texture = this.spriteManager.textures[128];
       else
         this.roleSprite.texture = this.spriteManager.textures[129];
-      this.roleSprite.x = 2;
+      this.roleSprite.x = 142;
       this.roleSprite.y = 2;
       this.pvContainer.addChild(this.roleSprite);
     }
     if (!this.roleText) {
       this.roleText = new Text('', { fontFamily: 'MatchupPro', fontSize: 32, fill: 0xffffff, align: 'center' });
-      this.roleText.x = 12;
+      this.roleText.x = 126;
       this.roleText.y = 3;
       this.roleText.scale.set(0.25);
       this.pvContainer.addChild(this.roleText);

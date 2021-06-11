@@ -53,7 +53,23 @@ export class SpriteManager {
               this.textures[116],
               this.textures[117]],
             7: // char4
-              [this.textures[7]],
+              [this.textures[280],
+              this.textures[281],
+              this.textures[282],
+              this.textures[283],
+              this.textures[284],
+              this.textures[285],
+              this.textures[286],
+              this.textures[287]],
+            8: // char5
+              [this.textures[290],
+              this.textures[291],
+              this.textures[292],
+              this.textures[293],
+              this.textures[294],
+              this.textures[295],
+              this.textures[296],
+              this.textures[297]],
             14: // Snake
               [this.textures[235],
               this.textures[236],
@@ -82,6 +98,16 @@ export class SpriteManager {
               this.textures[270],
               this.textures[270],
               this.textures[271]],
+            107: // char4 dash
+              [this.textures[252],
+              this.textures[252],
+              this.textures[252],
+              this.textures[253]],
+            108: // char5 dash
+              [this.textures[254],
+              this.textures[254],
+              this.textures[254],
+              this.textures[255]],
           }
 
           let menuTexture = this.appLoader.resources['menu'].texture.baseTexture;

@@ -9,8 +9,10 @@ import CustomInput from './CustomInput';
 import { Player, GameConfig, GameConfigStringPpties } from '../Board';
 import Spinner from './Spinner';
 import InformationModal from './InformationModal';
+import MusicButton from './MusicButton';
+import { SoundManager } from '../SoundManager';
 
-const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClient }) => {
+const InitGameModal = ({ gameServerClient, soundManager }: { gameServerClient: GameServerClient, soundManager: SoundManager }) => {
   const DefaultGameConfig: GameConfig = {
     nbSecsPerCycle: 120,
     nbSecsDiscuss: 60,
@@ -126,7 +128,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   const [charId, setCharId] = useState<number>(0);
 
   // Skin Id matched to the spriteId of the char
-  const SkinMap: { [key: number]: number } = { 0: 4, 1: 5, 2: 6, 3: 7 };
+  const SkinMap: { [key: number]: number } = { 0: 4, 1: 5, 2: 6, 3: 7, 4: 8, 5: 9 };
 
   let interval: NodeJS.Timeout = null;
 
@@ -196,7 +198,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
   };
 
   const nextChar = async () => {
-    let newCharId: number = charId == 2 ? 0 : charId + 1
+    let newCharId: number = charId == 4 ? 0 : charId + 1
     setCharId(newCharId);
     await gameServerClient.setPlayerSkinId(gameHash, gameServerClient.username, SkinMap[newCharId]);
   };
@@ -257,6 +259,7 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
 
       <div className="modal main-menu" style={{ display: !showLobbyModal && !showConfig && !showInfo ? 'flex' : 'none' }}>
         <div className="info-button" onClick={() => setShowInfo(true)}><SpriteImage sprite={74} size={4}></SpriteImage></div>
+        <div className="music-button"><MusicButton soundManager={soundManager}></MusicButton></div>
         <h1>Leave the woods</h1>
         <button className="button" disabled={!canCreateGame()} onClick={clickCreateGame}>Create Game</button>
         <div className="join-game-group">
@@ -350,7 +353,8 @@ const InitGameModal = ({ gameServerClient }: { gameServerClient: GameServerClien
       </div>
 
       <div className="modal" style={{ display: showLobbyModal && !showConfig ? 'flex' : 'none' }}>
-        <div className="config-button" onClick={async () => { await fetchGameConfig(); setShowConfig(true) }}>
+        <div className="music-button"><MusicButton soundManager={soundManager}></MusicButton></div>
+        <div className="info-button" onClick={async () => { await fetchGameConfig(); setShowConfig(true) }}>
           <SpriteImage sprite={ItemType.Backpack} size={5}></SpriteImage>
         </div>
         <div className="modal-block">

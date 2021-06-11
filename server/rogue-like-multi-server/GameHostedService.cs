@@ -25,36 +25,47 @@ namespace rogue_like_multi_server
             _gameService = gameService;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("GameHostedService is starting.");
 
-            while(_running)
+            try
             {
-                var begin = DateTime.UtcNow.Ticks;
-
-                // Apply all inputs received
-                _gameService.ApplyPlayerInputs();
-
-                // Simulate world, do AI work ...
-                _gameService.Update(_lastTrunTicks / TimeSpan.TicksPerMillisecond);
-
-                // Send the updated world to clients
-                await SendUpdatesClients();
-
-                var elapsed = DateTime.UtcNow.Ticks - begin;
-
-                // How long this turn took (taking to account delay to come)
-                _lastTrunTicks = Math.Max(TicksPerServerTick, elapsed);
-                if (elapsed < TicksPerServerTick)
+                Task.Run(async () =>
                 {
-                    await Task.Delay(Convert.ToInt32((TicksPerServerTick - elapsed) / TimeSpan.TicksPerMillisecond));
-                }
-                else
-                {
-                    _logger.Log(LogLevel.Information, $"Turn is late, it took {elapsed/TimeSpan.TicksPerMillisecond} ms");
-                }
+                    while (_running)
+                    {
+                        var begin = DateTime.UtcNow.Ticks;
+
+                        // Apply all inputs received
+                        _gameService.ApplyPlayerInputs();
+
+                        // Simulate world, do AI work ...
+                        _gameService.Update(_lastTrunTicks / TimeSpan.TicksPerMillisecond);
+
+                        // Send the updated world to clients
+                        await SendUpdatesClients();
+
+                        var elapsed = DateTime.UtcNow.Ticks - begin;
+
+                        // How long this turn took (taking to account delay to come)
+                        _lastTrunTicks = Math.Max(TicksPerServerTick, elapsed);
+                        if (elapsed < TicksPerServerTick)
+                        {
+                            await Task.Delay(Convert.ToInt32((TicksPerServerTick - elapsed) / TimeSpan.TicksPerMillisecond));
+                        }
+                        else
+                        {
+                            _logger.Log(LogLevel.Information, $"Turn is late, it took {elapsed / TimeSpan.TicksPerMillisecond} ms");
+                        }
+                    }
+                }, cancellationToken);
             }
+            catch (Exception e) {
+                _logger.Log(LogLevel.Error, e, $"Main Thread closed");
+            } // Prevent throwing if the Delay is cancelled
+
+            return Task.CompletedTask; // return ASAP
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

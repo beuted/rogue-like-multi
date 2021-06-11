@@ -8,6 +8,7 @@ import { GameState, Board } from './Board';
 import NightOverlay from './Ui/NightOverlay';
 import { InputManager } from './InputManager';
 import { CharacterController } from './CharacterController';
+import { SoundManager } from './SoundManager';
 
 const App = ({ app }: { app: PIXI.Application }) => {
   const [user, setUser] = useState<{ username: string, password: string }>(null);
@@ -15,6 +16,7 @@ const App = ({ app }: { app: PIXI.Application }) => {
   const [gameServerClient] = useState<GameServerClient | null>(new GameServerClient());
   const [socketClient] = useState<SocketClient | null>(new SocketClient());
   const [inputManager] = useState<InputManager | null>(new InputManager());
+  const [soundManager] = useState<SoundManager | null>(new SoundManager(app.loader));
   const [characterController, setCharacterController] = useState<CharacterController | null>(null);
   const [showGameModal, setShowGameModal] = useState<boolean>(true);
   const [showNightOverlay, setShowNightOverlay] = useState<boolean>(false);
@@ -31,7 +33,7 @@ const App = ({ app }: { app: PIXI.Application }) => {
     fetchUser();
 
     const characterController = new CharacterController(socketClient);
-    const boardScene = new BoardScene(app, gameServerClient, socketClient, inputManager, characterController, board, { setShowGameModal, setShowNightOverlay });
+    const boardScene = new BoardScene(app, gameServerClient, socketClient, inputManager, characterController, soundManager, board, { setShowGameModal, setShowNightOverlay });
 
     setCharacterController(characterController);
     setBoardScene(boardScene);
@@ -63,7 +65,7 @@ const App = ({ app }: { app: PIXI.Application }) => {
       <div className="game" id="game"></div>
       {!loading ?
         <div>
-          {showGameModal ? <InitGameModal gameServerClient={gameServerClient}></InitGameModal> : null}
+          {showGameModal ? <InitGameModal gameServerClient={gameServerClient} soundManager={soundManager} ></InitGameModal> : null}
           {showNightOverlay ? <NightOverlay inputManager={inputManager} characterController={characterController} board={board}></NightOverlay> : null}
         </div> : <div>Loading ...</div>}
     </div>

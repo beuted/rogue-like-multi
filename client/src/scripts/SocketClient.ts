@@ -13,6 +13,16 @@ export class SocketClient {
         accessTokenFactory: () => btoa(`${user.username}:${user.password}`)
       })
       .build();
+
+    this.connection.onclose(() => {
+      console.warn('[Warning]Socket lost connection!');
+      this.connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hub", {
+          httpClient: new CustomHttpClient(signalR.NullLogger.instance, user),
+          accessTokenFactory: () => btoa(`${user.username}:${user.password}`)
+        })
+        .build();
+    });
   }
 
   public async start() {

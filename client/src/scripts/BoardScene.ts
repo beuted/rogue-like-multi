@@ -32,16 +32,16 @@ export class BoardScene {
   private pendingInputs: Input[] = [];
   guiController: GuiController;
 
-  constructor(private app: Application, gameServerClient: GameServerClient, socketClient: SocketClient, inputManager: InputManager, characterController: CharacterController, board: Board, guiController: GuiController) {
+  constructor(private app: Application, gameServerClient: GameServerClient, socketClient: SocketClient, inputManager: InputManager, characterController: CharacterController, soundManager: SoundManager, board: Board, guiController: GuiController) {
     this.socketClient = socketClient;
     this.gameServerClient = gameServerClient;
     this.inputManager = inputManager;
     this.characterController = characterController;
+    this.soundManager = soundManager;
     this.board = board;
     this.guiController = guiController;
 
     this.spriteManager = new SpriteManager(this.app.loader, 'assets/v3.png', 'assets/menu.png', 8, 30, 10);
-    this.soundManager = new SoundManager(this.app.loader, 'assets/sounds/');
     this.lightRenderService = new LightRenderService(this.spriteManager);
     this.particleRenderService = new ParticleRenderService(this.spriteManager);
     this.renderService = new RenderService(this.spriteManager, this.lightRenderService, this.particleRenderService, this.inputManager, this.characterController, this.soundManager);
@@ -53,7 +53,7 @@ export class BoardScene {
     await this.soundManager.init();
     this.inputManager.init();
 
-    //this.soundManager.playMusic();
+    this.soundManager.playMusic();
 
     for (const fontName of ['MatchupPro', 'ExpressionPro', 'EquipmentPro', 'FutilePro', 'CompassPro']) {
       var font = new FontFaceObserver(fontName);

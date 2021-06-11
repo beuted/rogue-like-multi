@@ -14,6 +14,7 @@
 }
 
 .modal {
+  position: relative;
   height: 600px;
   width: 800px;
   background-color: #0c2e44;
@@ -47,7 +48,19 @@
   right: 30px;
   top: 30px;
 }
+
 .info-button:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.music-button {
+  position: absolute;
+  left: 30px;
+  top: 30px;
+}
+
+.music-button:hover {
   cursor: pointer;
   opacity: 0.8;
 }
