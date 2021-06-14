@@ -8,7 +8,7 @@ export class SpriteManager {
   constructor(private appLoader: Loader, private tilesetPath: string, private menuPath: string, public tilesetSize: number, private tilesetHeight: number, private tilesetWidth: number) { }
 
   init() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       this.appLoader
         .add('tilemap', this.tilesetPath)
         .add('menu', this.menuPath)
@@ -115,7 +115,6 @@ export class SpriteManager {
           let rectangle = new Rectangle(0, 0, 118, 11);
           texture.frame = rectangle;
           this.inventoryBgTexture = texture;
-
 
           resolve();
         });

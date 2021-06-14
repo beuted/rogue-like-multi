@@ -105,7 +105,7 @@ export class BoardScene {
     // In case of victory (a bit hacky)
     if (this.board.winnerTeam != Role.None) {
       this.gameServerClient.resetGame();
-      window.alert(`${this.board.winnerTeam == Role.Good ? 'The villagers' : 'The werewoves'} won the game !`);
+      window.alert(`${this.board.winnerTeam == Role.Good ? 'The wizards' : 'Mirkwood forest'} won the game !`);
       this.board.winnerTeam = Role.None
       location.reload();
     }

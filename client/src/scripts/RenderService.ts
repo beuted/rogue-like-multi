@@ -19,8 +19,9 @@ export class RenderService {
   private pvContainer: Container;
   private cellsContainer: Container;
 
-  private entitySprites: { [name: string]: { sprite: AnimatedSprite, name: Text } } = {};
+  private entitySprites: { [name: string]: { sprite: AnimatedSprite, name: Text, shadow: Graphics } } = {};
   private characterSprite: AnimatedSprite;
+  private characterShadow: Graphics;
   private deadCharacterSprite: Sprite;
   private inventorySprites: Sprite[] = [];
   private inventoryIndexes: Text[] = [];
@@ -70,6 +71,8 @@ export class RenderService {
   }
 
   public renderEntity(entity: Entity, playerPosition: Coord, previousEntityPosition: Coord | undefined, interpolFactor: number, cells: Cell[][], isTargetted: boolean, isHiding: boolean, showName: boolean) {
+    var hasJustBeenAdded = false;
+
     if (!previousEntityPosition)
       previousEntityPosition = entity.coord;
     // Remove if out of bounds or dead
@@ -77,18 +80,30 @@ export class RenderService {
       if (this.entitySprites[entity.name]) {
         this.entitySprites[entity.name].sprite.parent.removeChild(this.entitySprites[entity.name].sprite);
         this.entitySprites[entity.name].name.parent.removeChild(this.entitySprites[entity.name].name);
+        this.entitySprites[entity.name].shadow.parent.removeChild(this.entitySprites[entity.name].shadow);
         delete this.entitySprites[entity.name];
       }
       return;
     }
 
     if (!this.entitySprites[entity.name]) {
-      this.entitySprites[entity.name] = { sprite: null, name: null };
+      hasJustBeenAdded = true;
+      this.entitySprites[entity.name] = { sprite: null, name: null, shadow: null };
+
+      // Shadow
+      this.entitySprites[entity.name].shadow = new Graphics();
+      this.entitySprites[entity.name].shadow.beginFill(0x000000, 0.5);
+      this.entitySprites[entity.name].shadow.drawEllipse(0, 0, 0.5 * this.spriteManager.tilesetSize, 0.2 * this.spriteManager.tilesetSize);
+      this.entitySprites[entity.name].shadow.endFill();
+      this.entityContainer.addChild(this.entitySprites[entity.name].shadow);
+
+      // Sprite
       this.entitySprites[entity.name].sprite = new AnimatedSprite(this.spriteManager.animations[entity.spriteId]);
       this.entitySprites[entity.name].sprite.anchor.set(0.5);
       this.entitySprites[entity.name].sprite.animationSpeed = 0.2;
       this.entityContainer.addChild(this.entitySprites[entity.name].sprite);
 
+      // Name
       this.entitySprites[entity.name].name = new Text(showName ? entity.name : '', { fontFamily: 'MatchupPro', fontSize: 16, fill: 0xffffff88, align: 'center' });
       this.entitySprites[entity.name].name.anchor.set(0.5);
       this.entitySprites[entity.name].name.scale.set(0.25);
@@ -97,19 +112,21 @@ export class RenderService {
 
     const coord = CoordHelper.getClosestCoord(entity.coord);
     if (!isHiding && CellHelper.isHiding(cells[coord.x][coord.y])) {
-      if (this.entitySprites[entity.name].sprite.alpha == 1.0) {
+      if (this.entitySprites[entity.name].sprite.alpha == 1.0 && !hasJustBeenAdded) {
         this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
       this.entitySprites[entity.name].sprite.alpha = 0.1; //TODO: maybe just remove it
       this.entitySprites[entity.name].name.alpha = 0;
+      this.entitySprites[entity.name].shadow.alpha = 0;
     } else {
-      if (this.entitySprites[entity.name].sprite.alpha == 0.1) {
+      if (this.entitySprites[entity.name].sprite.alpha == 0.1 && !hasJustBeenAdded) {
         this.soundManager.play(Sound.Bush);
         this.particleRenderService.addLeafStaticEmitter(entity.coord);
       }
       this.entitySprites[entity.name].sprite.alpha = 1.0;
       this.entitySprites[entity.name].name.alpha = 1.0;
+      this.entitySprites[entity.name].shadow.alpha = 1.0;
     }
 
     if (isTargetted) {
@@ -141,16 +158,26 @@ export class RenderService {
     this.entitySprites[entity.name].sprite.y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
     this.entitySprites[entity.name].name.x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
     this.entitySprites[entity.name].name.y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) - 0.3) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].shadow.x = (MathHelper.lerp(previousEntityPosition.x, entity.coord.x, interpolFactor) + 0.5) * this.spriteManager.tilesetSize;
+    this.entitySprites[entity.name].shadow.y = (MathHelper.lerp(previousEntityPosition.y, entity.coord.y, interpolFactor) + 1) * this.spriteManager.tilesetSize;
   }
 
   public renderCharacter(character: Entity, isHiding: boolean, direction: Coord) {
     if (!this.characterSprite) {
+      // Sprite
       this.characterSprite = new AnimatedSprite(this.spriteManager.animations[character.spriteId]);
       this.characterSprite.anchor.set(0.5);
       this.characterSprite.zIndex = 1;
       this.characterSprite.animationSpeed = 0.2;
       this.characterSprite.play();
       this.mapContainer.addChild(this.characterSprite);
+
+      // Shadow
+      this.characterShadow = new Graphics();
+      this.characterShadow.beginFill(0x000000, 0.5);
+      this.characterShadow.drawEllipse(0, 0, 0.5 * this.spriteManager.tilesetSize, 0.2 * this.spriteManager.tilesetSize);
+      this.characterShadow.endFill();
+      this.entityContainer.addChild(this.characterShadow);
     }
 
     if (character.pv <= 0 && !this.deadCharacterSprite) {
@@ -208,6 +235,9 @@ export class RenderService {
 
       this.characterSprite.x = (character.coord.x + 0.5) * this.spriteManager.tilesetSize;
       this.characterSprite.y = (character.coord.y + 0.5) * this.spriteManager.tilesetSize;
+
+      this.characterShadow.x = (character.coord.x + 0.5) * this.spriteManager.tilesetSize;
+      this.characterShadow.y = (character.coord.y + 1) * this.spriteManager.tilesetSize;
     }
   }
 
@@ -387,11 +417,12 @@ export class RenderService {
         this.renderEntity(players[playerName].entity, playerPosition, entitiesPreviousCoords[playerName], interpolFactor, cells, entityInRangeName == playerName, isHiding, true);
     }
 
-    //If players or entites have been removed from list we need to clean them
+    // If players or entites have been removed from list we need to clean them
     for (let entitySpriteName in this.entitySprites) {
       if (!players[entitySpriteName] && !entities[entitySpriteName]) {
         this.entityContainer.removeChild(this.entitySprites[entitySpriteName].sprite);
         this.entityContainer.removeChild(this.entitySprites[entitySpriteName].name);
+        this.entityContainer.removeChild(this.entitySprites[entitySpriteName].shadow);
         delete this.entitySprites[entitySpriteName];
       }
     }
