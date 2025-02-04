@@ -1,38 +1,40 @@
-import { Loader, LoaderResource } from 'pixi.js';
-import sound from 'pixi-sound';
+import { Loader, LoaderResource } from "pixi.js";
+import sound from "pixi-sound";
 
 export enum Sound {
-  Bush = 'enter-bush',
-  Parry = 'hit-parry',
-  Flash = 'flash',
-  Stab = 'hit-stab',
-  Heal = 'heal',
+  Bush = "enter-bush",
+  Parry = "hit-parry",
+  Flash = "flash",
+  Stab = "hit-stab",
+  Heal = "heal",
 }
 export class SoundManager {
   public isMusicPlaying = false;
 
-  private soundPath: string
+  private soundPath: string;
   musicSound: sound.Sound;
 
   constructor(private appLoader: Loader) {
-    this.soundPath = 'assets/sounds/';
+    this.soundPath = "assets/sounds/";
   }
 
   init(): Promise<void> {
     return new Promise((resolve) => {
       this.appLoader
-        .add('musical', this.soundPath + 'GameDekajoo 5.wav')
-        .add(Sound.Bush, this.soundPath + 'enter-bush.wav')
-        .add(Sound.Parry, this.soundPath + 'hit-parry.wav')
-        .add(Sound.Flash, this.soundPath + 'flash.wav')
-        .add(Sound.Stab, this.soundPath + 'Knife-Stab-1.mp3')
-        .add(Sound.Heal, this.soundPath + 'drink.mp3')
-        .on('progress', loadProgressHandler)
-        .load(() => {
-          resolve();
-        });
+        .add("musical", this.soundPath + "GameDekajoo 5.wav")
+        .add(Sound.Bush, this.soundPath + "enter-bush.wav")
+        .add(Sound.Parry, this.soundPath + "hit-parry.wav")
+        .add(Sound.Flash, this.soundPath + "flash.wav")
+        .add(Sound.Stab, this.soundPath + "Knife-Stab-1.mp3")
+        .add(Sound.Heal, this.soundPath + "drink.mp3");
 
-      this.musicSound = sound.Sound.from(this.soundPath + 'GameDekajoo 5.wav');
+      this.appLoader.onProgress.add(loadProgressHandler);
+
+      this.appLoader.load(() => {
+        resolve();
+      });
+
+      this.musicSound = sound.Sound.from(this.soundPath + "GameDekajoo 5.wav");
       this.musicSound.loop = true;
       this.musicSound.volume = 0;
       this.musicSound.play();
