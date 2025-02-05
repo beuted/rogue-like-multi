@@ -15,6 +15,7 @@ export class LightRenderService {
   }
 
   init(mapContainer: Container, cells: Cell[][]) {
+    console.log("init light renderer service")
     this.lightMask = new Container();
     this.playerLightOverlaySprite = new Graphics();
 
